@@ -1,0 +1,216 @@
+{"text": "reach me at john@gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "here's my personal: sarah.k@outlook.com", "expect": "hold", "types": ["email"]}
+{"text": "ahmed.dev+client@gmail.com works too", "expect": "hold", "types": ["email"]}
+{"text": "EMAIL ME: AHMED@YAHOO.COM", "expect": "hold", "types": ["email"]}
+{"text": "jоhn@gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "jo​hn@gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "send files to usman_shabbir@hotmail.com", "expect": "hold", "types": ["email"]}
+{"text": "my icloud is designs@icloud.com", "expect": "hold", "types": ["email"]}
+{"text": "b2b@ahmedk.dev if you need me", "expect": "hold", "types": ["email"]}
+{"text": "write me on karim@proton.me", "expect": "hold", "types": ["email"]}
+{"text": "contact: dev.ahmed@ahmedcodes.io", "expect": "hold", "types": ["email"]}
+{"text": "you can cc my private mail fatima@zoho.com", "expect": "hold", "types": ["email"]}
+{"text": "sara@live.co.uk is better for invoices", "expect": "hold", "types": ["email"]}
+{"text": "ping me: mike@mikebuilds.dev", "expect": "hold", "types": ["email"]}
+{"text": "personal inbox is team.lead@gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "Delivered-To: dev@myagency.io", "expect": "hold", "types": ["email"]}
+{"text": "john [at] gmail [dot] com", "expect": "hold", "types": ["email"]}
+{"text": "john (at) gmail (dot) com", "expect": "hold", "types": ["email"]}
+{"text": "john(at)gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "sarah [at] outlook.com", "expect": "hold", "types": ["email"]}
+{"text": "ahmed at gmail dot com", "expect": "hold", "types": ["email"]}
+{"text": "reach me: ahmed dot k at gmail dot com", "expect": "hold", "types": ["email"]}
+{"text": "my email is john underscore doe at yahoo dot com", "expect": "hold", "types": ["email"]}
+{"text": "usman AT usmandesigns DOT com", "expect": "hold", "types": ["email"]}
+{"text": "write to hello{at}ahmedk{dot}dev", "expect": "hold", "types": ["email"]}
+{"text": "s a r a h [at] gmail [dot] com", "expect": "hold", "types": ["email"]}
+{"text": "fatima[at]proton[dot]me", "expect": "hold", "types": ["email"]}
+{"text": "dev [at] mystudio [dot] co [dot] uk", "expect": "hold", "types": ["email"]}
+{"text": "reply to mike (at) mikebuilds (dot) dev", "expect": "hold", "types": ["email"]}
+{"text": "john﻿@gmail.com", "expect": "hold", "types": ["email"]}
+{"text": "see the error from noreply@stripe.com", "expect": "flag_only", "types": ["email"]}
+{"text": "notifications@github.com opened an issue", "expect": "flag_only", "types": ["email"]}
+{"text": "sentry alert from noreply@sentry.io", "expect": "flag_only", "types": ["email"]}
+{"text": "invite sent via no-reply@figma.com", "expect": "flag_only", "types": ["email"]}
+{"text": "git remote is git@github.com:acme/api.git", "expect": "flag_only", "types": ["email"]}
+{"text": "CI email from builds@vercel.com", "expect": "flag_only", "types": ["email"]}
+{"text": "donotreply@amazonaws.com bounce again", "expect": "flag_only", "types": ["email"]}
+{"text": "postmaster@gmail.com returned the mail", "expect": "flag_only", "types": ["email"]}
+{"text": "updates from notification@linear.app", "expect": "flag_only", "types": ["email"]}
+{"text": "jira updates from noreply@atlassian.net", "expect": "flag_only", "types": ["email"]}
+{"text": "the receipt came from receipts@stripe.com", "expect": "flag_only", "types": ["email"]}
+{"text": "mailer-daemon@googlemail.com failure notice", "expect": "flag_only", "types": ["email"]}
+{"text": "my number is +92 300 1234567", "expect": "hold", "types": ["phone"]}
+{"text": "+92-300-1234567", "expect": "hold", "types": ["phone"]}
+{"text": "+92.300.1234567", "expect": "hold", "types": ["phone"]}
+{"text": "+923001234567", "expect": "hold", "types": ["phone"]}
+{"text": "call +44 7911 123456", "expect": "hold", "types": ["phone"]}
+{"text": "+1 (415) 555-2671", "expect": "hold", "types": ["phone"]}
+{"text": "+971 50 123 4567", "expect": "hold", "types": ["phone"]}
+{"text": "+918527041222", "expect": "hold", "types": ["phone"]}
+{"text": "call +33 6 12 34 56 78", "expect": "hold", "types": ["phone"]}
+{"text": "+61 412 345 678", "expect": "hold", "types": ["phone"]}
+{"text": "+49 151 12345678", "expect": "hold", "types": ["phone"]}
+{"text": "+7 916 123-45-67", "expect": "hold", "types": ["phone"]}
+{"text": "0092 300 1234567", "expect": "hold", "types": ["phone"]}
+{"text": "urgent, +92 321 9876543", "expect": "hold", "types": ["phone"]}
+{"text": "0300 1234567", "expect": "hold", "types": ["phone"]}
+{"text": "0300-1234567", "expect": "hold", "types": ["phone"]}
+{"text": "0300.123.4567", "expect": "hold", "types": ["phone"]}
+{"text": "(021) 3456 7890", "expect": "hold", "types": ["phone"]}
+{"text": "021 3456 7890", "expect": "hold", "types": ["phone"]}
+{"text": "0301 234 5678", "expect": "hold", "types": ["phone"]}
+{"text": "0333 123 4567 is my jazz number", "expect": "hold", "types": ["phone"]}
+{"text": "(0301) 234-5678", "expect": "hold", "types": ["phone"]}
+{"text": "030 0123 4567", "expect": "hold", "types": ["phone"]}
+{"text": "0345.678.9012", "expect": "hold", "types": ["phone"]}
+{"text": "0412 345 678", "expect": "hold", "types": ["phone"]}
+{"text": "021-34567890", "expect": "hold", "types": ["phone"]}
+{"text": "0300 1234567 pe msg karo", "expect": "hold", "types": ["phone"]}
+{"text": "ring 0771 234 5678", "expect": "hold", "types": ["phone"]}
+{"text": "03001234567", "expect": "hold", "types": ["phone"]}
+{"text": "my backup 03211234567", "expect": "hold", "types": ["phone"]}
+{"text": "03001234567 pe aa jao", "expect": "hold", "types": ["phone"]}
+{"text": "direct line 03459876543", "expect": "hold", "types": ["phone"]}
+{"text": "call me on 3001234567", "expect": "hold", "types": ["phone"]}
+{"text": "text me: 415 555 2671", "expect": "hold", "types": ["phone"]}
+{"text": "whatsapp me on 03001234567", "expect": "hold", "types": ["phone"]}
+{"text": "my number is 3459876543", "expect": "hold", "types": ["phone"]}
+{"text": "reach me at 92 300 1234567", "expect": "hold", "types": ["phone"]}
+{"text": "phone: 213.555.0198", "expect": "hold", "types": ["phone"]}
+{"text": "zero three zero zero one two three four five six seven", "expect": "hold", "types": ["phone"]}
+{"text": "my number: three one five, six two eight, nine one four zero", "expect": "hold", "types": ["phone"]}
+{"text": "oh three oh oh one two three four five six seven", "expect": "hold", "types": ["phone"]}
+{"text": "dial three zero zero, one two three, four five six seven", "expect": "hold", "types": ["phone"]}
+{"text": "pay me via paypal.me/ahmedk", "expect": "hold", "types": ["payment_handle"]}
+{"text": "here's my paypal: PayPal.Me/usmandev", "expect": "hold", "types": ["payment_handle"]}
+{"text": "paypal.me/sarah-k for the balance", "expect": "hold", "types": ["payment_handle"]}
+{"text": "wise.com/pay/r/abc123xyz", "expect": "hold", "types": ["payment_handle"]}
+{"text": "send via wise.com/invite/usman", "expect": "hold", "types": ["payment_handle"]}
+{"text": "payoneer.com/checkout/xyz for intl payments", "expect": "hold", "types": ["payment_handle"]}
+{"text": "PK36 SCBL 0000 0011 2345 6702", "expect": "hold", "types": ["payment_handle"]}
+{"text": "GB82 WEST 1234 5698 7654 32", "expect": "hold", "types": ["payment_handle"]}
+{"text": "DE89 3704 0044 0532 0130 00", "expect": "hold", "types": ["payment_handle"]}
+{"text": "my iban is pk36scbl0000001123456702", "expect": "hold", "types": ["payment_handle"]}
+{"text": "eth: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e", "expect": "hold", "types": ["crypto_address"]}
+{"text": "btc 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2", "expect": "hold", "types": ["crypto_address"]}
+{"text": "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq", "expect": "hold", "types": ["crypto_address"]}
+{"text": "usdt tron TJRabPrwbZy45sbavfcjinPJC18kjpRTv8", "expect": "hold", "types": ["crypto_address"]}
+{"text": "linkedin.com/in/ahmed-k-12345", "expect": "hold", "types": ["social_link"]}
+{"text": "check my LinkedIn: linkedin.com/in/ahmedk", "expect": "hold", "types": ["social_link"]}
+{"text": "pk.linkedin.com/in/usman-shabbir", "expect": "hold", "types": ["social_link"]}
+{"text": "https://www.linkedin.com/company/acme-digital", "expect": "hold", "types": ["social_link"]}
+{"text": "wa.me/923001234567", "expect": "hold", "types": ["social_link"]}
+{"text": "https://wa.me/+923001234567", "expect": "hold", "types": ["social_link"]}
+{"text": "chat.whatsapp.com/AbCdEf12345", "expect": "hold", "types": ["social_link"]}
+{"text": "api.whatsapp.com/send?phone=923001234567", "expect": "hold", "types": ["social_link"]}
+{"text": "t.me/ahmed_codes", "expect": "hold", "types": ["social_link"]}
+{"text": "message me on t.me/usmandev", "expect": "hold", "types": ["social_link"]}
+{"text": "telegram.me/sarah_designs", "expect": "hold", "types": ["social_link"]}
+{"text": "instagram.com/ahmed.codes", "expect": "hold", "types": ["social_link"]}
+{"text": "https://www.instagram.com/usman.builds", "expect": "hold", "types": ["social_link"]}
+{"text": "facebook.com/ahmed.k.dev", "expect": "hold", "types": ["social_link"]}
+{"text": "fb.me/usmandesigns", "expect": "hold", "types": ["social_link"]}
+{"text": "skype:ahmed.k.dev", "expect": "hold", "types": ["social_link"]}
+{"text": "join.skype.com/AbC123xyz", "expect": "hold", "types": ["social_link"]}
+{"text": "discord.gg/abc123", "expect": "hold", "types": ["social_link"]}
+{"text": "discord.com/invite/devchat", "expect": "hold", "types": ["social_link"]}
+{"text": "signal.me/#p/+923001234567", "expect": "hold", "types": ["social_link"]}
+{"text": "snapchat.com/add/ahmedk99", "expect": "hold", "types": ["social_link"]}
+{"text": "insta: @ahmed.codes", "expect": "hold", "types": ["social_link"]}
+{"text": "telegram - @dev_ahmed", "expect": "hold", "types": ["social_link"]}
+{"text": "budget 10 500 000 for phase two", "expect": "flag_only", "types": ["phone"]}
+{"text": "epoch 1722787200", "expect": "flag_only", "types": ["phone"]}
+{"text": "order 4111222233 shipped", "expect": "flag_only", "types": ["phone"]}
+{"text": "zoom meeting id 883 7623 1157", "expect": "flag_only", "types": ["phone"]}
+{"text": "tracking number 9205 5000 1234", "expect": "flag_only", "types": ["phone"]}
+{"text": "the invoice total came to 12 500 750", "expect": "flag_only", "types": ["phone"]}
+{"text": "txn 202608041234", "expect": "flag_only", "types": ["phone"]}
+{"text": "account number is 0123 4567 8901", "expect": "flag_only", "types": ["phone"]}
+{"text": "morning team, standup in 10", "expect": "allow"}
+{"text": "the new build is ready for review", "expect": "allow"}
+{"text": "pushed the fix to github.com/acme/delivery-app", "expect": "allow"}
+{"text": "PR is up at github.com/acme/api", "expect": "allow"}
+{"text": "figma.com/file/AbC123/homepage-v2", "expect": "allow"}
+{"text": "deployed to vercel, preview link in the ticket", "expect": "allow"}
+{"text": "supabase.com/dashboard/project/xyzabc", "expect": "allow"}
+{"text": "docs at notion.so/acme/onboarding", "expect": "allow"}
+{"text": "linear.app/acme/issue/ACM-142", "expect": "allow"}
+{"text": "meet at 3pm tomorrow", "expect": "allow"}
+{"text": "the demo is on 2026-08-04", "expect": "allow"}
+{"text": "deadline moved to 04/09/2026", "expect": "allow"}
+{"text": "sprint runs aug 4 to aug 15", "expect": "allow"}
+{"text": "v2.0.1 is tagged", "expect": "allow"}
+{"text": "upgraded next to v16.3.0", "expect": "allow"}
+{"text": "node 22.17.1 required", "expect": "allow"}
+{"text": "released 5.0.0-beta.1", "expect": "allow"}
+{"text": "port 3000 is taken, using 8080", "expect": "allow"}
+{"text": "server listening on localhost:54321", "expect": "allow"}
+{"text": "db is at 127.0.0.1:54322", "expect": "allow"}
+{"text": "whitelist 192.168.1.100 on the vpn", "expect": "allow"}
+{"text": "curl -X POST https://api.acme.dev/v1/messages", "expect": "allow"}
+{"text": "SELECT count(*) FROM messages WHERE status = 'pending'", "expect": "allow"}
+{"text": "error TS2304 cannot find name LayoutProps", "expect": "allow"}
+{"text": "commit 9f86d08 fixes it", "expect": "allow"}
+{"text": "full sha 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b", "expect": "allow"}
+{"text": "uuid is 550e8400-e29b-41d4-a716-446655440000", "expect": "allow"}
+{"text": "npm i lodash@4.17.21", "expect": "allow"}
+{"text": "pip install requests==2.31.0", "expect": "allow"}
+{"text": "docker image node:22-alpine", "expect": "allow"}
+{"text": "the bill was PKR 150,000", "expect": "allow"}
+{"text": "budget approved: PKR 10 500 000", "expect": "allow"}
+{"text": "invoice INV-2026-0815 attached", "expect": "allow"}
+{"text": "order #4471234 shipped", "expect": "allow"}
+{"text": "ticket ACM-1204 closed", "expect": "allow"}
+{"text": "err code 500 on checkout", "expect": "allow"}
+{"text": "http 404 on /api/messages", "expect": "allow"}
+{"text": "we have 25000 users now", "expect": "allow"}
+{"text": "storage at 85%, clean up soon", "expect": "allow"}
+{"text": "file is 24.5 MB", "expect": "allow"}
+{"text": "screens are 1920x1080", "expect": "allow"}
+{"text": "padding: 16px 24px", "expect": "allow"}
+{"text": "color is #FF5733", "expect": "allow"}
+{"text": "rgba(255, 87, 51, 0.8)", "expect": "allow"}
+{"text": "grid is 12 columns", "expect": "allow"}
+{"text": "retry after 30 seconds", "expect": "allow"}
+{"text": "cache ttl 86400", "expect": "allow"}
+{"text": "estimate: 40 hours over 2 weeks", "expect": "allow"}
+{"text": "standup at nine thirty", "expect": "allow"}
+{"text": "lunch at noon?", "expect": "allow"}
+{"text": "see you at the office", "expect": "allow"}
+{"text": "look at google.com for the pattern", "expect": "allow"}
+{"text": "point taken, let's move on", "expect": "allow"}
+{"text": "the dot release fixed it", "expect": "allow"}
+{"text": "connect the dots later", "expect": "allow"}
+{"text": "meet me at the cafe at five", "expect": "allow"}
+{"text": "he's at lunch, back at 2", "expect": "allow"}
+{"text": "typing dot dot dot", "expect": "allow"}
+{"text": "zoom link is in the calendar invite", "expect": "allow"}
+{"text": "jump on a huddle in 5?", "expect": "allow"}
+{"text": "recording will be shared after the call", "expect": "allow"}
+{"text": "call it a day", "expect": "allow"}
+{"text": "on it, give me 20 mins", "expect": "allow"}
+{"text": "shipped, great work everyone", "expect": "allow"}
+{"text": "the client approved milestone 2", "expect": "allow"}
+{"text": "payment for milestone 1 is marked done", "expect": "allow"}
+{"text": "let's discuss pricing in the thread", "expect": "allow"}
+{"text": "designs-final-v3.zip uploaded", "expect": "allow"}
+{"text": "brief.pdf and wireframes.fig attached", "expect": "allow"}
+{"text": "renamed the branch to feature/chat-ui", "expect": "allow"}
+{"text": "ENV var SUPABASE_SERVICE_ROLE_KEY is missing", "expect": "allow"}
+{"text": "the api key rotated at midnight", "expect": "allow"}
+{"text": "we are at capacity this sprint", "expect": "allow"}
+{"text": "good catch, fixed in the latest push", "expect": "allow"}
+{"text": "let me look at it after standup", "expect": "allow"}
+{"text": "spec section 9 covers the write path", "expect": "allow"}
+{"text": "left a comment at line 142", "expect": "allow"}
+{"text": "the array is 0-indexed", "expect": "allow"}
+{"text": "timeout is 120000 ms", "expect": "allow"}
+{"text": "retries: 3, backoff: 250ms", "expect": "allow"}
+{"text": "released to 10% of users", "expect": "allow"}
+{"text": "map zoom level 12 looks right", "expect": "allow"}
+{"text": "sprint velocity was 34 points", "expect": "allow"}
+{"text": "meeting moved to thursday", "expect": "allow"}
+{"text": "can you re-run the pipeline?", "expect": "allow"}
+{"text": "the contrast ratio is 4.5:1", "expect": "allow"}
+{"text": "tests green, 148 passed 0 failed", "expect": "allow"}

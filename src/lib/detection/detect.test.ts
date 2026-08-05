@@ -1,0 +1,107 @@
+import { describe, expect, it } from 'vitest'
+
+import { detect } from './index'
+
+/**
+ * Targeted acceptance tests (M2-08) — the named cases from the spec and
+ * TECHNICAL_PLAN, asserted individually. The corpus gate measures aggregate
+ * quality; these pin the behaviors we quoted to the team lead.
+ */
+describe('detect() — spec acceptance cases', () => {
+  it('holds "reach me at john@gmail.com"', () => {
+    const verdict = detect('reach me at john@gmail.com')
+    expect(verdict.action).toBe('hold')
+    expect(verdict.findings[0]?.type).toBe('email')
+  })
+
+  it('holds "my number is +92 300 1234567"', () => {
+    const verdict = detect('my number is +92 300 1234567')
+    expect(verdict.action).toBe('hold')
+    expect(verdict.findings[0]?.type).toBe('phone')
+  })
+
+  it('holds spaced digits "0300 1234567"', () => {
+    expect(detect('0300 1234567').action).toBe('hold')
+  })
+
+  it('flags but DELIVERS a pasted service email (three-tier, not two)', () => {
+    const verdict = detect('see the error from noreply@stripe.com')
+    expect(verdict.action).toBe('flag_only')
+    expect(verdict.findings).toHaveLength(1)
+  })
+
+  it('allows a plain work message untouched', () => {
+    const verdict = detect('PR is up at github.com/acme/api')
+    expect(verdict.action).toBe('allow')
+    expect(verdict.findings).toHaveLength(0)
+  })
+
+  it('holds a wa.me link', () => {
+    expect(detect('wa.me/923001234567').action).toBe('hold')
+  })
+
+  it('holds a flagged filename (M7-02 path)', () => {
+    expect(detect('call-me-+923001234567.pdf').action).toBe('hold')
+  })
+})
+
+describe('detect() — obfuscation and evasion', () => {
+  it('catches "[at] ... [dot]" obfuscation', () => {
+    expect(detect('john [at] gmail [dot] com').action).toBe('hold')
+  })
+
+  it('catches bare "at ... dot" obfuscation', () => {
+    expect(detect('ahmed at gmail dot com').action).toBe('hold')
+  })
+
+  it('catches a Cyrillic homoglyph email and maps the span to the original text', () => {
+    const original = 'jоhn@gmail.com' // Cyrillic о
+    const verdict = detect(original)
+    expect(verdict.action).toBe('hold')
+    const [start, end] = verdict.findings[0].span
+    expect(original.slice(start, end)).toBe(original)
+  })
+
+  it('catches a zero-width-space split email', () => {
+    expect(detect('jo​hn@gmail.com').action).toBe('hold')
+  })
+
+  it('an obfuscated email at an allowlisted domain still holds (evasion is evasion)', () => {
+    expect(detect('me [at] github [dot] com').action).toBe('hold')
+  })
+})
+
+describe('detect() — false-positive guards', () => {
+  it.each([
+    'order #4471234 shipped',
+    'v2.0.1 is tagged',
+    'the demo is on 2026-08-04',
+    'look at google.com for the pattern',
+    'budget approved: PKR 10 500 000',
+    'whitelist 192.168.1.100 on the vpn',
+  ])('does not hold %j', (text) => {
+    expect(detect(text).action).not.toBe('hold')
+  })
+
+  it('caps identifier digit runs at flag_only (zoom id, tracking number)', () => {
+    expect(detect('zoom meeting id 883 7623 1157').action).toBe('flag_only')
+    expect(detect('tracking number 9205 5000 1234').action).toBe('flag_only')
+  })
+})
+
+describe('detect() — workspace config', () => {
+  it('demotes the workspace own-domain emails to flag_only', () => {
+    const verdict = detect('bill it to accounts@myagency.io', {
+      workspaceDomains: ['myagency.io'],
+    })
+    expect(verdict.action).toBe('flag_only')
+  })
+
+  it('the same email HOLDS without the workspace domain configured', () => {
+    expect(detect('bill it to accounts@myagency.io').action).toBe('hold')
+  })
+
+  it('empty input allows', () => {
+    expect(detect('').action).toBe('allow')
+  })
+})

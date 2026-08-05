@@ -1,0 +1,65 @@
+# CI (M0-05) — a PR with a lint error, type error, or failing test cannot merge.
+#
+# Two jobs:
+#   checks — lint, typecheck, unit tests. No Docker, fast feedback.
+#   db     — boots the Supabase stack and runs grant/RLS/invariant tests.
+#            These assert properties enforced by Postgres itself (M1-12, M1-13),
+#            so they cannot run without a real database.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      # Includes the detection corpus gate (M2-10): ≥95% recall on hold cases,
+      # <5% false-hold rate — the spec's §11 metric enforced per commit.
+      - run: npm run test:unit
+
+  db:
+    name: Database invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: npm ci
+
+      - name: Start Supabase stack (applies all migrations)
+        run: supabase start
+
+      - name: Run db tests (isolation + invariants)
+        run: npm run test:db
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321

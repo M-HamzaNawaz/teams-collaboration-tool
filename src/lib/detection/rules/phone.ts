@@ -1,0 +1,147 @@
+import type { Rule, RuleMatch } from '../types'
+
+/**
+ * Phone rules (M2-04) — the highest false-positive risk in the engine: order
+ * numbers, IDs, timestamps, IPs, versions, and money amounts all look like
+ * digit runs. The design is layered confidence rather than one regex:
+ *
+ *   - explicit international prefix (+92 …)   → high confidence, holds
+ *   - separated groups with phone shape       → medium; leading 0 / (area)
+ *     or phone-words nearby push it over the hold threshold
+ *   - bare 10–13 digit runs                   → low, flags only unless the
+ *     surrounding words say it's a phone number ("call me on …")
+ *
+ * plus hard guards for the known impostors (dates, money, IDs, meeting pins).
+ */
+
+/** +CC or 00CC followed by 7–14 more digits with optional separators. */
+const INTERNATIONAL =
+  /(?:\+|00)\d{1,3}[\s.()-]{0,3}\d(?:[\s.()-]{0,3}\d){6,13}/g
+
+/** Grouped digits: (0300) 123-4567, 0300 1234567, 021.3456.7890 … */
+const SEPARATED =
+  /(?<![\d.,-])(?:\(\d{2,4}\)|\d{2,4})(?:[\s.-]\d{2,8}){1,4}(?![\d,.-])/g
+
+/** Bare digit run, phone-length. Hyphen in the guards keeps UUID/ID segments out. */
+const CONTIGUOUS = /(?<![\d.,-])\d{10,13}(?![\d.,-])/g
+
+/** Spelled-out digits: "zero three zero zero one two three…" (≥7 digit-words). */
+const SPELLED =
+  /\b(?:(?:zero|one|two|three|four|five|six|seven|eight|nine|oh)[\s,-]+){6,}(?:zero|one|two|three|four|five|six|seven|eight|nine|oh)\b/g
+
+/**
+ * Words shortly before a match that say "this is a phone number". The window
+ * allows letters between keyword and digits ("call me on 0300…") but no other
+ * digits, so the keyword binds to THIS number and not an earlier one.
+ */
+const CONTEXT =
+  /(?:number|phone|mobile|cell|call|text|dial|ring|whatsapp|contact|reach)\b[^0-9]{0,20}$/
+
+/**
+ * Words that say the digits are an identifier, not a phone: tracking numbers,
+ * Zoom meeting IDs, OTPs, invoice refs. Overrides CONTEXT (…"tracking number"
+ * contains "number") and caps confidence below the hold threshold — the
+ * message delivers flagged instead of freezing a courier update.
+ */
+const NEGATIVE_CONTEXT =
+  /(?:tracking|order|invoice|account|ticket|case|reference|ref|serial|pin|code|otp|passcode|id|txn|transaction|iban|version|build)\b[^0-9]{0,24}$/
+
+/** Impostor guards, tested against the matched text itself. */
+const ISO_DATE_START = /^(?:19|20)\d{2}\b/ // 2026-08-04, "2024 2025" year lists
+const CURRENCY_NEAR = /(?:rs|pkr|usd|eur|gbp|aed|inr|[$€£₹])\s*\.?\s*$/
+
+function digitCount(s: string): number {
+  return (s.match(/\d/g) ?? []).length
+}
+
+type Signals = { boost: number; capped: boolean }
+
+function contextSignals(text: string, start: number): Signals {
+  const window = text.slice(Math.max(0, start - 40), start)
+  if (NEGATIVE_CONTEXT.test(window)) return { boost: 0, capped: true }
+  return { boost: CONTEXT.test(window) ? 0.25 : 0, capped: false }
+}
+
+/** Char immediately before the match — '#' or a letter means ID/version, not phone. */
+function precededByIdMarker(text: string, start: number): boolean {
+  if (start === 0) return false
+  const before = text[start - 1]
+  return before === '#' || /[a-z]/.test(before)
+}
+
+function finalize(base: number, signals: Signals): number {
+  if (signals.capped) return Math.min(base, 0.5)
+  return Math.min(0.98, base + signals.boost)
+}
+
+export const phoneRules: Rule[] = [
+  {
+    id: 'phone.international',
+    type: 'phone',
+    target: 'normalized',
+    find(text) {
+      const matches: RuleMatch[] = []
+      for (const m of text.matchAll(INTERNATIONAL)) {
+        const digits = digitCount(m[0])
+        if (digits < 8 || digits > 16) continue
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence: 0.95 })
+      }
+      return matches
+    },
+  },
+  {
+    id: 'phone.separated-groups',
+    type: 'phone',
+    target: 'normalized',
+    find(text) {
+      const matches: RuleMatch[] = []
+      for (const m of text.matchAll(SEPARATED)) {
+        const s = m[0]
+        const digits = digitCount(s)
+        if (digits < 7 || digits > 14) continue
+        if (ISO_DATE_START.test(s)) continue // dates, datetimes, year ranges
+        if (CURRENCY_NEAR.test(text.slice(Math.max(0, m.index - 8), m.index))) continue // "PKR 10 500 000"
+        if (precededByIdMarker(text, m.index)) continue
+
+        // Leading 0 or a parenthesised area code is a strong phone signal;
+        // other grouped digits stay below the hold threshold unless the
+        // words around them say phone.
+        const strongShape = /^[(0]/.test(s)
+        const signals = contextSignals(text, m.index)
+        const confidence = finalize(strongShape ? 0.75 : 0.62, signals)
+        matches.push({ start: m.index, end: m.index + s.length, confidence })
+      }
+      return matches
+    },
+  },
+  {
+    id: 'phone.contiguous',
+    type: 'phone',
+    target: 'normalized',
+    find(text) {
+      const matches: RuleMatch[] = []
+      for (const m of text.matchAll(CONTIGUOUS)) {
+        if (precededByIdMarker(text, m.index)) continue
+        if (ISO_DATE_START.test(m[0]) && m[0].length <= 10) continue // 2026080400-ish stamps
+        // Bare digit runs are timestamps, order IDs, tracking numbers — a
+        // leading 0 (03001234567) or phone words nearby raise it to hold.
+        const signals = contextSignals(text, m.index)
+        const confidence = finalize(m[0].startsWith('0') ? 0.72 : 0.6, signals)
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence })
+      }
+      return matches
+    },
+  },
+  {
+    id: 'phone.spelled-digits',
+    type: 'phone',
+    target: 'normalized',
+    find(text) {
+      const matches: RuleMatch[] = []
+      for (const m of text.matchAll(SPELLED)) {
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence: 0.85 })
+      }
+      return matches
+    },
+  },
+]
