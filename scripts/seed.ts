@@ -163,7 +163,7 @@ export async function seed(databaseUrl: string = DATABASE_URL): Promise<void> {
         (workspace_id, group_id, email, display_name, member_role, role_label, token_hash, expires_at, created_by) values
         (${SEED.wsA}, ${SEED.groups.unipile}, 'newdev@seed-a.confide.test',
          'Hassan', 'member', 'Backend Developer',
-         'a'.repeat(64), now() + interval '7 days', ${SEED.users.usman})
+         ${'a'.repeat(64)}, now() + interval '7 days', ${SEED.users.usman})
       on conflict (token_hash) do nothing`
 
     await sql`
