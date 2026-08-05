@@ -16,7 +16,7 @@ Admin-only creation. Members list only their own active groups; there is no grou
 
 ---
 
-### M4-02 — Archive, delete, tombstone · `todo` · 6 h
+### M4-02 — Archive, delete, tombstone · `done` · 6 h
 
 `active → archived → deleted`, all as state transitions. Archived is read-only and invisible to members but fully readable by the admin. Permanent deletion sits behind a type-to-confirm dialog, purges messages and files, sets `status = 'deleted'`, and leaves a tombstone row so audit entries referencing the group stay readable.
 
