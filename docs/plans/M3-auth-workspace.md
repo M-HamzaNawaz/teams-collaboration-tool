@@ -6,7 +6,7 @@ Sessions, the workspace bootstrap, and the two functions every later mutation de
 
 ---
 
-### M3-01 — Supabase Auth wiring · `todo` · 4 h
+### M3-01 — Supabase Auth wiring · `done` · 4 h
 
 Email + password auth, SSR session helpers, Next.js middleware for route protection, a typed `getSession()` returning user + workspace + role.
 
@@ -14,7 +14,7 @@ Email + password auth, SSR session helpers, Next.js middleware for route protect
 
 ---
 
-### M3-02 — Short JWT lifetime and revocation · `todo` · 4 h
+### M3-02 — Short JWT lifetime and revocation · `done` · 4 h
 
 JWT expiry set to **10 minutes** with transparent refresh-token rotation. Removal revokes refresh tokens via `auth.admin.signOut(userId, 'global')`.
 
@@ -26,7 +26,7 @@ Backs the spec's "session invalidated within seconds" criterion. Note the real m
 
 ---
 
-### M3-03 — Signup and workspace creation · `todo` · 4 h
+### M3-03 — Signup and workspace creation · `done` · 4 h
 
 Admin signs up → workspace is created → the first user becomes its Admin, in one transaction. Seeds default `role_visibility_rules` (M8-01) and the default detection config (M2-07).
 
@@ -36,7 +36,7 @@ Admin signs up → workspace is created → the first user becomes its Admin, in
 
 ---
 
-### M3-04 — Login, logout, password reset · `todo` · 4 h
+### M3-04 — Login, logout, password reset · `done` · 4 h
 
 Standard flows with rate limiting on login and reset request.
 
@@ -46,7 +46,7 @@ Standard flows with rate limiting on login and reset request.
 
 ---
 
-### M3-05 — `audit()` writer · `todo` · 4 h
+### M3-05 — `audit()` writer · `done` · 4 h
 
 One helper, called in the same transaction as the write it records. Captures actor, workspace, group, event type, payload, and the denormalized display name and group name (M1-06).
 
@@ -58,7 +58,7 @@ Wired into every mutation from the very first one. Retrofitting means auditing e
 
 ---
 
-### M3-06 — `authorize()` helper · `todo` · 6 h
+### M3-06 — `authorize()` helper · `done` · 6 h
 
 ```ts
 authorize(userId, { workspace, group?, action }): Promise<AuthzResult>

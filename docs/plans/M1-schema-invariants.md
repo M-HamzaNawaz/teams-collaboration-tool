@@ -6,7 +6,7 @@ The database layer, and the point at which the three invariants stop being polic
 
 ---
 
-### M1-01 — Enums, workspaces, users, profiles · `todo` · 3 h
+### M1-01 — Enums, workspaces, users, profiles · `done` · 3 h
 
 Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_doc_type`, `detection_action`). Tables: `workspaces`, `users` (mirrors auth, holds real email/phone), `profiles` (PK `(user_id, workspace_id)`).
 
@@ -14,7 +14,7 @@ Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_
 
 ---
 
-### M1-02 — Groups and membership · `todo` · 2 h
+### M1-02 — Groups and membership · `done` · 2 h
 
 `groups` with `status ∈ (active, archived, deleted)` plus `archived_at` / `deleted_at`. `group_members` with `removed_at` for soft removal.
 
@@ -26,7 +26,7 @@ Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_
 
 ---
 
-### M1-03 — Invitations and consents · `todo` · 2 h
+### M1-03 — Invitations and consents · `done` · 2 h
 
 `invitations` storing `token_hash` only (never the raw token), with `expires_at` and `accepted_at`. `consents` with `doc_type`, `doc_version`, `accepted_at`, `ip`, `user_agent`.
 
@@ -36,7 +36,7 @@ Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_
 
 ---
 
-### M1-04 — Messages and flags · `todo` · 2 h
+### M1-04 — Messages and flags · `done` · 2 h
 
 `messages(id, workspace_id, group_id NOT NULL, sender_id, body, status, created_at, delivered_at)`. `message_flags(message_id, findings_jsonb, action, resolution, resolved_by, resolved_at)`.
 
@@ -48,7 +48,7 @@ Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_
 
 ---
 
-### M1-05 — Files and name change requests · `todo` · 2 h
+### M1-05 — Files and name change requests · `done` · 2 h
 
 `files` with `scan_status`. `name_change_requests(user_id, requested_name, findings_jsonb, status, reviewed_by, reviewed_at)` — the requested string is scanned before an admin sees it (M4-07).
 
@@ -58,7 +58,7 @@ Enums (`group_status`, `message_status`, `member_role`, `scan_status`, `consent_
 
 ---
 
-### M1-06 — Audit log + immutability · `todo` · 4 h
+### M1-06 — Audit log + immutability · `done` · 4 h
 
 Append-only `audit_log`. Denormalized `actor_display_name` and `group_name` as text, **no foreign keys** — entries must stay readable after the user or group is deleted.
 
@@ -76,7 +76,7 @@ CREATE TRIGGER audit_log_no_mutate BEFORE UPDATE OR DELETE ON audit_log
 
 ---
 
-### M1-07 — Audit hash chain · `todo` · 4 h
+### M1-07 — Audit hash chain · `done` · 4 h
 
 `prev_hash` / `row_hash` columns, a `BEFORE INSERT` trigger computing `row_hash = sha256(prev_hash || canonical row)`, and a `verify_audit_chain(workspace_id)` function.
 
@@ -88,7 +88,7 @@ Turns "we have logs" into "we can show the logs were not altered" — the distin
 
 ---
 
-### M1-08 — Grant lockdown · `todo` · 3 h
+### M1-08 — Grant lockdown · `done` · 3 h
 
 The mechanism behind the write path:
 
@@ -104,7 +104,7 @@ REVOKE SELECT ON users FROM authenticated, anon;                     -- real con
 
 ---
 
-### M1-09 — RLS helper functions · `todo` · 3 h
+### M1-09 — RLS helper functions · `done` · 3 h
 
 `is_workspace_member(ws)`, `is_workspace_admin(ws)`, `is_active_group_member(gid)`, `can_manage_group(gid)`. `STABLE` and `SECURITY DEFINER`, indexed lookups — these run on every policy evaluation.
 
@@ -114,7 +114,7 @@ REVOKE SELECT ON users FROM authenticated, anon;                     -- real con
 
 ---
 
-### M1-10 — RLS policies · `todo` · 6 h
+### M1-10 — RLS policies · `done` · 6 h
 
 `ENABLE ROW LEVEL SECURITY` on every table, plus policies. Key ones:
 
@@ -128,7 +128,7 @@ REVOKE SELECT ON users FROM authenticated, anon;                     -- real con
 
 ---
 
-### M1-11 — Seed script · `todo` · 3 h
+### M1-11 — Seed script · `done` · 3 h
 
 Two full workspaces (A and B) with overlapping shapes: same email in both, groups with identical names, archived and deleted groups, held and delivered messages. Deterministic UUIDs so tests can assert against them.
 
@@ -138,7 +138,7 @@ Two full workspaces (A and B) with overlapping shapes: same email in both, group
 
 ---
 
-### M1-12 — Cross-tenant isolation harness · `todo` · 6 h
+### M1-12 — Cross-tenant isolation harness · `done` · 6 h
 
 Enumerates tables from `information_schema`, and for each attempts SELECT / INSERT / UPDATE / DELETE as a workspace-B user against workspace-A rows. **A new table with no isolation coverage fails CI** — the list is generated, not hand-maintained.
 
@@ -150,7 +150,7 @@ The spec calls a cross-workspace leak company-ending; this is the test that back
 
 ---
 
-### M1-13 — Invariant test suite · `todo` · 4 h
+### M1-13 — Invariant test suite · `done` · 4 h
 
 Direct tests of the three invariants:
 

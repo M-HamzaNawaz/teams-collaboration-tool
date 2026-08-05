@@ -8,7 +8,7 @@ A pure TypeScript module: text in, findings out. No database, no network, no fra
 
 ---
 
-### M2-01 — Types and interface · `todo` · 2 h
+### M2-01 — Types and interface · `done` · 2 h
 
 ```ts
 type Finding = {
@@ -29,7 +29,7 @@ Synchronous and pure. Phase 2's LLM pass arrives as `detectAsync()` behind the s
 
 ---
 
-### M2-02 — Normalizer with offset mapping · `todo` · 6 h
+### M2-02 — Normalizer with offset mapping · `done` · 6 h
 
 Lowercase, map Unicode confusables to ASCII (Cyrillic `а` → `a`, a one-character bypass otherwise), strip zero-width characters, collapse whitespace and separator runs.
 
@@ -41,7 +41,7 @@ Every transform records an index map so spans found in normalized text map back 
 
 ---
 
-### M2-03 — Email rules · `todo` · 4 h
+### M2-03 — Email rules · `done` · 4 h
 
 Standard addresses plus the obfuscations that matter: `[at]`, `(at)`, ` at `, `dot`, `name at gmail dot com`, spaced-out domains.
 
@@ -51,7 +51,7 @@ Standard addresses plus the obfuscations that matter: `[at]`, `(at)`, ` at `, `d
 
 ---
 
-### M2-04 — Phone rules · `todo` · 6 h
+### M2-04 — Phone rules · `done` · 6 h
 
 International formats, `+92 300 1234567`, dotted and dashed digits, parenthesised area codes, spaced digit runs, and spelled-out digits ("three zero zero…").
 
@@ -63,7 +63,7 @@ Highest false-positive risk in the whole engine — order numbers, IDs, version 
 
 ---
 
-### M2-05 — Payment handle and crypto rules · `todo` · 4 h
+### M2-05 — Payment handle and crypto rules · `done` · 4 h
 
 PayPal.me, IBAN (with checksum validation to cut false positives), Wise, Payoneer, BTC / ETH / TRON addresses.
 
@@ -73,7 +73,7 @@ PayPal.me, IBAN (with checksum validation to cut false positives), Wise, Payonee
 
 ---
 
-### M2-06 — Contact link rules · `todo` · 3 h
+### M2-06 — Contact link rules · `done` · 3 h
 
 LinkedIn, `wa.me`, `t.me`, Instagram, Facebook, Skype, Discord, Signal — bare, `www.`, and full-URL forms.
 
@@ -83,7 +83,7 @@ LinkedIn, `wa.me`, `t.me`, Instagram, Facebook, Skype, Discord, Signal — bare,
 
 ---
 
-### M2-07 — Allowlist layer · `todo` · 3 h
+### M2-07 — Allowlist layer · `done` · 3 h
 
 Per-workspace, admin-editable: the agency's own domain, plus defaults (`github.com`, `stripe.com`, `figma.com`, `vercel.com`, `noreply@*`).
 
@@ -95,7 +95,7 @@ This layer is what makes the false-positive rate survivable and the platform usa
 
 ---
 
-### M2-08 — Three-tier action mapping · `todo` · 4 h
+### M2-08 — Three-tier action mapping · `done` · 4 h
 
 Findings → `allow` | `flag_only` | `hold`, per-workspace configurable.
 
@@ -107,7 +107,7 @@ The spec holds every match. That strangles adoption — a stack trace containing
 
 ---
 
-### M2-09 — Test corpus · `todo` · 8 h
+### M2-09 — Test corpus · `done` · 8 h
 
 `~200` cases in `src/lib/detection/__fixtures__/corpus.jsonl`:
 
@@ -125,7 +125,7 @@ Roughly half positives (including deliberate obfuscation attempts), half realist
 
 ---
 
-### M2-10 — Metrics harness and CI gate · `todo` · 4 h
+### M2-10 — Metrics harness and CI gate · `done` · 4 h
 
 Scores the corpus and fails the build below **≥95% recall on `hold` cases** or **>5% false-hold rate on negatives** — the spec's §11 success metric, enforced per commit instead of measured once at the end.
 

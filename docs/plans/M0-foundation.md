@@ -6,7 +6,7 @@ Repo, tooling, CI, and the two database clients. Nothing here is product code, b
 
 ---
 
-### M0-01 — Scaffold Next.js app · `todo` · 2 h
+### M0-01 — Scaffold Next.js app · `done` · 2 h
 
 Next.js 15 App Router, TypeScript strict, Tailwind, ESLint, `src/` layout, `@/*` import alias.
 
@@ -16,7 +16,7 @@ Next.js 15 App Router, TypeScript strict, Tailwind, ESLint, `src/` layout, `@/*`
 
 ---
 
-### M0-02 — Git init and repo hygiene · `todo` · 1 h
+### M0-02 — Git init and repo hygiene · `done` · 1 h
 
 `git init`, `.gitignore` (includes `.env*.local`, `supabase/.temp`, `.next`), `.env.example` documenting every required key, `README.md` stub.
 
@@ -24,7 +24,7 @@ Next.js 15 App Router, TypeScript strict, Tailwind, ESLint, `src/` layout, `@/*`
 
 ---
 
-### M0-03 — Supabase local stack · `todo` · 3 h
+### M0-03 — Supabase local stack · `done` · 3 h
 
 `supabase init`, Docker-based local stack, `supabase/migrations/` wired up. Scripts: `db:start`, `db:reset`, `db:diff`, `db:push`.
 
@@ -34,7 +34,7 @@ Next.js 15 App Router, TypeScript strict, Tailwind, ESLint, `src/` layout, `@/*`
 
 ---
 
-### M0-04 — Test runner · `todo` · 3 h
+### M0-04 — Test runner · `done` · 3 h
 
 Vitest with two projects: `unit` (pure, fast, no Docker) and `db` (integration, requires the local stack). Separate scripts so unit tests stay runnable without Docker.
 
@@ -44,7 +44,7 @@ Vitest with two projects: `unit` (pure, fast, no Docker) and `db` (integration, 
 
 ---
 
-### M0-05 — CI pipeline · `todo` · 3 h
+### M0-05 — CI pipeline · `done` · 3 h
 
 GitHub Actions: lint → typecheck → unit tests → boot Supabase → db tests. Runs on every push and PR.
 
@@ -54,7 +54,7 @@ GitHub Actions: lint → typecheck → unit tests → boot Supabase → db tests
 
 ---
 
-### M0-06 — Env config module · `todo` · 2 h
+### M0-06 — Env config module · `done` · 2 h
 
 `src/lib/env.ts` — Zod-validated environment parsing, split into `serverEnv` and `publicEnv`. Throws at boot on a missing or malformed key.
 
@@ -62,7 +62,7 @@ GitHub Actions: lint → typecheck → unit tests → boot Supabase → db tests
 
 ---
 
-### M0-07 — Database client factories · `todo` · 3 h
+### M0-07 — Database client factories · `done` · 3 h
 
 Two clients, deliberately separated:
 

@@ -1,14 +1,16 @@
 # Testing Guide
 
-What tests exist, which ones need Docker, and exactly how to run everything once Docker is installed.
+What tests exist, which ones need Docker, and exactly how to run everything.
 
-## Current situation on this PC
+## Current situation
 
-| Suite | Needs Docker? | Status here |
+| Suite | Needs Docker? | Status |
 |---|---|---|
-| Unit tests (detection engine, rate limiter, guards) | No | ✅ Runs now — 38 tests green |
-| DB tests (isolation, invariants, authorize matrix) | **Yes** | ⛔ Blocked — Docker not installed |
-| Same DB tests in GitHub Actions | No (CI has Docker) | ✅ Run on every push |
+| Unit tests (detection engine, rate limiter, guards) | No | ✅ 38 tests green |
+| DB tests (isolation, invariants, authorize matrix) | **Yes** | ✅ 42 tests green locally (Linux ThinkPad, 2026-08-06) |
+| Same DB tests in GitHub Actions | No (CI has Docker) | Runs on every push — **first passable commit is `b4584ba`**: before it, newer Supabase images left no data grants and 8 denial tests were structurally unpassable (postgres.js rejects `begin()` on any inner query error, even a caught one) |
+
+> **Machine notes (Linux ThinkPad):** system node is v12 — use `export PATH="$HOME/.local/node22/bin:$PATH"` first. Supabase CLI is at `~/.local/bin/supabase`; `supabase db reset` fails on this CLI version (`LegacyDbBootstrapError`) — apply new migrations with `supabase migration up` instead. The Windows-oriented setup steps below still apply to the other PC.
 
 The db tests assert things **Postgres itself** enforces — grants, Row Level Security, triggers, the audit hash chain. They cannot be simulated without a real database, which is why they need the local Supabase stack, which runs on Docker.
 

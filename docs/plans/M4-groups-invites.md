@@ -6,7 +6,7 @@ Group lifecycle, the invitation flow, and the consent record. Two of the three i
 
 ---
 
-### M4-01 — Group creation and listing · `todo` · 4 h
+### M4-01 — Group creation and listing · `done` · 4 h
 
 Admin-only creation. Members list only their own active groups; there is no group directory and no "start a chat" affordance anywhere in the UI.
 

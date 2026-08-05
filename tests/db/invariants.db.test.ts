@@ -83,8 +83,18 @@ describe('I3 — archive ≠ delete; the audit log is permanent', () => {
       expect(groups.map((g) => g.id)).toEqual([SEED.groups.unipile])
     })
     await asUser(SEED.users.usman, async (tx) => {
-      const groups = await tx<Array<{ id: string }>>`select id from public.groups where workspace_id = ${SEED.wsA}`
-      expect(groups.length, 'admin must see active + archived + tombstone').toBe(3)
+      // Anchored on the seeded ids, not a global count — the local db doubles
+      // as the dev database, so rows created by real app usage must not fail
+      // the invariant. What matters: ALL THREE states are visible to admin.
+      const groups = await tx<Array<{ id: string }>>`
+        select id from public.groups
+        where id in (${SEED.groups.unipile}, ${SEED.groups.phoneApp}, ${SEED.groups.oldSite})`
+      expect(
+        groups.map((g) => g.id).sort(),
+        'admin must see active + archived + tombstone',
+      ).toEqual(
+        [SEED.groups.unipile, SEED.groups.phoneApp, SEED.groups.oldSite].sort(),
+      )
     })
   })
 

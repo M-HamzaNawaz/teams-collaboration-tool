@@ -63,18 +63,26 @@ export async function seed(databaseUrl: string = DATABASE_URL): Promise<void> {
 
   try {
     // -- auth.users (trigger mirrors into public.users) ---------------------
+    // The token columns MUST be '' rather than their NULL default: GoTrue
+    // scans them into Go strings and a NULL breaks every auth call for the
+    // row with "Database error querying schema" (500) — which surfaces as
+    // "invalid credentials" and is miserable to debug from the outside.
     for (const user of AUTH_USERS) {
       await sql`
         insert into auth.users
           (instance_id, id, aud, role, email, encrypted_password,
            email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-           created_at, updated_at)
+           created_at, updated_at,
+           confirmation_token, recovery_token, email_change,
+           email_change_token_new, email_change_token_current,
+           phone_change, phone_change_token, reauthentication_token)
         values
           ('00000000-0000-0000-0000-000000000000', ${user.id}, 'authenticated',
            'authenticated', ${user.email},
            extensions.crypt('seed-password-123', extensions.gen_salt('bf')),
            now(), '{"provider":"email","providers":["email"]}', '{}',
-           now(), now())
+           now(), now(),
+           '', '', '', '', '', '', '', '')
         on conflict (id) do nothing`
     }
 
