@@ -58,7 +58,11 @@ jobs:
       - name: Start Supabase stack (applies all migrations)
         run: supabase start
 
-      - name: Run db tests (isolation + invariants)
+      # Exports API_URL / SERVICE_ROLE_KEY etc. for the authorize() suite.
+      - name: Export Supabase env
+        run: supabase status -o env | sed 's/"//g' >> "$GITHUB_ENV"
+
+      - name: Run db tests (isolation + invariants + authorize matrix)
         run: npm run test:db
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres

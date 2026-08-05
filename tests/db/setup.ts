@@ -15,7 +15,20 @@ export const TEST_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
 
 export const TEST_SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.API_URL ?? // `supabase status -o env` (CI)
+  'http://127.0.0.1:54321'
+
+/**
+ * Service-role key for authorize() tests. Resolution order: explicit env,
+ * CI's `supabase status -o env` export, then the WELL-KNOWN local demo key
+ * every `supabase start` stack accepts by default — a published constant for
+ * local development, secret to nothing.
+ */
+export const TEST_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SERVICE_ROLE_KEY ??
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
 
 beforeAll(async () => {
   // Fail fast with a useful message when the stack is down, instead of every
