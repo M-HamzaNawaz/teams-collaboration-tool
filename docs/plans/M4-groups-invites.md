@@ -28,7 +28,7 @@ Admin-only creation. Members list only their own active groups; there is no grou
 
 ---
 
-### M4-03 — Membership and removal · `todo` · 5 h
+### M4-03 — Membership and removal · `done` · 5 h
 
 Add and remove members with roles; at most one Manager per group (enforced by a partial unique index, not application code). Removal sets `removed_at`, revokes refresh tokens (M3-02), and broadcasts a `member_removed` event forcing the client to reload into a logged-out state.
 

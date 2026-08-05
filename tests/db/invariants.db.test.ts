@@ -79,8 +79,14 @@ describe('I2 — identity is admin-controlled', () => {
 describe('I3 — archive ≠ delete; the audit log is permanent', () => {
   it('archived groups are invisible to members but visible to the admin', async () => {
     await asUser(SEED.users.waleed, async (tx) => {
+      // Assert the invariant, not an exact list (the dev db accrues real
+      // groups): waleed sees his active group; the archived and tombstone
+      // groups do NOT exist for him.
       const groups = await tx<Array<{ id: string }>>`select id from public.groups`
-      expect(groups.map((g) => g.id)).toEqual([SEED.groups.unipile])
+      const ids = groups.map((g) => g.id)
+      expect(ids).toContain(SEED.groups.unipile)
+      expect(ids).not.toContain(SEED.groups.phoneApp)
+      expect(ids).not.toContain(SEED.groups.oldSite)
     })
     await asUser(SEED.users.usman, async (tx) => {
       // Anchored on the seeded ids, not a global count — the local db doubles
