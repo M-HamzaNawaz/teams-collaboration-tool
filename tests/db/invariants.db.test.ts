@@ -35,8 +35,10 @@ describe('I1 — no DMs, groups only', () => {
   })
 
   it('a member cannot create a group (only the API can, behind authorize())', async () => {
-    await asUser(SEED.users.ahmed, (tx) =>
-      expectPermissionDenied(tx`
+    // expectPermissionDenied wraps the WHOLE transaction: postgres.js rejects
+    // begin() when any query inside errors, even one caught in the callback.
+    await expectPermissionDenied(
+      asUser(SEED.users.ahmed, (tx) => tx`
         insert into public.groups (workspace_id, name, created_by)
         values (${SEED.wsA}, 'side channel', ${SEED.users.ahmed})`),
     )
@@ -45,8 +47,8 @@ describe('I1 — no DMs, groups only', () => {
 
 describe('I2 — identity is admin-controlled', () => {
   it('a member cannot update their own profile row', async () => {
-    await asUser(SEED.users.ahmed, (tx) =>
-      expectPermissionDenied(tx`
+    await expectPermissionDenied(
+      asUser(SEED.users.ahmed, (tx) => tx`
         update public.profiles
         set display_name = 'Ahmed — ahmed.dev@gmail.com'
         where user_id = ${SEED.users.ahmed} and workspace_id = ${SEED.wsA}`),
@@ -54,8 +56,9 @@ describe('I2 — identity is admin-controlled', () => {
   })
 
   it('a member cannot read real contact data (users table)', async () => {
-    await asUser(SEED.users.waleed, (tx) =>
-      expectPermissionDenied(tx`select email from public.users where id = ${SEED.users.ahmed}`),
+    await expectPermissionDenied(
+      asUser(SEED.users.waleed, (tx) =>
+        tx`select email from public.users where id = ${SEED.users.ahmed}`),
     )
   })
 
@@ -102,13 +105,13 @@ describe('I3 — archive ≠ delete; the audit log is permanent', () => {
   })
 
   it('audit_log rejects UPDATE and DELETE from service_role (grants)', async () => {
-    await asServiceRole((tx) =>
-      expectPermissionDenied(
+    await expectPermissionDenied(
+      asServiceRole((tx) =>
         tx`update public.audit_log set event_type = 'tampered' where false`,
       ),
     )
-    await asServiceRole((tx) =>
-      expectPermissionDenied(tx`delete from public.audit_log where false`),
+    await expectPermissionDenied(
+      asServiceRole((tx) => tx`delete from public.audit_log where false`),
     )
   })
 

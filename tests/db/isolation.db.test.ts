@@ -83,23 +83,26 @@ describe('cross-tenant reads: workspace B sees nothing of workspace A', () => {
     for (const table of tables) {
       if (table in WORKSPACE_ID_EXEMPT) continue
 
-      await asUser(SEED.users.bilal, async (tx) => {
-        let rows: unknown[]
-        try {
-          rows = await tx.unsafe(
+      // The catch sits OUTSIDE asUser: postgres.js rejects the whole begin()
+      // when any query inside errors, even a caught one — a denial must
+      // surface at the transaction level, not be handled within it.
+      let rows: unknown[]
+      try {
+        rows = await asUser(SEED.users.bilal, (tx) =>
+          tx.unsafe(
             `select 1 from public."${table}" where workspace_id = '${SEED.wsA}' limit 5`,
-          )
-        } catch (error) {
-          // Entirely unreadable is also a pass (users, invitations, audit_log…)
-          const code = (error as { code?: string }).code
-          if (code === '42501') return
-          throw error
-        }
-        expect(
-          rows.length,
-          `cross-tenant leak: table "${table}" showed workspace-A rows to a workspace-B user`,
-        ).toBe(0)
-      })
+          ),
+        )
+      } catch (error) {
+        // Entirely unreadable is also a pass (users, invitations, audit_log…)
+        const code = (error as { code?: string }).code
+        if (code === '42501') continue
+        throw error
+      }
+      expect(
+        rows.length,
+        `cross-tenant leak: table "${table}" showed workspace-A rows to a workspace-B user`,
+      ).toBe(0)
     }
   })
 
@@ -111,12 +114,12 @@ describe('cross-tenant reads: workspace B sees nothing of workspace A', () => {
   })
 
   it('users: unreadable by any authenticated user (real contact data)', async () => {
-    await asUser(SEED.users.bilal, (tx) =>
-      expectPermissionDenied(tx`select * from public.users limit 1`),
+    await expectPermissionDenied(
+      asUser(SEED.users.bilal, (tx) => tx`select * from public.users limit 1`),
     )
-    await asUser(SEED.users.usman, (tx) =>
-      // Even a workspace ADMIN reads real contact data via the API only.
-      expectPermissionDenied(tx`select * from public.users limit 1`),
+    // Even a workspace ADMIN reads real contact data via the API only.
+    await expectPermissionDenied(
+      asUser(SEED.users.usman, (tx) => tx`select * from public.users limit 1`),
     )
   })
 
@@ -136,13 +139,13 @@ describe('cross-tenant writes: denied at the grant layer', () => {
       const columns = await tableColumns(table)
       const anchor = columns.includes('workspace_id') ? 'workspace_id' : columns[0]
 
-      await asUser(SEED.users.bilal, (tx) =>
-        expectPermissionDenied(
+      await expectPermissionDenied(
+        asUser(SEED.users.bilal, (tx) =>
           tx.unsafe(`update public."${table}" set "${anchor}" = "${anchor}" where false`),
         ),
       )
-      await asUser(SEED.users.bilal, (tx) =>
-        expectPermissionDenied(
+      await expectPermissionDenied(
+        asUser(SEED.users.bilal, (tx) =>
           tx.unsafe(`delete from public."${table}" where false`),
         ),
       )
@@ -150,8 +153,8 @@ describe('cross-tenant writes: denied at the grant layer', () => {
   })
 
   it('a member cannot INSERT a message even into their OWN group (write path, M5-01)', async () => {
-    await asUser(SEED.users.ahmed, (tx) =>
-      expectPermissionDenied(tx`
+    await expectPermissionDenied(
+      asUser(SEED.users.ahmed, (tx) => tx`
         insert into public.messages (workspace_id, group_id, sender_id, body, status)
         values (${SEED.wsA}, ${SEED.groups.unipile}, ${SEED.users.ahmed}, 'bypass attempt', 'delivered')`),
     )

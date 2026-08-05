@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Runtime files the local Supabase stack drops while running (git-ignored).
+    "supabase/.temp/**",
   ]),
 ]);
 
