@@ -103,6 +103,7 @@ export default async function AppPage() {
       }}
       unreadByGroup={unreadByGroup}
       moderation={isAdmin || isManager ? { pendingCount } : null}
+      auditLink={isAdmin}
     />
   )
 }

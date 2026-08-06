@@ -1,0 +1,84 @@
+import { z } from 'zod'
+
+import { getSession } from '@/lib/auth/session'
+import { authorize } from '@/lib/authz/authorize'
+import { serviceClient } from '@/lib/supabase/service-client'
+
+/**
+ * GET /api/audit (M9-01) — the evidence query. Admin-only via
+ * authorize(workspace.manage); a manager gets 403 (acceptance).
+ *
+ * Filters COMPOSE (group, actor name, event type, date range) and paginate
+ * by keyset on id — stable under concurrent inserts, which an append-only
+ * log has constantly. Reads the DENORMALIZED actor_display_name/group_name
+ * columns, so entries outlive the people and groups they mention.
+ */
+
+const querySchema = z.object({
+  groupId: z.uuid().optional(),
+  actorName: z.string().trim().min(1).max(80).optional(),
+  eventType: z.string().trim().min(1).max(80).optional(),
+  from: z.iso.datetime({ offset: true }).optional(),
+  to: z.iso.datetime({ offset: true }).optional(),
+  before: z.coerce.number().int().positive().optional(), // keyset cursor
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+})
+
+export async function GET(request: Request) {
+  const session = await getSession()
+  if (!session) {
+    return Response.json({ error: 'authentication required' }, { status: 401 })
+  }
+  const workspaceId = session.profile.workspace_id
+
+  const url = new URL(request.url)
+  const parsed = querySchema.safeParse(
+    Object.fromEntries(url.searchParams.entries()),
+  )
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? 'invalid query' },
+      { status: 400 },
+    )
+  }
+  const q = parsed.data
+
+  const service = serviceClient()
+  const authz = await authorize(service, session.userId, {
+    workspaceId,
+    action: 'workspace.manage',
+  })
+  if (!authz.ok) {
+    return Response.json({ error: authz.reason }, { status: authz.status })
+  }
+
+  let query = service
+    .from('audit_log')
+    .select(
+      'id, actor_id, actor_display_name, group_id, group_name, event_type, payload_jsonb, created_at',
+    )
+    .eq('workspace_id', workspaceId)
+    .order('id', { ascending: false })
+    .limit(q.limit)
+
+  if (q.groupId) query = query.eq('group_id', q.groupId)
+  if (q.actorName) query = query.ilike('actor_display_name', `%${q.actorName}%`)
+  if (q.eventType) query = query.ilike('event_type', `${q.eventType}%`)
+  if (q.from) query = query.gte('created_at', q.from)
+  if (q.to) query = query.lte('created_at', q.to)
+  if (q.before) query = query.lt('id', q.before)
+
+  const { data, error } = await query
+  if (error) {
+    return Response.json({ error: 'audit query failed' }, { status: 500 })
+  }
+
+  const entries = data ?? []
+  return Response.json({
+    entries,
+    nextBefore:
+      entries.length === q.limit
+        ? (entries[entries.length - 1].id as number)
+        : null,
+  })
+}

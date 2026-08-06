@@ -6,7 +6,7 @@ The audit log is written from M3-05 onward; this milestone makes it readable. It
 
 ---
 
-### M9-01 — Query API · `todo` · 4 h
+### M9-01 — Query API · `done` · 4 h
 
 Admin-only, workspace-scoped, filterable by group, member, event type, and date range, with keyset pagination.
 
@@ -18,7 +18,7 @@ Reads the denormalized `actor_display_name` and `group_name` columns (M1-06), so
 
 ---
 
-### M9-02 — Viewer UI · `todo` · 5 h — **partly cuttable**
+### M9-02 — Viewer UI · `done` · 5 h — **partly cuttable**
 
 Table with filters, expandable payload, and CSV export for the dispute case the whole feature exists to serve.
 
@@ -30,7 +30,7 @@ Cut list (TECHNICAL_PLAN §9.1) allows shipping Phase 1 without this UI and quer
 
 ---
 
-### M9-03 — Chain verification job · `todo` · 3 h
+### M9-03 — Chain verification job · `done` · 3 h
 
 Scheduled `verify_audit_chain(workspace_id)` (M1-07) with alerting on failure, plus an on-demand run from the viewer.
 

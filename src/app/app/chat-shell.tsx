@@ -26,6 +26,7 @@ export function ChatShell(props: {
   me: Me
   unreadByGroup?: Record<string, number>
   moderation?: { pendingCount: number } | null
+  auditLink?: boolean
 }) {
   const [selected, setSelected] = useState<GroupRow | null>(
     props.groups[0] ?? null,
@@ -71,6 +72,7 @@ export function ChatShell(props: {
           onSelect={openGroup}
           unreadByGroup={props.unreadByGroup ?? {}}
           moderation={props.moderation ?? null}
+          auditLink={props.auditLink ?? false}
         />
       </aside>
 

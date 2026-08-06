@@ -22,6 +22,7 @@ export function GroupList(props: {
   onSelect: (group: GroupRow) => void
   unreadByGroup: Record<string, number>
   moderation: { pendingCount: number } | null
+  auditLink?: boolean
 }) {
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -125,6 +126,19 @@ export function GroupList(props: {
               {props.moderation.pendingCount}
             </span>
           )}
+        </a>
+      )}
+
+      {/* Audit log (M9-02) — admins only */}
+      {props.auditLink && (
+        <a
+          href="/app/audit"
+          className="mx-2 mb-2 flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-surface-2"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-a/15 text-sm">
+            📜
+          </span>
+          <span className="flex-1 text-sm font-medium">Audit log</span>
         </a>
       )}
 
