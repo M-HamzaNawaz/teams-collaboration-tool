@@ -71,6 +71,12 @@ export function ChatPane(props: {
   // M5-06/07: presence + connection state.
   const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; at: number }>>(new Map())
   const [reads, setReads] = useState<Map<string, string>>(new Map())
+  // M7: message_id → attachment metadata (files RLS-scoped to the group).
+  const [attachments, setAttachments] = useState<
+    Map<string, { id: string; name: string; sizeBytes: number }>
+  >(new Map())
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const attachmentsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
 
@@ -141,6 +147,35 @@ export function ChatPane(props: {
     }
     replayRef.current = replay
 
+    const refetchAttachments = async () => {
+      const { data: fileRows } = await supabase
+        .from('files')
+        .select('id, message_id, name, size_bytes')
+        .eq('group_id', props.group.id)
+      setAttachments(
+        new Map(
+          (fileRows ?? [])
+            .filter((f) => f.message_id)
+            .map((f) => [
+              f.message_id as string,
+              {
+                id: f.id as string,
+                name: f.name as string,
+                sizeBytes: f.size_bytes as number,
+              },
+            ]),
+        ),
+      )
+    }
+
+    // A message arriving over the wire may carry an attachment we don't
+    // know yet — debounce a files refetch behind every realtime event.
+    const onWireMessage = (message: RealtimeMessage) => {
+      upsert(message)
+      if (attachmentsTimer.current) clearTimeout(attachmentsTimer.current)
+      attachmentsTimer.current = setTimeout(() => void refetchAttachments(), 400)
+    }
+
     // Realtime must join AS THE USER: the subscription filter is validated
     // against columns the subscriber's role can SELECT, and anon can select
     // nothing on messages — joining before the SSR session is restored made
@@ -157,7 +192,7 @@ export function ChatPane(props: {
       channel = subscribeToGroupMessages(
         supabase,
         props.group.id,
-        upsert,
+        onWireMessage,
         (status) => {
           if (status === 'SUBSCRIBED') {
             setConnected(true)
@@ -227,6 +262,7 @@ export function ChatPane(props: {
             .map((m) => [m.user_id as string, m.last_read_at as string]),
         ),
       )
+      await refetchAttachments()
     }
     void load()
 
@@ -474,6 +510,67 @@ export function ChatPane(props: {
     void deliver(tempId, body).finally(() => setSending(false))
   }
 
+  /** M7-02: upload a file — it becomes a message whose body is the filename. */
+  async function uploadFile(file: File) {
+    setNotice(null)
+    stickToBottom.current = true
+    const form = new FormData()
+    form.set('file', file)
+    form.set('groupId', props.group.id)
+
+    const response = await fetch('/api/files', { method: 'POST', body: form })
+    const data = (await response.json().catch(() => null)) as {
+      message?: {
+        id: string
+        status: string
+        createdAt: string
+        fileId: string
+        fileName: string
+      }
+      error?: string
+    } | null
+
+    if (response.status === 201 && data?.message) {
+      const m = data.message
+      setAttachments((current) =>
+        new Map(current).set(m.id, {
+          id: m.fileId,
+          name: m.fileName,
+          sizeBytes: file.size,
+        }),
+      )
+      upsert({
+        id: m.id,
+        workspace_id: props.group.workspace_id,
+        group_id: props.group.id,
+        sender_id: props.me.userId,
+        body: m.fileName,
+        status: m.status as ClientMessage['status'],
+        created_at: m.createdAt,
+        delivered_at: null,
+      })
+      if (m.status === 'pending') {
+        setNotice('Your file is pending review by an admin before delivery.')
+      }
+    } else {
+      setNotice(data?.error ?? 'upload failed')
+    }
+  }
+
+  /** M7-01: downloads go through the API, which mints a 5-minute URL. */
+  async function download(fileId: string) {
+    const response = await fetch(`/api/files/${fileId}/download`)
+    const data = (await response.json().catch(() => null)) as {
+      url?: string
+      error?: string
+    } | null
+    if (response.ok && data?.url) {
+      window.open(data.url, '_blank', 'noopener')
+    } else {
+      setNotice(data?.error ?? 'download failed')
+    }
+  }
+
   function retry(message: ClientMessage) {
     if (message.status !== 'failed') return
     setNotice(null)
@@ -634,9 +731,36 @@ export function ChatPane(props: {
                               : ''
                           } ${message.status === 'blocked' ? 'opacity-70' : ''}`}
                         >
-                          <p className="whitespace-pre-wrap wrap-break-word text-sm">
-                            {message.body}
-                          </p>
+                          {attachments.has(message.id) ? (
+                            // M7: attachment chip instead of raw body text.
+                            <button
+                              type="button"
+                              onClick={() =>
+                                message.status === 'delivered' ||
+                                message.sender_id === props.me.userId
+                                  ? download(attachments.get(message.id)!.id)
+                                  : undefined
+                              }
+                              className="flex items-center gap-2 rounded-lg bg-surface-2/70 px-2.5 py-2 text-left text-sm hover:bg-surface-2"
+                            >
+                              <span className="text-lg">📎</span>
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">
+                                  {attachments.get(message.id)!.name}
+                                </span>
+                                <span className="block text-[10px] text-muted">
+                                  {formatBytes(
+                                    attachments.get(message.id)!.sizeBytes,
+                                  )}{' '}
+                                  · tap to download
+                                </span>
+                              </span>
+                            </button>
+                          ) : (
+                            <p className="whitespace-pre-wrap wrap-break-word text-sm">
+                              {message.body}
+                            </p>
+                          )}
                           {message.status === 'blocked' && (
                             <p className="mt-1 text-[11px] font-medium text-danger">
                               Not delivered — blocked by workspace policy
@@ -716,6 +840,25 @@ export function ChatPane(props: {
         onSubmit={send}
         className="flex items-end gap-2 border-t border-border bg-surface p-3"
       >
+        {/* M7-02: attach — filename goes through detect() server-side */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) void uploadFile(file)
+            e.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          aria-label="Attach a file"
+          onClick={() => fileInputRef.current?.click()}
+          className="h-10.5 shrink-0 rounded-xl border border-border px-3 text-lg hover:bg-surface-2"
+        >
+          📎
+        </button>
         <textarea
           value={draft}
           onChange={(e) => {
@@ -754,6 +897,12 @@ export function ChatPane(props: {
       </form>
     </div>
   )
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 /** "Today", "Yesterday", or "Mon, Aug 4" — only where the day changes. */

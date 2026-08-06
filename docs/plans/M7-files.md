@@ -6,7 +6,7 @@ Private storage with short-lived signed URLs, and filename scanning. File *conte
 
 ---
 
-### M7-01 — Private buckets and signed URLs · `todo` · 5 h
+### M7-01 — Private buckets and signed URLs · `done` · 5 h
 
 **Private buckets only** — nothing on the platform is publicly addressable. Downloads go through an API route that re-checks `authorize()` and mints a 5-minute signed URL on demand.
 
@@ -18,7 +18,7 @@ This is also what makes member removal real for files: no long-lived link keeps 
 
 ---
 
-### M7-02 — Upload with filename scanning · `todo` · 6 h
+### M7-02 — Upload with filename scanning · `done` · 6 h
 
 Upload → `authorize()` → **filename through `detect()`** → attach to a message → audit entry. A flagged filename holds the message exactly like flagged text. Limit 100 MB, configurable.
 
@@ -28,7 +28,7 @@ Upload → `authorize()` → **filename through `detect()`** → attach to a mes
 
 ---
 
-### M7-03 — Virus scan hook point · `todo` · 3 h
+### M7-03 — Virus scan hook point · `done` · 3 h
 
 `scan_status` transitions (`pending → clean | infected | skipped`) with a stubbed scanner behind an interface. Files stay undelivered until scanning resolves. Stub is acceptable in v1 per spec; the seam is what matters.
 
