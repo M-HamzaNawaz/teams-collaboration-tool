@@ -6,7 +6,7 @@ The gap between "features complete" and "a client will actually use this." Adopt
 
 ---
 
-### M10-01 — Responsive pass · `todo` · 8 h
+### M10-01 — Responsive pass · `done` · 8 h
 
 Every screen at 360 px, 768 px, and 1440 px. Mobile chat is full-screen with a proper back affordance; safe-area insets; keyboard-aware composer on iOS; no horizontal scroll anywhere.
 
@@ -16,7 +16,7 @@ The bar is WhatsApp-grade (spec §7). Clients will judge the product on a phone.
 
 ---
 
-### M10-02 — PWA · `todo` · 3 h
+### M10-02 — PWA · `done` · 3 h
 
 Manifest, icons, installability, offline shell. Sets up the Phase 3 native path (spec P2) without committing to it.
 

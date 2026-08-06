@@ -143,7 +143,7 @@ export function GroupList(props: {
       )}
 
       {/* Me */}
-      <footer className="flex items-center gap-3 border-t border-border p-3">
+      <footer className="pb-safe flex items-center gap-3 border-t border-border p-3">
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
           style={gradientStyle(props.me.userId)}

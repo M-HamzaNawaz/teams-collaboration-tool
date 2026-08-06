@@ -87,6 +87,18 @@ body {
   }
 }
 
+/* ── Safe areas (M10-01): notched phones, edge-to-edge ────────────── */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
 /* ── Scrollbars that match the surface ────────────────────────────── */
 * {
   scrollbar-width: thin;

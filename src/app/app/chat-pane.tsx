@@ -839,7 +839,7 @@ export function ChatPane(props: {
       {/* Composer */}
       <form
         onSubmit={send}
-        className="flex items-end gap-2 border-t border-border bg-surface p-3"
+        className="pb-safe flex items-end gap-2 border-t border-border bg-surface p-3"
       >
         {/* M7-02: attach — filename goes through detect() server-side */}
         <input
