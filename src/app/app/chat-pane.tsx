@@ -648,6 +648,17 @@ export function ChatPane(props: {
                                 ⏳ pending review
                               </span>
                             )}
+                            {/* M6-05: held-then-approved returns to its
+                                ORIGINAL position (created_at order) — this
+                                marker is what makes it findable there. */}
+                            {message.delivered_at &&
+                              Date.parse(message.delivered_at) -
+                                Date.parse(message.created_at) >
+                                60_000 && (
+                                <span className="font-medium text-brand-b">
+                                  ✓ released after review
+                                </span>
+                              )}
                             {message.status === 'sending' && (
                               <span className="font-medium">sending…</span>
                             )}

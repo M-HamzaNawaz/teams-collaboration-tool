@@ -20,6 +20,8 @@ export function GroupList(props: {
   me: Me
   selectedId: string | null
   onSelect: (group: GroupRow) => void
+  unreadByGroup: Record<string, number>
+  moderation: { pendingCount: number } | null
 }) {
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -91,12 +93,40 @@ export function GroupList(props: {
                       {active ? 'Open' : 'Tap to open'}
                     </span>
                   </span>
+                  {/* Unread badge (M6-05) — counts by delivered_at, so a
+                      released-after-review message drives it too. */}
+                  {(props.unreadByGroup[group.id] ?? 0) > 0 && !active && (
+                    <span
+                      className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white"
+                      style={gradientStyle(group.id)}
+                    >
+                      {props.unreadByGroup[group.id]}
+                    </span>
+                  )}
                 </button>
               </li>
             )
           })}
         </ul>
       </nav>
+
+      {/* Moderation entry (M6-01) — admins and group managers only */}
+      {props.moderation && (
+        <a
+          href="/app/moderation"
+          className="mx-2 mb-2 flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-surface-2"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-hold/15 text-sm">
+            🛡
+          </span>
+          <span className="flex-1 text-sm font-medium">Moderation</span>
+          {props.moderation.pendingCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-hold px-1.5 text-[11px] font-bold text-white">
+              {props.moderation.pendingCount}
+            </span>
+          )}
+        </a>
+      )}
 
       {/* Me */}
       <footer className="flex items-center gap-3 border-t border-border p-3">

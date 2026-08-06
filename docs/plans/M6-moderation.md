@@ -6,7 +6,7 @@ The admin's cockpit: the hold queue, approve/block, and the real-time alert. Thi
 
 ---
 
-### M6-01 — Hold queue · `todo` · 6 h
+### M6-01 — Hold queue · `done` · 6 h
 
 Admin and group-manager view of pending messages: flagged spans highlighted in the original text, sender, group, timestamp, waiting time. Managers see only their own group; admins see everything in the workspace.
 
@@ -16,7 +16,7 @@ Admin and group-manager view of pending messages: flagged spans highlighted in t
 
 ---
 
-### M6-02 — Approve and block · `todo` · 4 h
+### M6-02 — Approve and block · `done` · 4 h
 
 Approve → `status = 'delivered'`, which Realtime fans out automatically (M5-02). Block → `status = 'blocked'`, sender notified it was blocked by workspace policy. Both write `message_flags.resolution` and an audit entry.
 
@@ -26,7 +26,7 @@ Approve → `status = 'delivered'`, which Realtime fans out automatically (M5-02
 
 ---
 
-### M6-03 — Real-time admin alerts · `todo` · 5 h
+### M6-03 — Real-time admin alerts · `done` · 5 h
 
 In-app toast plus a badge on hold, and an email fallback when no admin session is active. Spec target: **visible to the admin within 5 seconds** of the send.
 
@@ -36,7 +36,7 @@ In-app toast plus a badge on hold, and an email fallback when no admin session i
 
 ---
 
-### M6-04 — Escalation and timeout · `todo` · 5 h — **decision #1**
+### M6-04 — Escalation and timeout · `done` · 5 h — **decision #1**
 
 Held messages cannot sit forever with nobody watching. Assumed default: escalate to the group manager at **30 minutes**, auto-approve-with-flag at **8 hours**, both configurable per workspace.
 
@@ -48,7 +48,7 @@ This is the adoption valve. Without it, a stack trace sent on Friday night freez
 
 ---
 
-### M6-05 — "Released after review" marker · `todo` · 3 h — **decision #4**
+### M6-05 — "Released after review" marker · `done` · 3 h — **decision #4**
 
 The spec preserves original timestamp order on approval, so a message held at 9 pm and approved at midnight lands back at its 9 pm position — where nobody will ever see it.
 

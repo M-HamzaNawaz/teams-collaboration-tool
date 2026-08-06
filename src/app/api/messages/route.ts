@@ -4,6 +4,8 @@ import { getSession } from '@/lib/auth/session'
 import { createRateLimiter, rateLimitResponse } from '@/lib/auth/rate-limit'
 import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
+import { sendEmail } from '@/lib/email/send'
+import { publicEnv } from '@/lib/env/public'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -100,8 +102,9 @@ export async function POST(request: Request) {
     delivered_at: string | null
   }
 
-  // Held → nudge admin dashboards now (M6-03 subscribes). Best-effort: the
-  // hold itself is already durable in the database.
+  // Held → nudge admin dashboards now (M6-03 subscribes), and fall back to
+  // email when no admin session is active. Both best-effort: the hold
+  // itself is already durable in the database.
   if (verdict.action === 'hold') {
     try {
       const channel = service.channel(`workspace:${workspaceId}:moderation`)
@@ -114,6 +117,31 @@ export async function POST(request: Request) {
     } catch {
       // Realtime hiccup — the hold queue query (M6-01) remains the truth.
     }
+
+    void (async () => {
+      try {
+        const { data: recipients } = await service.rpc(
+          'admin_alert_recipients',
+          { p_workspace_id: workspaceId },
+        )
+        const emails = ((recipients ?? []) as Array<{ email: string }>).map(
+          (r) => r.email,
+        )
+        for (const to of emails) {
+          await sendEmail({
+            to,
+            subject: 'A message is waiting for review on Confide',
+            text:
+              `A message in "${authz.group?.name ?? 'a group'}" was held for review.\n\n` +
+              `Open the moderation queue to approve or block it:\n` +
+              `${publicEnv.NEXT_PUBLIC_APP_URL}/app/moderation\n\n` +
+              `Held messages auto-escalate per your workspace settings.`,
+          })
+        }
+      } catch {
+        // Email fallback is advisory; the queue and escalation timers hold.
+      }
+    })()
   }
 
   return Response.json(

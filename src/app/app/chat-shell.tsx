@@ -24,6 +24,8 @@ export function ChatShell(props: {
   groups: GroupRow[]
   workspaceName: string
   me: Me
+  unreadByGroup?: Record<string, number>
+  moderation?: { pendingCount: number } | null
 }) {
   const [selected, setSelected] = useState<GroupRow | null>(
     props.groups[0] ?? null,
@@ -67,6 +69,8 @@ export function ChatShell(props: {
           me={props.me}
           selectedId={selected?.id ?? null}
           onSelect={openGroup}
+          unreadByGroup={props.unreadByGroup ?? {}}
+          moderation={props.moderation ?? null}
         />
       </aside>
 
