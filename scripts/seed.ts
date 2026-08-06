@@ -143,7 +143,11 @@ export async function seed(databaseUrl: string = DATABASE_URL): Promise<void> {
          'final invoice approved, closing this out', 'delivered', now()),
         (${SEED.messages.bDelivered}, ${SEED.wsB}, ${SEED.groups.boltSite}, ${SEED.users.omar},
          'staging is up for the bolt site', 'delivered', now())
-      on conflict (id) do nothing`
+      on conflict (id) do update
+        set status = excluded.status, delivered_at = excluded.delivered_at`
+    // ^ RESTORE the baseline, don't skip: the escalation timers (M6-04) and
+    // moderation actions legitimately change these rows in a live dev db,
+    // and the invariant suite depends on message 302 being pending again.
 
     // -- flags for the held/blocked messages --------------------------------
     await sql`
