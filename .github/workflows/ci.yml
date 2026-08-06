@@ -67,3 +67,46 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: npm ci
+
+      - name: Start Supabase stack (applies all migrations)
+        run: supabase start
+
+      - name: Export Supabase env
+        run: supabase status -o env | sed 's/"//g' >> "$GITHUB_ENV"
+
+      - name: Seed
+        run: npx tsx scripts/seed.ts
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+      - name: Start dev server
+        run: |
+          NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+          NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY" \
+          SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+          DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+          NEXT_PUBLIC_APP_URL=http://localhost:3000 \
+          npm run dev &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/login -o /dev/null && break; sleep 2; done
+
+      # The journey that IS the product: invite -> consent -> hold ->
+      # recipient blind -> approve -> deliver -> audit chain. Gates release.
+      - name: Run E2E suite
+        run: npx playwright test

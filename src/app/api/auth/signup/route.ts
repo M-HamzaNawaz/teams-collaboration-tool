@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { audit } from '@/lib/audit/audit'
 import {
-  authLimiter,
+  authIpLimiter,
   clientIp,
   rateLimitResponse,
 } from '@/lib/auth/rate-limit'
@@ -26,7 +26,7 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request) {
-  if (!authLimiter.check(`signup:${clientIp(request)}`)) {
+  if (!authIpLimiter.check(`signup:${clientIp(request)}`)) {
     return rateLimitResponse()
   }
 

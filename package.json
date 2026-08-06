@@ -19,7 +19,8 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff -f",
     "db:seed": "tsx scripts/seed.ts",
-    "verify": "npm run lint && npm run typecheck && npm run test:unit"
+    "verify": "npm run lint && npm run typecheck && npm run test:unit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -32,6 +33,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -46,3 +46,5 @@ next-env.d.ts
 # supabase local stack
 supabase/.temp
 supabase/.branches
+test-results/
+playwright-report/

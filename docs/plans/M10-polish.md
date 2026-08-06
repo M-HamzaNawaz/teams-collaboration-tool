@@ -24,7 +24,7 @@ Manifest, icons, installability, offline shell. Sets up the Phase 3 native path 
 
 ---
 
-### M10-03 — E2E suite · `todo` · 8 h
+### M10-03 — E2E suite · `done` · 8 h
 
 Playwright, covering the product's whole reason for existing as one test:
 
@@ -36,7 +36,7 @@ Plus: member removal cutting access mid-session, archived group rejecting writes
 
 ---
 
-### M10-04 — Pilot readiness · `todo` · 5 h
+### M10-04 — Pilot readiness · `done` · 5 h
 
 Error monitoring, structured logging with no message bodies or contact data in logs, backup verification, a runbook for the manual workspace creation the pilot uses, and a rehearsed restore.
 

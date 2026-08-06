@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { audit } from '@/lib/audit/audit'
 import {
+  authIpLimiter,
   authLimiter,
   clientIp,
   rateLimitResponse,
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
 
   if (
     !authLimiter.check(`login:${email.toLowerCase()}`) ||
-    !authLimiter.check(`login:${clientIp(request)}`)
+    !authIpLimiter.check(`login:${clientIp(request)}`)
   ) {
     return rateLimitResponse()
   }

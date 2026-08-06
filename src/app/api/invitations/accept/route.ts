@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { getSession, ACTIVE_WORKSPACE_COOKIE } from '@/lib/auth/session'
 import {
-  authLimiter,
+  authIpLimiter,
   clientIp,
   rateLimitResponse,
 } from '@/lib/auth/rate-limit'
@@ -37,7 +37,7 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request) {
-  if (!authLimiter.check(`invite-accept:${clientIp(request)}`)) {
+  if (!authIpLimiter.check(`invite-accept:${clientIp(request)}`)) {
     return rateLimitResponse()
   }
 

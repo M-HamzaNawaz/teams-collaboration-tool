@@ -6,6 +6,7 @@ import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
 import { sendEmail } from '@/lib/email/send'
 import { publicEnv } from '@/lib/env/public'
+import { logError } from '@/lib/log'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -92,6 +93,12 @@ export async function POST(request: Request) {
   })
 
   if (error) {
+    // ids only — never the body (M10-04 log hygiene).
+    logError('message.send_failed', error, {
+      group_id: groupId,
+      sender_id: session.userId,
+      detection_action: verdict.action,
+    })
     return Response.json({ error: 'send failed' }, { status: 500 })
   }
 

@@ -39,8 +39,15 @@ export function createRateLimiter(options: {
   }
 }
 
-/** Login + signup attempts: 10 per 15 minutes per key (email and IP separately). */
+/** Login + signup attempts: 10 per 15 minutes per EMAIL (brute-force guard). */
 export const authLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 10 })
+
+/**
+ * Per-IP companion limit, deliberately roomier: an agency office behind one
+ * NAT is many people on one IP, and 10/15min locked a whole team out after
+ * a morning of logins (found by the E2E suite tripping it).
+ */
+export const authIpLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 60 })
 
 /** Password-reset requests: 3 per hour per key. */
 export const resetLimiter = createRateLimiter({ windowMs: 60 * 60_000, max: 3 })
