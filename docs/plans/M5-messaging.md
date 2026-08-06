@@ -54,7 +54,7 @@ Sorted by `created_at` so an approved message returns to its original position (
 
 ---
 
-### M5-05 — Composer and pending state · `todo` · 6 h
+### M5-05 — Composer and pending state · `done` · 6 h
 
 Optimistic send, then reconcile with the server verdict. A held message stays visible **to its sender** as "pending review" — per the spec's edge case, it must never silently disappear. Blocked messages show the workspace-policy notice.
 

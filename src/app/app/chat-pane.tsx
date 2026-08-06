@@ -41,12 +41,22 @@ import type { Me } from './chat-shell'
 const FIRST_PAGE = 50
 const OLDER_PAGE = 100
 
+/**
+ * Client-side message shape (M5-05): server rows plus two local-only states —
+ * 'sending' (optimistic, awaiting the verdict) and 'failed' (send didn't
+ * reach the server; retryable). The acceptance rule: the sender sees their
+ * message in SOME state at every moment; no path loses it.
+ */
+type ClientMessage = Omit<RealtimeMessage, 'status'> & {
+  status: RealtimeMessage['status'] | 'sending' | 'failed'
+}
+
 export function ChatPane(props: {
   group: GroupRow
   me: Me
   onBack: () => void
 }) {
-  const [messages, setMessages] = useState<RealtimeMessage[] | null>(null)
+  const [messages, setMessages] = useState<ClientMessage[] | null>(null)
   const [names, setNames] = useState<Map<string, string>>(new Map())
   const [hasMore, setHasMore] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
@@ -69,7 +79,7 @@ export function ChatPane(props: {
   const oldestRef = useRef<string | null>(null)
   const hasMoreRef = useRef(false)
 
-  const upsert = useCallback((incoming: RealtimeMessage) => {
+  const upsert = useCallback((incoming: ClientMessage) => {
     setMessages((current) => {
       const list = current ?? []
       const index = list.findIndex((m) => m.id === incoming.id)
@@ -80,6 +90,18 @@ export function ChatPane(props: {
       return next.sort((a, b) => a.created_at.localeCompare(b.created_at))
     })
   }, [])
+
+  /** Swap an optimistic temp row for the server's row (id changes). */
+  const replaceMessage = useCallback(
+    (tempId: string, replacement: ClientMessage) => {
+      setMessages((current) =>
+        (current ?? [])
+          .map((m) => (m.id === tempId ? replacement : m))
+          .sort((a, b) => a.created_at.localeCompare(b.created_at)),
+      )
+    },
+    [],
+  )
 
   // ── Subscribe → fetch newest page + member names (that order, M5-02).
   useEffect(() => {
@@ -213,47 +235,99 @@ export function ChatPane(props: {
     }
   }, [messages])
 
-  async function send(event: React.FormEvent) {
+  /**
+   * Optimistic send (M5-05): the bubble exists the moment the button is hit,
+   * in 'sending' state, and is then reconciled with the server's verdict —
+   * delivered, pending (held), or failed-with-retry. The draft clears
+   * immediately; a failure puts the TEXT back into the bubble's retry, not
+   * into the void.
+   */
+  const deliver = useCallback(
+    async (tempId: string, body: string) => {
+      let response: Response
+      try {
+        response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: props.group.id, body }),
+        })
+      } catch {
+        // Network down — keep the bubble, mark it retryable.
+        setMessages((current) =>
+          (current ?? []).map((m) =>
+            m.id === tempId ? { ...m, status: 'failed' as const } : m,
+          ),
+        )
+        return
+      }
+
+      if (response.status === 201) {
+        const { message } = (await response.json()) as {
+          message: { id: string; status: string; createdAt: string }
+        }
+        replaceMessage(tempId, {
+          id: message.id,
+          workspace_id: props.group.workspace_id,
+          group_id: props.group.id,
+          sender_id: props.me.userId,
+          body,
+          status: message.status as ClientMessage['status'],
+          created_at: message.createdAt,
+          delivered_at: null,
+        })
+        if (message.status === 'pending') {
+          setNotice(
+            'Your message is pending review by an admin before delivery.',
+          )
+        }
+      } else {
+        const data = (await response.json().catch(() => null)) as {
+          error?: string
+        } | null
+        setMessages((current) =>
+          (current ?? []).map((m) =>
+            m.id === tempId ? { ...m, status: 'failed' as const } : m,
+          ),
+        )
+        setNotice(data?.error ?? 'send failed — tap the message to retry')
+      }
+    },
+    [props.group.id, props.group.workspace_id, props.me.userId, replaceMessage],
+  )
+
+  function send(event: React.FormEvent) {
     event.preventDefault()
     const body = draft.trim()
     if (!body || sending) return
     setSending(true)
     setNotice(null)
+    setDraft('')
+    stickToBottom.current = true
 
-    const response = await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId: props.group.id, body }),
+    const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    upsert({
+      id: tempId,
+      workspace_id: props.group.workspace_id,
+      group_id: props.group.id,
+      sender_id: props.me.userId,
+      body,
+      status: 'sending',
+      created_at: new Date().toISOString(),
+      delivered_at: null,
     })
 
-    if (response.status === 201) {
-      const { message } = (await response.json()) as {
-        message: { id: string; status: string; createdAt: string }
-      }
-      setDraft('')
-      stickToBottom.current = true
-      // Own pending rows aren't guaranteed on the wire — upsert locally so
-      // "pending review" is visible to the sender at once (never silently gone).
-      upsert({
-        id: message.id,
-        workspace_id: props.group.workspace_id,
-        group_id: props.group.id,
-        sender_id: props.me.userId,
-        body,
-        status: message.status as RealtimeMessage['status'],
-        created_at: message.createdAt,
-        delivered_at: null,
-      })
-      if (message.status === 'pending') {
-        setNotice('Your message is pending review by an admin before delivery.')
-      }
-    } else {
-      const data = (await response.json().catch(() => null)) as {
-        error?: string
-      } | null
-      setNotice(data?.error ?? 'send failed — try again')
-    }
-    setSending(false)
+    void deliver(tempId, body).finally(() => setSending(false))
+  }
+
+  function retry(message: ClientMessage) {
+    if (message.status !== 'failed') return
+    setNotice(null)
+    setMessages((current) =>
+      (current ?? []).map((m) =>
+        m.id === message.id ? { ...m, status: 'sending' as const } : m,
+      ),
+    )
+    void deliver(message.id, message.body)
   }
 
   const timeFormat = useMemo(
@@ -350,22 +424,44 @@ export function ChatPane(props: {
                           </p>
                         )}
                         <div
+                          onClick={() => retry(message)}
                           className={`rounded-2xl border px-3.5 py-2 shadow-sm ${
                             own
                               ? 'rounded-br-md border-transparent bg-bubble-own'
                               : 'rounded-bl-md border-border bg-bubble-other'
-                          } ${message.status === 'pending' ? 'border-hold/60' : ''}`}
+                          } ${message.status === 'pending' ? 'border-hold/60' : ''} ${
+                            message.status === 'sending' ? 'opacity-60' : ''
+                          } ${
+                            message.status === 'failed'
+                              ? 'cursor-pointer border-danger/60'
+                              : ''
+                          } ${message.status === 'blocked' ? 'opacity-70' : ''}`}
                         >
                           <p className="whitespace-pre-wrap wrap-break-word text-sm">
                             {message.body}
                           </p>
+                          {message.status === 'blocked' && (
+                            <p className="mt-1 text-[11px] font-medium text-danger">
+                              Not delivered — blocked by workspace policy
+                            </p>
+                          )}
                           <p className="mt-1 flex items-center justify-end gap-2 text-[10px] text-muted">
                             {message.status === 'pending' && (
                               <span className="font-semibold text-hold">
                                 ⏳ pending review
                               </span>
                             )}
-                            {timeFormat.format(new Date(message.created_at))}
+                            {message.status === 'sending' && (
+                              <span className="font-medium">sending…</span>
+                            )}
+                            {message.status === 'failed' && (
+                              <span className="font-semibold text-danger">
+                                ⚠ failed — tap to retry
+                              </span>
+                            )}
+                            {message.status !== 'sending' &&
+                              message.status !== 'failed' &&
+                              timeFormat.format(new Date(message.created_at))}
                           </p>
                         </div>
                       </div>
