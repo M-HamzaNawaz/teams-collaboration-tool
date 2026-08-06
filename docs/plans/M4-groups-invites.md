@@ -50,7 +50,7 @@ Admin submits email + **display name** + role. Server generates a 32-byte token,
 
 ---
 
-### M4-05 — Accept invitation · `todo` · 6 h
+### M4-05 — Accept invitation · `done` · 6 h
 
 Open link → set password → avatar step → consent screen → enter. If the email already has an account, **link** it into the workspace rather than creating a duplicate.
 
@@ -62,7 +62,7 @@ Open link → set password → avatar step → consent screen → enter. If the 
 
 ---
 
-### M4-06 — Consent records · `todo` · 3 h
+### M4-06 — Consent records · `done` · 3 h
 
 One plain-language scrollable page, one checkbox, one continue — deliberately not a legal wizard (spec Q3). Records `doc_type`, `doc_version`, `accepted_at`, `ip`, `user_agent`, plus an audit entry.
 

@@ -66,12 +66,17 @@ describe('I2 — identity is admin-controlled', () => {
     await asUser(SEED.users.waleed, async (tx) => {
       const visible = await tx<Array<{ user_id: string }>>`
         select user_id from public.profiles where workspace_id = ${SEED.wsA}`
-      const ids = visible.map((r) => r.user_id).sort()
-      // waleed shares Unipile (active) with ahmed and sarah; phoneApp is
-      // archived so it grants nothing. usman (admin) shares no active group.
-      expect(ids).toEqual(
-        [SEED.users.ahmed, SEED.users.sarah, SEED.users.waleed].sort(),
-      )
+      const ids = visible.map((r) => r.user_id)
+      // Invariant, not an exact list (the dev db accrues real members):
+      // waleed shares Unipile (active) with ahmed and sarah → visible.
+      // phoneApp is ARCHIVED so it grants nothing → usman (admin, no shared
+      // active group) is invisible, and workspace B users never appear.
+      expect(ids).toContain(SEED.users.ahmed)
+      expect(ids).toContain(SEED.users.sarah)
+      expect(ids).toContain(SEED.users.waleed)
+      expect(ids).not.toContain(SEED.users.usman)
+      expect(ids).not.toContain(SEED.users.bilal)
+      expect(ids).not.toContain(SEED.users.omar)
     })
   })
 })
