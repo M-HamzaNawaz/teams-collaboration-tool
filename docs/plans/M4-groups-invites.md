@@ -38,7 +38,7 @@ Add and remove members with roles; at most one Manager per group (enforced by a 
 
 ---
 
-### M4-04 — Issue invitations · `todo` · 5 h
+### M4-04 — Issue invitations · `done` · 5 h
 
 Admin submits email + **display name** + role. Server generates a 32-byte token, stores only `SHA-256(token)`, and emails the raw token via Resend. Seven-day expiry, single use.
 
