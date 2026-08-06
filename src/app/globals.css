@@ -87,6 +87,19 @@ body {
   }
 }
 
+/* ── Buttons: pointer cursor everywhere (Tailwind v4 dropped the
+     default), except disabled ones — those honestly say "not now". ── */
+button:not(:disabled),
+[role='button']:not(:disabled),
+select,
+input[type='checkbox']:not(:disabled),
+label:has(> input[type='checkbox']:not(:disabled)) {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* ── Safe areas (M10-01): notched phones, edge-to-edge ────────────── */
 body {
   padding-left: env(safe-area-inset-left);
