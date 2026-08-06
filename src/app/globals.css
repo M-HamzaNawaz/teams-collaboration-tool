@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
+/**
+ * Confide design tokens (M5-03).
+ *
+ * Multicolor identity system: every group and person gets a deterministic
+ * gradient from the wheel in src/lib/ui/colors.ts (picked by id hash), on a
+ * calm neutral canvas so the color carries meaning without noise.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f7fb;
+  --surface: #ffffff;
+  --surface-2: #f0f0f6;
+  --foreground: #16161d;
+  --muted: #6e6e7a;
+  --border: #e5e5ef;
+
+  --brand-a: #6d5cff; /* violet */
+  --brand-b: #00b3a4; /* teal   */
+  --hold: #f59e0b;    /* amber — "pending review" */
+  --danger: #ef4444;
+
+  --bubble-own: #e9e6ff;
+  --bubble-other: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand-a: var(--brand-a);
+  --color-brand-b: var(--brand-b);
+  --color-hold: var(--hold);
+  --color-danger: var(--danger);
+  --color-bubble-own: var(--bubble-own);
+  --color-bubble-other: var(--bubble-other);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0d0d13;
+    --surface: #15151d;
+    --surface-2: #1c1c26;
+    --foreground: #ececf2;
+    --muted: #9a9aa8;
+    --border: #262633;
+
+    --bubble-own: #2c2752;
+    --bubble-other: #1c1c26;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* ── Skeleton shimmer (M5-03) ─────────────────────────────────────── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: 0.5rem;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--foreground) 6%, transparent),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ── Scrollbars that match the surface ────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

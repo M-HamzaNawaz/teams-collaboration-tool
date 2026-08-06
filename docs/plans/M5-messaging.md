@@ -32,7 +32,7 @@ Scale note: RLS is evaluated per subscriber per change, which is comfortable at 
 
 ---
 
-### M5-03 — Chat UI shell · `todo` · 8 h
+### M5-03 — Chat UI shell · `done` · 8 h
 
 Sidebar plus message pane on desktop, full-screen chat on mobile, tablet in between. Group list, header, composer.
 
