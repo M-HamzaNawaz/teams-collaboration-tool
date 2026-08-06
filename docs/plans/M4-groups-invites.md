@@ -74,7 +74,7 @@ Ships with the placeholder non-circumvention text and a visible "pending legal r
 
 ---
 
-### M4-07 — Name change requests · `todo` · 4 h
+### M4-07 — Name change requests · `done` · 4 h
 
 Members may *request* a new display name; an admin approves. The requested string runs through `detect()` **before an admin ever sees it**, with findings highlighted in the review UI.
 

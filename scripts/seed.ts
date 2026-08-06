@@ -182,11 +182,14 @@ export async function seed(databaseUrl: string = DATABASE_URL): Promise<void> {
         (${SEED.users.zara}, ${SEED.wsB}, 'nca', 'v1', '127.0.0.1', 'seed')
       on conflict (user_id, workspace_id, doc_type, doc_version) do nothing`
 
+    // Conflict target = the one_pending_name_change partial index; a bare
+    // ON CONFLICT DO NOTHING matched no constraint and inserted a duplicate
+    // on every seed() call.
     await sql`
       insert into public.name_change_requests
         (workspace_id, user_id, requested_name, findings_jsonb, status) values
         (${SEED.wsA}, ${SEED.users.ahmed}, 'Ahmed — the real one', '[]', 'pending')
-      on conflict do nothing`
+      on conflict (workspace_id, user_id) where status = 'pending' do nothing`
 
     // -- audit entries (append-only: only insert on first run) --------------
     const [{ count }] = await sql<[{ count: string }]>`
