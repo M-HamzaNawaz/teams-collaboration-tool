@@ -224,7 +224,7 @@ export function ChatPane(props: {
     void start()
 
     async function load() {
-      const [{ data: rows }, { data: profiles }, { data: members }] =
+      const [{ data: rows }, maskedResponse, { data: members }] =
         await Promise.all([
           supabase
             .from('messages')
@@ -232,10 +232,9 @@ export function ChatPane(props: {
             .eq('group_id', props.group.id)
             .order('created_at', { ascending: false })
             .limit(FIRST_PAGE),
-          supabase
-            .from('profiles')
-            .select('user_id, display_name')
-            .eq('workspace_id', props.group.workspace_id),
+          // Member identities come MASKED from the server (M8-03) — the
+          // browser can no longer read profiles at all.
+          fetch(`/api/groups/${props.group.id}/profiles`),
           supabase
             .from('group_members')
             .select('user_id, last_read_at')
@@ -247,12 +246,14 @@ export function ChatPane(props: {
       oldestRef.current = page[0]?.created_at ?? null
       hasMoreRef.current = page.length === FIRST_PAGE
       setHasMore(hasMoreRef.current)
+      const maskedProfiles = maskedResponse.ok
+        ? ((await maskedResponse.json()) as {
+            profiles: Array<{ userId: string; displayName?: string }>
+          }).profiles
+        : []
       setNames(
         new Map(
-          (profiles ?? []).map((p) => [
-            p.user_id as string,
-            p.display_name as string,
-          ]),
+          maskedProfiles.map((p) => [p.userId, p.displayName ?? 'Member']),
         ),
       )
       setReads(

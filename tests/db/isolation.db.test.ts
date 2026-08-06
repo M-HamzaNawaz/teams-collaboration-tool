@@ -124,11 +124,16 @@ describe('cross-tenant reads: workspace B sees nothing of workspace A', () => {
   })
 
   it('B admin cannot see A profiles, groups, or messages by direct id', async () => {
+    // profiles: unreadable OUTRIGHT since M8-03 (grant revoked — masking is
+    // server-side), which is an even harder stop than an empty result.
+    await expectPermissionDenied(
+      asUser(SEED.users.bilal, (tx) =>
+        tx`select 1 from public.profiles where workspace_id = ${SEED.wsA}`),
+    )
     await asUser(SEED.users.bilal, async (tx) => {
-      const profiles = await tx`select 1 from public.profiles where workspace_id = ${SEED.wsA}`
       const groups = await tx`select 1 from public.groups where id = ${SEED.groups.unipile}`
       const messages = await tx`select 1 from public.messages where id = ${SEED.messages.delivered}`
-      expect([profiles.length, groups.length, messages.length]).toEqual([0, 0, 0])
+      expect([groups.length, messages.length]).toEqual([0, 0])
     })
   })
 })

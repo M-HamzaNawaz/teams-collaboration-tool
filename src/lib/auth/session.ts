@@ -3,6 +3,7 @@ import 'server-only'
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 
+import { serviceClient } from '@/lib/supabase/service-client'
 import { userClient } from '@/lib/supabase/user-client'
 import type { ProfileRow } from '@/lib/types'
 
@@ -39,7 +40,10 @@ export const getSession = cache(async (): Promise<Session | null> => {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
+  // Own profiles via the SERVICE client: browser roles hold no SELECT on
+  // profiles at all (M8-03 — field masking is server-side), and getUser()
+  // above already validated the identity these rows are filtered by.
+  const { data } = await serviceClient()
     .from('profiles')
     .select('*')
     .eq('user_id', user.id)

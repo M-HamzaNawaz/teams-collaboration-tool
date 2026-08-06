@@ -6,7 +6,7 @@ The signature feature. The rule that makes it real: masked data never leaves the
 
 ---
 
-### M8-01 — Visibility rules and defaults · `todo` · 4 h
+### M8-01 — Visibility rules and defaults · `done` · 4 h
 
 `role_visibility_rules(workspace_id, viewer_role, target_role, visible_fields jsonb)`, seeded at workspace creation (M3-03).
 
@@ -16,7 +16,7 @@ Defaults per spec: clients see a team member's first name + last initial + role 
 
 ---
 
-### M8-02 — `projectProfile()` · `todo` · 5 h
+### M8-02 — `projectProfile()` · `done` · 5 h
 
 ```ts
 function projectProfile(viewer: Member, target: Profile): MaskedProfile
@@ -30,7 +30,7 @@ One function, one test file. Every profile-returning endpoint passes through it.
 
 ---
 
-### M8-03 — Enforce projection at every boundary · `todo` · 4 h
+### M8-03 — Enforce projection at every boundary · `done` · 4 h
 
 Audit every endpoint that returns profile data — message sender info, group member lists, mention pickers, the hold queue, the audit viewer — and route each through `projectProfile()`. A test asserts no route returns a raw profile row.
 

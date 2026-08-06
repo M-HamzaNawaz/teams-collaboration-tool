@@ -62,22 +62,19 @@ describe('I2 — identity is admin-controlled', () => {
     )
   })
 
-  it('a client sees profiles only of people sharing an active group', async () => {
-    await asUser(SEED.users.waleed, async (tx) => {
-      const visible = await tx<Array<{ user_id: string }>>`
-        select user_id from public.profiles where workspace_id = ${SEED.wsA}`
-      const ids = visible.map((r) => r.user_id)
-      // Invariant, not an exact list (the dev db accrues real members):
-      // waleed shares Unipile (active) with ahmed and sarah → visible.
-      // phoneApp is ARCHIVED so it grants nothing → usman (admin, no shared
-      // active group) is invisible, and workspace B users never appear.
-      expect(ids).toContain(SEED.users.ahmed)
-      expect(ids).toContain(SEED.users.sarah)
-      expect(ids).toContain(SEED.users.waleed)
-      expect(ids).not.toContain(SEED.users.usman)
-      expect(ids).not.toContain(SEED.users.bilal)
-      expect(ids).not.toContain(SEED.users.omar)
-    })
+  it('profiles are unreadable by the browser role entirely (M8-03)', async () => {
+    // Field-level masking is server-side (projectProfile, M8-02); like
+    // `users`, the guarantee is the ABSENCE of a grant. Row scoping — "you
+    // can enumerate exactly the people in your own groups" — now lives in
+    // GET /api/groups/:id/profiles behind authorize().
+    await expectPermissionDenied(
+      asUser(SEED.users.waleed, (tx) =>
+        tx`select user_id from public.profiles where workspace_id = ${SEED.wsA}`),
+    )
+    // Even the workspace ADMIN reads profiles through the API only.
+    await expectPermissionDenied(
+      asUser(SEED.users.usman, (tx) => tx`select * from public.profiles limit 1`),
+    )
   })
 })
 
