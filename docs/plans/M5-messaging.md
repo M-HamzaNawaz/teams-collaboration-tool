@@ -20,7 +20,7 @@ The write path and the chat itself. M5-01 is the single most load-bearing task i
 
 ---
 
-### M5-02 — Realtime fan-out · `todo` · 6 h
+### M5-02 — Realtime fan-out · `done` · 6 h
 
 Postgres Changes on `messages`, RLS-filtered per subscriber. Because the member SELECT policy requires `status = 'delivered'`, **approval is simply `UPDATE messages SET status='delivered'`** and Realtime delivers it — no separate delivery mechanism to build or keep consistent.
 
