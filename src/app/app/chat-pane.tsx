@@ -24,6 +24,7 @@ import type { GroupRow } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
 
 import type { Me } from './chat-shell'
+import { MembersPanel } from './members-panel'
 
 /**
  * Chat pane (M5-03/04): header, live message list, composer.
@@ -79,6 +80,7 @@ export function ChatPane(props: {
   const attachmentsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
+  const [showMembers, setShowMembers] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
@@ -654,7 +656,23 @@ export function ChatPane(props: {
             Messages are screened for contact info
           </p>
         </div>
+        <button
+          onClick={() => setShowMembers(true)}
+          aria-label="Group members"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
+        >
+          👥 Members
+        </button>
       </header>
+
+      {showMembers && (
+        <MembersPanel
+          groupId={props.group.id}
+          groupName={props.group.name}
+          me={props.me}
+          onClose={() => setShowMembers(false)}
+        />
+      )}
 
       {/* Messages */}
       <div

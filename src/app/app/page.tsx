@@ -100,6 +100,7 @@ export default async function AppPage() {
         userId: session.userId,
         displayName: session.profile.display_name,
         roleLabel: session.profile.role_label || session.profile.member_role,
+        isAdmin,
       }}
       unreadByGroup={unreadByGroup}
       moderation={isAdmin || isManager ? { pendingCount } : null}

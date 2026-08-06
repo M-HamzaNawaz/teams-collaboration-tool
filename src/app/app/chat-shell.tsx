@@ -18,6 +18,7 @@ export type Me = {
   userId: string
   displayName: string
   roleLabel: string
+  isAdmin?: boolean
 }
 
 export function ChatShell(props: {
@@ -28,6 +29,15 @@ export function ChatShell(props: {
   moderation?: { pendingCount: number } | null
   auditLink?: boolean
 }) {
+  // Groups just created in THIS session appear instantly; router.refresh()
+  // brings the server list up to date and the dedupe folds them together.
+  const [extraGroups, setExtraGroups] = useState<GroupRow[]>([])
+  const serverIds = new Set(props.groups.map((g) => g.id))
+  const groups = [
+    ...extraGroups.filter((g) => !serverIds.has(g.id)),
+    ...props.groups,
+  ]
+
   const [selected, setSelected] = useState<GroupRow | null>(
     props.groups[0] ?? null,
   )
@@ -55,6 +65,12 @@ export function ChatShell(props: {
     setMobileView('chat')
   }
 
+  function onGroupCreated(group: GroupRow) {
+    setExtraGroups((current) => [group, ...current])
+    setSelected(group)
+    setMobileView('chat')
+  }
+
   return (
     <div ref={shellRef} className="flex h-dvh w-full overflow-hidden">
       {/* Sidebar — hidden on mobile while a chat is open */}
@@ -65,11 +81,12 @@ export function ChatShell(props: {
         } w-full shrink-0 flex-col border-r border-border bg-surface md:flex md:w-72 lg:w-80`}
       >
         <GroupList
-          groups={props.groups}
+          groups={groups}
           workspaceName={props.workspaceName}
           me={props.me}
           selectedId={selected?.id ?? null}
           onSelect={openGroup}
+          onGroupCreated={onGroupCreated}
           unreadByGroup={props.unreadByGroup ?? {}}
           moderation={props.moderation ?? null}
           auditLink={props.auditLink ?? false}
