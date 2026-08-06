@@ -3,6 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import {
+  AuthShell,
+  inputClass,
+  primaryButtonClass,
+  primaryButtonStyle,
+} from '../auth-ui'
+
 /**
  * Workspace signup (M3-03) — the agency ADMIN's entry point. Members and
  * clients never see this page: they join through email invitations (M4),
@@ -39,17 +46,12 @@ export default function SignupPage() {
     setBusy(false)
   }
 
-  const inputClass =
-    'rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900'
-
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Create your workspace</h1>
-        <p className="text-sm text-neutral-500">
-          You&apos;ll be the workspace admin. Team members and clients join by
-          invitation only.
-        </p>
+    <AuthShell
+      title="Create your workspace"
+      subtitle="You'll be the admin — your team and clients join by invitation only"
+    >
+      <form onSubmit={submit} className="flex flex-col gap-4">
         <input required placeholder="Agency / workspace name" value={workspaceName}
           onChange={(e) => setWorkspaceName(e.target.value)} className={inputClass} />
         <input required placeholder="Your display name" value={displayName}
@@ -58,15 +60,15 @@ export default function SignupPage() {
           onChange={(e) => setEmail(e.target.value)} className={inputClass} />
         <input type="password" required minLength={10} placeholder="Password (min 10 chars)"
           value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" disabled={busy}
-          className="rounded-md bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900">
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <button type="submit" disabled={busy} className={primaryButtonClass} style={primaryButtonStyle}>
           {busy ? 'Creating…' : 'Create workspace'}
         </button>
-        <p className="text-sm text-neutral-500">
-          Already have an account? <a href="/login" className="underline">Sign in</a>
+        <p className="text-center text-sm text-muted">
+          Already have an account?{' '}
+          <a href="/login" className="underline hover:text-foreground">Sign in</a>
         </p>
       </form>
-    </main>
+    </AuthShell>
   )
 }

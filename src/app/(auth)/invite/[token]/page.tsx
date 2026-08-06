@@ -2,6 +2,7 @@ import { CONSENT_DOC_TEXT } from '@/lib/invites/consent'
 import { hashInviteToken } from '@/lib/invites/token'
 import { serviceClient } from '@/lib/supabase/service-client'
 
+import { AuthShell } from '../../auth-ui'
 import { AcceptForm } from './accept-form'
 
 /**
@@ -34,15 +35,17 @@ export default async function InvitePage({
 
   if (!valid) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-sm text-center">
-          <h1 className="text-2xl font-semibold">Invitation not available</h1>
-          <p className="mt-3 text-neutral-500">
-            This link is invalid, already used, or has expired. Ask your
-            workspace admin to send a new invitation.
-          </p>
-        </div>
-      </main>
+      <AuthShell
+        title="Invitation not available"
+        subtitle="This link is invalid, already used, or has expired. Ask your workspace admin to send a new invitation."
+      >
+        <p className="text-center text-sm text-muted">
+          Already a member?{' '}
+          <a href="/login" className="underline hover:text-foreground">
+            Sign in
+          </a>
+        </p>
+      </AuthShell>
     )
   }
 
@@ -59,17 +62,23 @@ export default async function InvitePage({
       .maybeSingle(),
   ])
 
+  const workspaceName = (workspace?.name as string) ?? 'a workspace'
+
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <AuthShell
+      title={`Join ${workspaceName}`}
+      subtitle="Review the terms below to accept your invitation"
+      maxWidth="lg"
+    >
       <AcceptForm
         token={token}
         email={(invitation.email as string).toLowerCase()}
         displayName={invitation.display_name as string}
         roleLabel={(invitation.role_label as string) || null}
-        workspaceName={(workspace?.name as string) ?? 'a workspace'}
+        workspaceName={workspaceName}
         needsAccount={!existingUser}
         consentText={CONSENT_DOC_TEXT}
       />
-    </main>
+    </AuthShell>
   )
 }

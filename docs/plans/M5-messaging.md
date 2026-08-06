@@ -42,7 +42,7 @@ Sidebar plus message pane on desktop, full-screen chat on mobile, tablet in betw
 
 ---
 
-### M5-04 — Message list · `todo` · 8 h
+### M5-04 — Message list · `done` · 8 h
 
 Reverse-infinite pagination, day separators, timestamps, grouped consecutive messages from one sender, scroll anchoring that survives loading older pages.
 

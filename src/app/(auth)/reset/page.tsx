@@ -5,6 +5,13 @@ import { useEffect, useState } from 'react'
 
 import { browserClient } from '@/lib/supabase/browser-client'
 
+import {
+  AuthShell,
+  inputClass,
+  primaryButtonClass,
+  primaryButtonStyle,
+} from '../auth-ui'
+
 /**
  * Password reset (M3-04). Two modes on one page:
  *  - request: enter email → POST /api/auth/reset (always "check your email")
@@ -57,34 +64,37 @@ export default function ResetPage() {
     router.refresh()
   }
 
-  const inputClass =
-    'rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900'
-  const buttonClass =
-    'rounded-md bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900'
-
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <AuthShell
+      title={mode === 'request' ? 'Reset password' : 'Set a new password'}
+      subtitle={
+        mode === 'request'
+          ? "We'll email you a secure reset link"
+          : 'Choose a new password to finish'
+      }
+    >
       {mode === 'request' ? (
-        <form onSubmit={requestReset} className="flex w-full max-w-sm flex-col gap-4">
-          <h1 className="text-2xl font-semibold">Reset password</h1>
+        <form onSubmit={requestReset} className="flex flex-col gap-4">
           <input type="email" required placeholder="Email" value={email}
             onChange={(e) => setEmail(e.target.value)} className={inputClass} />
-          {message && <p className="text-sm text-neutral-500">{message}</p>}
-          <button type="submit" disabled={busy} className={buttonClass}>
+          {message && <p className="text-sm text-muted">{message}</p>}
+          <button type="submit" disabled={busy} className={primaryButtonClass} style={primaryButtonStyle}>
             {busy ? 'Sending…' : 'Send reset link'}
           </button>
+          <p className="text-center text-sm text-muted">
+            <a href="/login" className="underline hover:text-foreground">Back to sign in</a>
+          </p>
         </form>
       ) : (
-        <form onSubmit={updatePassword} className="flex w-full max-w-sm flex-col gap-4">
-          <h1 className="text-2xl font-semibold">Set a new password</h1>
+        <form onSubmit={updatePassword} className="flex flex-col gap-4">
           <input type="password" required minLength={10} placeholder="New password (min 10 chars)"
             value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
-          {message && <p className="text-sm text-red-600">{message}</p>}
-          <button type="submit" disabled={busy} className={buttonClass}>
+          {message && <p className="text-sm text-danger">{message}</p>}
+          <button type="submit" disabled={busy} className={primaryButtonClass} style={primaryButtonStyle}>
             {busy ? 'Saving…' : 'Save password'}
           </button>
         </form>
       )}
-    </main>
+    </AuthShell>
   )
 }

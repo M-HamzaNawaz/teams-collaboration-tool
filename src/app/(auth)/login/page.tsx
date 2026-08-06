@@ -3,6 +3,13 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useState } from 'react'
 
+import {
+  AuthShell,
+  inputClass,
+  primaryButtonClass,
+  primaryButtonStyle,
+} from '../auth-ui'
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -34,15 +41,14 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4">
-      <h1 className="text-2xl font-semibold">Sign in to Confide</h1>
+    <form onSubmit={submit} className="flex flex-col gap-4">
       <input
         type="email"
         required
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+        className={inputClass}
       />
       <input
         type="password"
@@ -50,20 +56,21 @@ function LoginForm() {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+        className={inputClass}
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
         disabled={busy}
-        className="rounded-md bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        className={primaryButtonClass}
+        style={primaryButtonStyle}
       >
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
-      <p className="text-sm text-neutral-500">
-        <a href="/reset" className="underline">Forgot password?</a>
+      <p className="text-center text-sm text-muted">
+        <a href="/reset" className="underline hover:text-foreground">Forgot password?</a>
         {' · '}
-        <a href="/signup" className="underline">Create a workspace</a>
+        <a href="/signup" className="underline hover:text-foreground">Create a workspace</a>
       </p>
     </form>
   )
@@ -71,10 +78,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
+    <AuthShell
+      title="Sign in to Confide"
+      subtitle="Agency collaboration with client protection built in"
+    >
       <Suspense>
         <LoginForm />
       </Suspense>
-    </main>
+    </AuthShell>
   )
 }
