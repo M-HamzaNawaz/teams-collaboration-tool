@@ -6,7 +6,7 @@ The write path and the chat itself. M5-01 is the single most load-bearing task i
 
 ---
 
-### M5-01 — Server-side write path · `todo` · 6 h
+### M5-01 — Server-side write path · `done` · 6 h
 
 `POST /api/messages` → `authorize()` → `detect()` → insert with the resulting status → `audit()`. Writes use `serviceClient()`; the client's grant on `messages` is revoked (M1-08), so no browser can insert one regardless of JWT validity.
 
