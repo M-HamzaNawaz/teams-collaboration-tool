@@ -64,7 +64,7 @@ Optimistic send, then reconcile with the server verdict. A held message stays vi
 
 ---
 
-### M5-06 — Typing indicators and read receipts · `todo` · 4 h — **cuttable**
+### M5-06 — Typing indicators and read receipts · `done` · 4 h — **cuttable**
 
 Realtime presence for typing; per-member read watermarks.
 
@@ -74,7 +74,7 @@ First on the cut list (TECHNICAL_PLAN §9.1). Pleasant, not core.
 
 ---
 
-### M5-07 — Reconnection and offline queue · `todo` · 6 h
+### M5-07 — Reconnection and offline queue · `done` · 6 h
 
 Detect socket loss, back off and resubscribe, replay missed messages by cursor, queue outbound sends while offline and flush on reconnect with de-duplication.
 

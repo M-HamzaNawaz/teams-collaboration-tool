@@ -14,6 +14,11 @@ import {
   subscribeToGroupMessages,
   type RealtimeMessage,
 } from '@/lib/realtime/messages'
+import {
+  joinPresence,
+  sendRead,
+  sendTyping,
+} from '@/lib/realtime/presence'
 import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
@@ -63,6 +68,11 @@ export function ChatPane(props: {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  // M5-06/07: presence + connection state.
+  const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; at: number }>>(new Map())
+  const [reads, setReads] = useState<Map<string, string>>(new Map())
+  const [connected, setConnected] = useState(true)
+  const [online, setOnline] = useState(true)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
@@ -78,6 +88,13 @@ export function ChatPane(props: {
   const olderInFlight = useRef(false)
   const oldestRef = useRef<string | null>(null)
   const hasMoreRef = useRef(false)
+  // M5-06/07 plumbing: replay cursor, presence channel, throttles.
+  const newestRef = useRef<string | null>(null)
+  const replayRef = useRef<(() => Promise<void>) | null>(null)
+  const presenceRef = useRef<ReturnType<typeof joinPresence> | null>(null)
+  const wasDropped = useRef(false)
+  const lastTypingSent = useRef(0)
+  const lastReadSent = useRef(0)
 
   const upsert = useCallback((incoming: ClientMessage) => {
     setMessages((current) => {
@@ -104,23 +121,92 @@ export function ChatPane(props: {
   )
 
   // ── Subscribe → fetch newest page + member names (that order, M5-02).
+  // On re-SUBSCRIBED after a drop, REPLAY missed rows by cursor (M5-07) —
+  // whatever happened during the outage never came over the wire.
   useEffect(() => {
     const supabase = browserClient()
-    const channel = subscribeToGroupMessages(supabase, props.group.id, upsert)
+    let channel: ReturnType<typeof subscribeToGroupMessages> | null = null
+    let cancelled = false
+
+    const replay = async () => {
+      if (!newestRef.current) return
+      const { data: missed } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('group_id', props.group.id)
+        .gt('created_at', newestRef.current)
+        .order('created_at', { ascending: true })
+        .limit(500)
+      for (const row of (missed ?? []) as RealtimeMessage[]) upsert(row)
+    }
+    replayRef.current = replay
+
+    // Realtime must join AS THE USER: the subscription filter is validated
+    // against columns the subscriber's role can SELECT, and anon can select
+    // nothing on messages — joining before the SSR session is restored made
+    // Realtime silently reject the subscription ("invalid column for filter
+    // group_id" in the db log). Resolve the session, hand the token to
+    // Realtime, THEN subscribe.
+    async function start() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (cancelled) return
+      if (session) await supabase.realtime.setAuth(session.access_token)
+
+      channel = subscribeToGroupMessages(
+        supabase,
+        props.group.id,
+        upsert,
+        (status) => {
+          if (status === 'SUBSCRIBED') {
+            setConnected(true)
+            if (wasDropped.current) {
+              wasDropped.current = false
+              void replay()
+            }
+          } else {
+            wasDropped.current = true
+            setConnected(false)
+          }
+        },
+      )
+
+      presenceRef.current = joinPresence(supabase, props.group.id, {
+        onTyping: (event) => {
+          if (event.userId === props.me.userId) return
+          setTypingUsers((current) =>
+            new Map(current).set(event.userId, {
+              name: event.displayName,
+              at: Date.now(),
+            }),
+          )
+        },
+        onRead: (event) =>
+          setReads((current) => new Map(current).set(event.userId, event.at)),
+      })
+    }
+    void start()
 
     async function load() {
-      const [{ data: rows }, { data: profiles }] = await Promise.all([
-        supabase
-          .from('messages')
-          .select('*')
-          .eq('group_id', props.group.id)
-          .order('created_at', { ascending: false })
-          .limit(FIRST_PAGE),
-        supabase
-          .from('profiles')
-          .select('user_id, display_name')
-          .eq('workspace_id', props.group.workspace_id),
-      ])
+      const [{ data: rows }, { data: profiles }, { data: members }] =
+        await Promise.all([
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('group_id', props.group.id)
+            .order('created_at', { ascending: false })
+            .limit(FIRST_PAGE),
+          supabase
+            .from('profiles')
+            .select('user_id, display_name')
+            .eq('workspace_id', props.group.workspace_id),
+          supabase
+            .from('group_members')
+            .select('user_id, last_read_at')
+            .eq('group_id', props.group.id)
+            .is('removed_at', null),
+        ])
       const page = ((rows ?? []) as RealtimeMessage[]).reverse()
       setMessages(page)
       oldestRef.current = page[0]?.created_at ?? null
@@ -134,13 +220,82 @@ export function ChatPane(props: {
           ]),
         ),
       )
+      setReads(
+        new Map(
+          (members ?? [])
+            .filter((m) => m.last_read_at)
+            .map((m) => [m.user_id as string, m.last_read_at as string]),
+        ),
+      )
     }
     void load()
 
+    // Typing signals fade after 3s of silence.
+    const pruner = setInterval(() => {
+      setTypingUsers((current) => {
+        const cutoff = Date.now() - 3000
+        if (![...current.values()].some((t) => t.at < cutoff)) return current
+        return new Map([...current].filter(([, t]) => t.at >= cutoff))
+      })
+    }, 1000)
+
     return () => {
-      void supabase.removeChannel(channel)
+      cancelled = true
+      clearInterval(pruner)
+      if (channel) void supabase.removeChannel(channel)
+      if (presenceRef.current) void supabase.removeChannel(presenceRef.current)
     }
-  }, [props.group.id, props.group.workspace_id, upsert])
+  }, [props.group.id, props.group.workspace_id, props.me.userId, upsert])
+
+  // Track the replay cursor: newest SERVER row we hold (optimistic ids are
+  // client-local and must not become cursors). messagesRef mirrors state for
+  // event handlers that must read it without re-subscribing.
+  const messagesRef = useRef<ClientMessage[] | null>(null)
+  useEffect(() => {
+    messagesRef.current = messages
+    const newestServer = [...(messages ?? [])]
+      .reverse()
+      .find((m) => !m.id.startsWith('optimistic-'))
+    if (newestServer) newestRef.current = newestServer.created_at
+  }, [messages])
+
+  // ── Read watermark (M5-06): advance on load, on focus, and when new
+  // messages arrive while the reader is at the bottom. Throttled.
+  const markRead = useCallback(() => {
+    const now = Date.now()
+    if (now - lastReadSent.current < 4000) return
+    lastReadSent.current = now
+    const at = new Date().toISOString()
+    void fetch(`/api/groups/${props.group.id}/read`, { method: 'POST' })
+    if (presenceRef.current) {
+      sendRead(presenceRef.current, { userId: props.me.userId, at })
+    }
+  }, [props.group.id, props.me.userId])
+
+  useEffect(() => {
+    if (messages?.length && stickToBottom.current) markRead()
+  }, [messages, markRead])
+
+  useEffect(() => {
+    const onFocus = () => markRead()
+    const onOnline = () => {
+      setOnline(true)
+      // Belt and braces: don't wait for the socket's rejoin backoff — pull
+      // whatever landed during the outage by cursor right now (M5-07).
+      void replayRef.current?.()
+    }
+    const onOffline = () => setOnline(false)
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    // Initial sync deferred — React 19 lint: no sync setState in effects.
+    if (!navigator.onLine) queueMicrotask(() => setOnline(false))
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
+  }, [markRead])
 
   // ── Reverse-infinite: nearing the top loads the next older page. All
   // guards and cursors are refs — one load in flight, ever.
@@ -330,11 +485,53 @@ export function ChatPane(props: {
     void deliver(message.id, message.body)
   }
 
+  // ── Offline queue flush (M5-07): when connectivity returns, resend every
+  // failed message IN ORDER, sequentially. Statuses flip to 'sending'
+  // synchronously first, so a second trigger finds nothing to flush — that,
+  // plus one deliver() per queued id, is the no-duplicates guarantee.
+  useEffect(() => {
+    if (!online) return
+    const queued = (messagesRef.current ?? []).filter(
+      (m) => m.status === 'failed',
+    )
+    if (!queued.length) return
+    setMessages((current) =>
+      (current ?? []).map((m) =>
+        m.status === 'failed' ? { ...m, status: 'sending' as const } : m,
+      ),
+    )
+    void (async () => {
+      for (const message of queued) {
+        await deliver(message.id, message.body)
+      }
+    })()
+  }, [online, deliver])
+
   const timeFormat = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }),
     [],
   )
+
+  // ── Read receipt (M5-06): under the caller's LATEST delivered message,
+  // the members whose watermark has passed it. Date.parse, not string
+  // compare — watermarks and rows carry different timezone suffixes.
+  const receipt = useMemo(() => {
+    const lastOwn = [...(messages ?? [])]
+      .reverse()
+      .find((m) => m.sender_id === props.me.userId && m.status === 'delivered')
+    if (!lastOwn) return null
+    const sentAt = Date.parse(lastOwn.created_at)
+    const seenBy = [...reads]
+      .filter(
+        ([userId, at]) =>
+          userId !== props.me.userId && Date.parse(at) >= sentAt,
+      )
+      .map(([userId]) => names.get(userId) ?? 'Member')
+    return seenBy.length
+      ? { id: lastOwn.id, label: `Seen by ${seenBy.join(', ')}` }
+      : null
+  }, [messages, reads, names, props.me.userId])
 
   return (
     <div ref={paneRef} className="flex h-full min-w-0 flex-col">
@@ -464,6 +661,11 @@ export function ChatPane(props: {
                               timeFormat.format(new Date(message.created_at))}
                           </p>
                         </div>
+                        {receipt?.id === message.id && (
+                          <p className="mt-0.5 pr-1 text-right text-[10px] text-muted">
+                            {receipt.label}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -473,6 +675,23 @@ export function ChatPane(props: {
           </>
         )}
       </div>
+
+      {/* Connection state (M5-07) */}
+      {(!online || !connected) && (
+        <p className="border-t border-border bg-hold/10 px-4 py-2 text-xs font-medium text-hold">
+          {!online
+            ? 'Offline — your messages will be sent when you reconnect.'
+            : 'Reconnecting…'}
+        </p>
+      )}
+
+      {/* Typing (M5-06) */}
+      {typingUsers.size > 0 && (
+        <p className="animate-pulse px-4 pb-1 pt-2 text-xs italic text-muted">
+          {[...typingUsers.values()].map((t) => t.name).join(', ')}{' '}
+          {typingUsers.size === 1 ? 'is' : 'are'} typing…
+        </p>
+      )}
 
       {/* Notice strip (pending / errors) */}
       {notice && (
@@ -488,7 +707,18 @@ export function ChatPane(props: {
       >
         <textarea
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value)
+            // Typing signal, throttled — ephemeral broadcast (M5-06).
+            const now = Date.now()
+            if (now - lastTypingSent.current > 1500 && presenceRef.current) {
+              lastTypingSent.current = now
+              sendTyping(presenceRef.current, {
+                userId: props.me.userId,
+                displayName: props.me.displayName,
+              })
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()

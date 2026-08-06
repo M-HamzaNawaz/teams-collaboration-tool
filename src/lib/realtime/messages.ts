@@ -39,10 +39,22 @@ export type RealtimeMessage = {
   delivered_at: string | null
 }
 
+/**
+ * Connection status surfaced to the UI (M5-07). supabase-js reconnects the
+ * socket itself with backoff; the caller's job on re-SUBSCRIBED is to REPLAY
+ * missed rows by cursor — events during the outage are gone from the wire.
+ */
+export type SubscriptionStatus =
+  | 'SUBSCRIBED'
+  | 'TIMED_OUT'
+  | 'CLOSED'
+  | 'CHANNEL_ERROR'
+
 export function subscribeToGroupMessages(
   client: SupabaseClient,
   groupId: string,
   onMessage: (message: RealtimeMessage) => void,
+  onStatus?: (status: SubscriptionStatus) => void,
 ): RealtimeChannel {
   return client
     .channel(`messages:${groupId}`)
@@ -70,5 +82,5 @@ export function subscribeToGroupMessages(
         if ('id' in payload.new) onMessage(payload.new)
       },
     )
-    .subscribe()
+    .subscribe((status) => onStatus?.(status as SubscriptionStatus))
 }
