@@ -15,7 +15,7 @@ import React from 'react'
  */
 
 const URL_RE = /https?:\/\/[^\s<>"')\]]+/g
-const INLINE_TOKEN_RE = /(\*\*[^*\n]+\*\*|_[^_\n]+_|~[^~\n]+~|`[^`\n]+`)/g
+const INLINE_TOKEN_RE = /(\*\*[^*\n]+\*\*|__[^_\n]+__|_[^_\n]+_|~[^~\n]+~|`[^`\n]+`)/g
 
 /** Remove formatting punctuation so split content re-joins for detect(). */
 export function stripFormatting(text: string): string {
@@ -36,6 +36,8 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
     const key = `${keyBase}-${index++}`
     if (piece.startsWith('**') && piece.endsWith('**') && piece.length > 4) {
       out.push(<strong key={key}>{renderInline(piece.slice(2, -2), key)}</strong>)
+    } else if (piece.startsWith('__') && piece.endsWith('__') && piece.length > 4) {
+      out.push(<u key={key}>{renderInline(piece.slice(2, -2), key)}</u>)
     } else if (piece.startsWith('_') && piece.endsWith('_') && piece.length > 2) {
       out.push(<em key={key}>{renderInline(piece.slice(1, -1), key)}</em>)
     } else if (piece.startsWith('~') && piece.endsWith('~') && piece.length > 2) {

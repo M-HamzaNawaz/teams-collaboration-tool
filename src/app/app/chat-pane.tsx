@@ -22,6 +22,26 @@ import {
 import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+import {
+  AtSignIcon,
+  BoldIcon,
+  ChevronDownIcon,
+  CodeBlockIcon,
+  CodeIcon,
+  ItalicIcon,
+  LinkIcon,
+  ListIcon,
+  ListOrderedIcon,
+  MicIcon,
+  PlusIcon,
+  QuoteIcon,
+  SendIcon,
+  SlashSquareIcon,
+  SmileIcon,
+  StrikethroughIcon,
+  UnderlineIcon,
+  VideoIcon,
+} from '@/lib/ui/icons'
 import { FormattedBody } from '@/lib/ui/message-format'
 
 import type { Me } from './chat-shell'
@@ -907,34 +927,41 @@ export function ChatPane(props: {
         className="pb-safe border-t border-border bg-surface p-3"
       >
         <div className="rounded-xl border border-border bg-background focus-within:border-brand-a">
-          {/* Formatting toolbar (Aa toggles it) */}
+          {/* Formatting toolbar (Aa toggles it) — icon order mirrors Slack */}
           {showToolbar && (
             <div className="flex items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
               <ToolbarButton label="Bold (Ctrl+B)" onClick={() => surroundSelection('**')}>
-                <b>B</b>
+                <BoldIcon />
               </ToolbarButton>
               <ToolbarButton label="Italic (Ctrl+I)" onClick={() => surroundSelection('_')}>
-                <i>I</i>
+                <ItalicIcon />
               </ToolbarButton>
-              <ToolbarButton label="Strikethrough" onClick={() => surroundSelection('~')}>
-                <s>S</s>
+              <ToolbarButton label="Underline (Ctrl+U)" onClick={() => surroundSelection('__')}>
+                <UnderlineIcon />
+              </ToolbarButton>
+              <ToolbarButton label="Strikethrough (Ctrl+Shift+X)" onClick={() => surroundSelection('~')}>
+                <StrikethroughIcon />
               </ToolbarButton>
               <span className="mx-1 h-4 w-px bg-border" />
-              <ToolbarButton label="Bulleted list" onClick={() => prefixLines('- ')}>
-                ≔
+              <ToolbarButton label="Insert link" onClick={() => insertAtCursor('https://')}>
+                <LinkIcon />
               </ToolbarButton>
               <ToolbarButton label="Numbered list" onClick={() => prefixLines('1. ')}>
-                ⒈
+                <ListOrderedIcon />
               </ToolbarButton>
+              <ToolbarButton label="Bulleted list" onClick={() => prefixLines('- ')}>
+                <ListIcon />
+              </ToolbarButton>
+              <span className="mx-1 h-4 w-px bg-border" />
               <ToolbarButton label="Quote" onClick={() => prefixLines('> ')}>
-                ❝
+                <QuoteIcon />
               </ToolbarButton>
               <span className="mx-1 h-4 w-px bg-border" />
               <ToolbarButton label="Inline code (Ctrl+E)" onClick={() => surroundSelection('`')}>
-                {'<>'}
+                <CodeIcon />
               </ToolbarButton>
               <ToolbarButton label="Code block" onClick={() => surroundSelection('```\n', '\n```')}>
-                ⧉
+                <CodeBlockIcon />
               </ToolbarButton>
             </div>
           )}
@@ -964,6 +991,7 @@ export function ChatPane(props: {
                 const key = e.key.toLowerCase()
                 if (key === 'b') { e.preventDefault(); surroundSelection('**') }
                 if (key === 'i') { e.preventDefault(); surroundSelection('_') }
+                if (key === 'u') { e.preventDefault(); surroundSelection('__') }
                 if (key === 'e') { e.preventDefault(); surroundSelection('`') }
                 if (key === 'x' && e.shiftKey) { e.preventDefault(); surroundSelection('~') }
               }
@@ -986,48 +1014,65 @@ export function ChatPane(props: {
               }}
             />
             <ToolbarButton label="Attach a file" onClick={() => fileInputRef.current?.click()}>
-              ＋
+              <PlusIcon />
             </ToolbarButton>
             <ToolbarButton
               label={showToolbar ? 'Hide formatting' : 'Show formatting'}
               active={showToolbar}
               onClick={() => setShowToolbar((v) => !v)}
             >
-              Aa
+              <span className="text-[13px] font-semibold underline underline-offset-2">Aa</span>
             </ToolbarButton>
             <ToolbarButton
               label="Emoji"
               active={popover === 'emoji'}
               onClick={() => setPopover(popover === 'emoji' ? null : 'emoji')}
             >
-              ☺
+              <SmileIcon />
             </ToolbarButton>
             <ToolbarButton
               label="Mention someone"
               active={popover === 'mention'}
               onClick={() => setPopover(popover === 'mention' ? null : 'mention')}
             >
-              @
+              <AtSignIcon />
             </ToolbarButton>
             <span className="mx-1 h-4 w-px bg-border" />
             <ToolbarButton label="Video calls arrive in Phase 3" disabled>
-              🎥
+              <VideoIcon />
             </ToolbarButton>
             <ToolbarButton label="Voice arrives in Phase 3" disabled>
-              🎙
+              <MicIcon />
             </ToolbarButton>
-            <button
-              type="submit"
-              aria-label="Send message"
-              disabled={sending || !draft.trim()}
-              className="ml-auto flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-white shadow-sm transition-transform enabled:hover:scale-105 disabled:opacity-40"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-              }}
-            >
-              {sending ? '…' : '➤'}
-            </button>
+            <ToolbarButton label="Shortcuts arrive later" disabled>
+              <SlashSquareIcon />
+            </ToolbarButton>
+            <div className="ml-auto flex items-center overflow-hidden rounded-lg shadow-sm">
+              <button
+                type="submit"
+                aria-label="Send message"
+                disabled={sending || !draft.trim()}
+                className="flex h-8 items-center px-3.5 text-white transition-transform enabled:hover:scale-105 disabled:opacity-40"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
+                }}
+              >
+                {sending ? '…' : <SendIcon />}
+              </button>
+              <button
+                type="button"
+                aria-label="Send options arrive later"
+                disabled
+                className="flex h-8 items-center border-l border-white/25 px-1.5 text-white disabled:opacity-40"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, var(--brand-b), var(--brand-b))',
+                }}
+              >
+                <ChevronDownIcon />
+              </button>
+            </div>
           </div>
         </div>
 

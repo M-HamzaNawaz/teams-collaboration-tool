@@ -9,9 +9,10 @@ import { FormattedBody, stripFormatting } from './message-format'
 const html = (body: string) => renderToStaticMarkup(<FormattedBody body={body} />)
 
 describe('FormattedBody', () => {
-  it('renders bold, italic, strike, inline code', () => {
-    const out = html('**bold** _it_ ~gone~ `x=1`')
+  it('renders bold, underline, italic, strike, inline code', () => {
+    const out = html('**bold** __under__ _it_ ~gone~ `x=1`')
     expect(out).toContain('<strong>bold</strong>')
+    expect(out).toContain('<u>under</u>')
     expect(out).toContain('<em>it</em>')
     expect(out).toContain('<s>gone</s>')
     expect(out).toContain('>x=1</code>')
