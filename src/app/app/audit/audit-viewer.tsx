@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
 import { accentFor, initials } from '@/lib/ui/colors'
+import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
  * Audit viewer (M9-02): filters compose, payloads expand, CSV exports.
@@ -139,6 +140,7 @@ export function AuditViewer(props: {
           >
             ⬇ Export CSV
           </button>
+          <ThemeToggle />
         </div>
       </header>
 

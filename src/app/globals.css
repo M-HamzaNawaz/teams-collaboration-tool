@@ -7,21 +7,37 @@
  * gradient from the wheel in src/lib/ui/colors.ts (picked by id hash), on a
  * calm neutral canvas so the color carries meaning without noise.
  */
+/*
+ * One definition per color via light-dark() (M10 polish + theme toggle).
+ * The effective scheme comes from color-scheme:
+ *   - default: `light dark` → follows the OS preference
+ *   - <html data-theme="light"|"dark"> → the user's explicit choice,
+ *     set by the ThemeToggle and restored pre-paint in layout.tsx.
+ */
 :root {
-  --background: #f7f7fb;
-  --surface: #ffffff;
-  --surface-2: #f0f0f6;
-  --foreground: #16161d;
-  --muted: #6e6e7a;
-  --border: #e5e5ef;
+  color-scheme: light dark;
+
+  --background: light-dark(#f7f7fb, #0d0d13);
+  --surface: light-dark(#ffffff, #15151d);
+  --surface-2: light-dark(#f0f0f6, #1c1c26);
+  --foreground: light-dark(#16161d, #ececf2);
+  --muted: light-dark(#6e6e7a, #9a9aa8);
+  --border: light-dark(#e5e5ef, #262633);
 
   --brand-a: #6d5cff; /* violet */
   --brand-b: #00b3a4; /* teal   */
   --hold: #f59e0b;    /* amber — "pending review" */
   --danger: #ef4444;
 
-  --bubble-own: #e9e6ff;
-  --bubble-other: #ffffff;
+  --bubble-own: light-dark(#e9e6ff, #2c2752);
+  --bubble-other: light-dark(#ffffff, #1c1c26);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -39,20 +55,6 @@
   --color-bubble-other: var(--bubble-other);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0d0d13;
-    --surface: #15151d;
-    --surface-2: #1c1c26;
-    --foreground: #ececf2;
-    --muted: #9a9aa8;
-    --border: #262633;
-
-    --bubble-own: #2c2752;
-    --bubble-other: #1c1c26;
-  }
 }
 
 body {

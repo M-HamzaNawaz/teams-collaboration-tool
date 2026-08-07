@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Finding } from '@/lib/detection'
 import { browserClient } from '@/lib/supabase/browser-client'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
  * The hold queue (M6-01/02/03).
@@ -164,11 +165,14 @@ export function ModerationQueue(props: {
               : 'Held messages in groups you manage'}
           </p>
         </div>
-        {queue !== null && queue.length > 0 && (
-          <span className="ml-auto rounded-full bg-hold/15 px-3 py-1 text-sm font-semibold text-hold">
-            {queue.length} waiting
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {queue !== null && queue.length > 0 && (
+            <span className="rounded-full bg-hold/15 px-3 py-1 text-sm font-semibold text-hold">
+              {queue.length} waiting
+            </span>
+          )}
+          <ThemeToggle />
+        </div>
       </header>
 
       {loadError && (

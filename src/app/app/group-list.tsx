@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { GroupRow } from '@/lib/types'
 import { gradientStyle, initials } from '@/lib/ui/colors'
 
+import { ThemeToggle } from '@/lib/ui/theme-toggle'
+
 import { LogoutButton } from './logout-button'
 import type { Me } from './chat-shell'
 
@@ -229,6 +231,7 @@ export function GroupList(props: {
           <p className="truncate text-sm font-medium">{props.me.displayName}</p>
           <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
         </div>
+        <ThemeToggle />
         <LogoutButton />
       </footer>
     </div>

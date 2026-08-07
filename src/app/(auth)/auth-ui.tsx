@@ -3,6 +3,8 @@
 import gsap from 'gsap'
 import { useEffect, useRef } from 'react'
 
+import { ThemeToggle } from '@/lib/ui/theme-toggle'
+
 /**
  * Shared auth-page chrome (M5-03 design pass): one card, one gradient mark,
  * one entrance animation — login, signup, reset, and invite all read as the
@@ -51,6 +53,9 @@ export function AuthShell(props: {
       ref={ref}
       className="flex min-h-screen items-center justify-center bg-background p-6"
     >
+      <div className="fixed right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div
         className={`w-full ${props.maxWidth === 'lg' ? 'max-w-lg' : 'max-w-sm'}`}
       >
