@@ -37,6 +37,7 @@ export function AuditViewer(props: {
   const [nextBefore, setNextBefore] = useState<number | null>(null)
   const [expanded, setExpanded] = useState<number | null>(null)
   const [check, setCheck] = useState<ChainCheck | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
   const [groupId, setGroupId] = useState('')
   const [actorName, setActorName] = useState('')
@@ -51,7 +52,14 @@ export function AuditViewer(props: {
       if (eventType) params.set('eventType', eventType)
       if (before) params.set('before', String(before))
       const response = await fetch(`/api/audit?${params}`)
-      if (!response.ok) return
+      if (!response.ok) {
+        // Never leave the skeletons up silently — the same trap the
+        // moderation queue fell into.
+        setLoadError(`Could not load the audit log (${response.status}).`)
+        setEntries([])
+        return
+      }
+      setLoadError(null)
       const data = (await response.json()) as {
         entries: Entry[]
         nextBefore: number | null
@@ -197,6 +205,18 @@ export function AuditViewer(props: {
           ))}
         </select>
       </div>
+
+      {loadError && (
+        <div className="mb-3 flex items-center gap-3 rounded-xl border border-danger bg-danger/10 p-3 text-sm">
+          <span className="flex-1 font-medium text-danger">{loadError}</span>
+          <button
+            onClick={() => void load()}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Entries */}
       <div ref={listRef} className="flex flex-col gap-1">

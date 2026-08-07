@@ -36,16 +36,35 @@ export function ModerationQueue(props: {
   me: { userId: string; displayName: string; isAdmin: boolean }
 }) {
   const [queue, setQueue] = useState<QueueItem[] | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const refetch = useCallback(async () => {
-    const response = await fetch('/api/moderation/queue')
-    if (response.ok) {
+  /**
+   * Load the queue. Returns whether it succeeded, so the caller can retry
+   * fast until the first good load.
+   *
+   * The failure path matters: this route is the admin's only view of held
+   * messages, and silently leaving the skeletons up (the original bug —
+   * caught by CI, where the first fetch lost a race with route compilation)
+   * means an admin stares at shimmer forever with nothing to act on.
+   */
+  const refetch = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/moderation/queue')
+      if (!response.ok) {
+        setLoadError(`Queue unavailable (${response.status}) — retrying…`)
+        return false
+      }
       const data = (await response.json()) as { queue: QueueItem[] }
       setQueue(data.queue)
+      setLoadError(null)
+      return true
+    } catch {
+      setLoadError('Queue unavailable — check your connection.')
+      return false
     }
   }, [])
 
@@ -71,12 +90,25 @@ export function ModerationQueue(props: {
       })
       .subscribe()
 
+    // Retry fast until the first successful load, then settle into a steady
+    // poll. A single failed first fetch must never leave the admin with a
+    // permanently empty-looking queue.
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout>
+    let attempts = 0
+    const tick = async () => {
+      if (cancelled) return
+      const ok = await refetch()
+      if (cancelled) return
+      attempts += 1
+      timer = setTimeout(tick, ok ? 30_000 : Math.min(1_000 * attempts, 8_000))
+    }
     // Deferred — React 19 lint: no sync setState paths in effect bodies.
-    queueMicrotask(() => void refetch())
-    const poll = setInterval(() => void refetch(), 30_000)
+    timer = setTimeout(tick, 0)
 
     return () => {
-      clearInterval(poll)
+      cancelled = true
+      clearTimeout(timer)
       void supabase.removeChannel(channel)
     }
   }, [props.workspaceId, refetch, showToast])
@@ -138,6 +170,18 @@ export function ModerationQueue(props: {
           </span>
         )}
       </header>
+
+      {loadError && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-danger bg-danger/10 p-3 text-sm">
+          <span className="flex-1 font-medium text-danger">{loadError}</span>
+          <button
+            onClick={() => void refetch()}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2"
+          >
+            Retry now
+          </button>
+        </div>
+      )}
 
       <div ref={listRef} className="flex flex-col gap-4">
         {queue === null ? (

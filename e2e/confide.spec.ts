@@ -92,9 +92,23 @@ test('the full control loop: invite → consent → hold → approve → deliver
   await expect(recipient.locator(`text=${smuggle}`)).toHaveCount(0)
 
   // ── Admin approves from the moderation queue.
+  // Assert the SERVER state before the UI: when this fails on CI, the log
+  // then says whether the message never reached the queue (data/scoping) or
+  // the page didn't render it (client) — instead of one ambiguous "element
+  // not found".
+  const queueResponse = await admin.request.get('/api/moderation/queue')
+  expect(queueResponse.status(), 'moderation queue API').toBe(200)
+  const { queue } = (await queueResponse.json()) as {
+    queue: Array<{ body: string }>
+  }
+  expect(
+    queue.map((q) => q.body),
+    'the held message is in the admin queue',
+  ).toContain(smuggle)
+
   await admin.goto('/app/moderation')
   const card = admin.locator('article', { hasText: smuggle })
-  await expect(card).toBeVisible({ timeout: 10_000 })
+  await expect(card).toBeVisible({ timeout: 30_000 })
   await card.getByRole('button', { name: /Approve/ }).click()
 
   // ── Delivery: the recipient receives it WITHOUT a reload.
