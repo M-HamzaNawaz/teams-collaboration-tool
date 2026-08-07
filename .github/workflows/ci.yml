@@ -14,7 +14,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs, but let every main push finish — otherwise
+  # rapid pushes paint older commits with misleading red X's.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -96,6 +98,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
+      - name: Ensure Chrome for Playwright
+        run: command -v google-chrome || npx playwright install --with-deps chrome
+
       - name: Start dev server
         run: |
           NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
@@ -106,7 +111,21 @@ jobs:
           npm run dev &
           for i in $(seq 1 60); do curl -sf http://localhost:3000/login -o /dev/null && break; sleep 2; done
 
+      - name: Warm route compilation
+        run: |
+          for path in /login /signup /reset /manifest.webmanifest; do
+            curl -sf "http://localhost:3000$path" -o /dev/null || true
+          done
+
       # The journey that IS the product: invite -> consent -> hold ->
       # recipient blind -> approve -> deliver -> audit chain. Gates release.
       - name: Run E2E suite
         run: npx playwright test
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7

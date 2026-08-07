@@ -9,13 +9,20 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  timeout: 60_000,
+  // CI runners compile Next routes on first hit at a fraction of laptop
+  // speed — generous ceilings so timing never masquerades as a failure.
+  timeout: 120_000,
+  expect: { timeout: 15_000 },
   fullyParallel: false, // the journey mutates shared state deliberately
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI ? [['list'], ['github']] : 'list',
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     channel: 'chrome',
+    navigationTimeout: 45_000,
+    actionTimeout: 20_000,
     screenshot: 'only-on-failure',
+    trace: process.env.CI ? 'retain-on-failure' : 'off',
   },
 })

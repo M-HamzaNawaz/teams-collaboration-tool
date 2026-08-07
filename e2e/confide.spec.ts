@@ -24,7 +24,7 @@ async function login(page: Page, who: { email: string; password: string }) {
   await page.fill('input[type=email]', who.email)
   await page.fill('input[type=password]', who.password)
   await page.click('button[type=submit]')
-  await page.waitForURL('**/app', { timeout: 15_000 })
+  await page.waitForURL('**/app', { timeout: 45_000 })
 }
 
 async function loggedInPage(browser: Browser, who: { email: string; password: string }) {
@@ -72,7 +72,7 @@ test('the full control loop: invite → consent → hold → approve → deliver
   await invitee.fill('input[placeholder="Confirm password"]', 'e2e-client-pass-1')
   await invitee.check('input[type=checkbox]')
   await invitee.click('button[type=submit]')
-  await invitee.waitForURL('**/app', { timeout: 15_000 })
+  await invitee.waitForURL('**/app', { timeout: 45_000 })
   await expect(invitee.getByText(groupName).first()).toBeVisible()
 
   // ── Recipient opens the group and stays on it.
