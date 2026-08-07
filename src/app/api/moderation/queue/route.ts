@@ -23,6 +23,16 @@ export async function GET() {
 
   const service = serviceClient()
 
+  // Clients never reach the queue — held findings are the exact content
+  // holds exist to keep from them (defense in depth; the db trigger
+  // already prevents client-manager rows from existing).
+  if (session.profile.member_role === 'client') {
+    return Response.json(
+      { error: 'requires group manager or admin' },
+      { status: 403 },
+    )
+  }
+
   // Manager scoping: the groups this caller actively manages.
   let managedGroupIds: string[] = []
   if (!isAdmin) {

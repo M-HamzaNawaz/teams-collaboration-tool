@@ -114,6 +114,14 @@ export async function POST(
         { status: 409 },
       )
     }
+    if (error.code === 'P0020') {
+      // forbid_client_managers trigger — clients moderating would see the
+      // held findings the product exists to keep from them.
+      return Response.json(
+        { error: 'clients cannot be group managers' },
+        { status: 400 },
+      )
+    }
     return Response.json({ error: 'failed to add member' }, { status: 500 })
   }
 

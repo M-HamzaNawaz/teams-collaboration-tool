@@ -180,6 +180,24 @@ describe('message visibility — the held-message contract (spec §6/§7)', () =
           values (${SEED.groups.unipile}, ${SEED.users.usman}, ${SEED.wsA}, 'manager')`,
     ).rejects.toThrow(/one_manager_per_group|duplicate key/)
   })
+
+  it('a CLIENT can never be a group manager — trigger, not code', async () => {
+    // A client-manager would read the moderation queue, where held findings
+    // display the exact contact data the hold keeps from clients. Found by
+    // real usage; forbidden at the database layer since 20260807110000.
+    // waleed is wsA's client and a member of phoneApp (archived) — try to
+    // promote him anywhere:
+    await expect(
+      sql`update public.group_members
+          set group_role = 'manager'
+          where user_id = ${SEED.users.waleed} and workspace_id = ${SEED.wsA}`,
+    ).rejects.toThrow(/clients cannot be group managers/)
+
+    await expect(
+      sql`insert into public.group_members (group_id, user_id, workspace_id, group_role)
+          values (${SEED.groups.boltSite}, ${SEED.users.zara}, ${SEED.wsB}, 'manager')`,
+    ).rejects.toThrow(/clients cannot be group managers/)
+  })
 })
 
 describe('audit hash chain (M1-07)', () => {

@@ -196,8 +196,10 @@ export async function authorize(
       if (isAdmin) return grant() // admin moderates everywhere
       if (!group) return { ok: false, status: 404, reason: 'group required' }
       // One Manager per group: that group's manager approves/blocks for
-      // their group only (spec Q5).
-      if (groupRole === 'manager') return grant()
+      // their group only (spec Q5). NEVER a client, even if a manager row
+      // somehow exists (the db trigger forbids creating one): the queue
+      // shows held findings — the exact data holds keep from clients.
+      if (groupRole === 'manager' && role !== 'client') return grant()
       return { ok: false, status: 403, reason: 'requires group manager or admin' }
     }
   }

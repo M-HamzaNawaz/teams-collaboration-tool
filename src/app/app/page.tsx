@@ -75,8 +75,12 @@ export default async function AppPage() {
   )
 
   // Moderation entry (M6-01): admins and managers of at least one group.
+  // Clients never count as managers (the db trigger forbids the rows;
+  // this guard keeps the UI honest even against legacy data).
   const isAdmin = session.profile.member_role === 'admin'
-  const isManager = myMemberships.some((m) => m.group_role === 'manager')
+  const isManager =
+    session.profile.member_role !== 'client' &&
+    myMemberships.some((m) => m.group_role === 'manager')
   let pendingCount = 0
   if (isAdmin || isManager) {
     const managedIds = myMemberships
