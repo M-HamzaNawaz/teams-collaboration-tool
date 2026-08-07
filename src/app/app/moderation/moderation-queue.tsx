@@ -279,11 +279,31 @@ export function ModerationQueue(props: {
   )
 }
 
-/** The original text with findings' spans wrapped in amber marks (M2-02). */
+/**
+ * The original text with findings' spans wrapped in amber marks (M2-02).
+ *
+ * Defensive on purpose: this page is the admin's ONLY window onto held
+ * messages, so a malformed finding must degrade to unhighlighted text, never
+ * crash the page. (Learned in CI: the seed's flag rows lacked `span`, and
+ * destructuring undefined took the whole moderation queue down with
+ * "TypeError: not iterable" — an admin blinded by one bad row.)
+ */
 function HighlightedBody(props: { body: string; findings: Finding[] }) {
-  const spans = [...props.findings]
+  const spans = props.findings
     .map((f) => f.span)
+    .filter(
+      (s): s is [number, number] =>
+        Array.isArray(s) &&
+        s.length === 2 &&
+        Number.isFinite(s[0]) &&
+        Number.isFinite(s[1]) &&
+        s[0] >= 0 &&
+        s[1] > s[0] &&
+        s[1] <= props.body.length,
+    )
     .sort((a, b) => a[0] - b[0])
+
+  if (spans.length === 0) return <>{props.body}</>
 
   const parts: React.ReactNode[] = []
   let cursor = 0

@@ -150,16 +150,26 @@ export async function seed(databaseUrl: string = DATABASE_URL): Promise<void> {
     // and the invariant suite depends on message 302 being pending again.
 
     // -- flags for the held/blocked messages --------------------------------
+    // Findings carry the FULL engine shape (span/confidence/action): the
+    // moderation UI highlights by span, and a span-less fixture crashed the
+    // queue page in CI. Conflict target = message_flags_one_per_message;
+    // the update restores baseline like the messages upsert above.
     await sql`
       insert into public.message_flags
         (workspace_id, message_id, findings_jsonb, action, resolution) values
         (${SEED.wsA}, ${SEED.messages.pending},
-         '[{"type":"email","rule_id":"email.standard","match":"ahmed.k@gmail.com"}]',
+         '[{"type":"email","rule_id":"email.standard","match":"ahmed.k@gmail.com","span":[12,29],"confidence":0.95,"action":"hold"}]',
          'hold', null),
         (${SEED.wsA}, ${SEED.messages.blocked},
-         '[{"type":"phone","rule_id":"phone.international","match":"+92 300 1234567"}]',
+         '[{"type":"phone","rule_id":"phone.international","match":"+92 300 1234567","span":[13,28],"confidence":0.9,"action":"hold"}]',
          'hold', 'blocked')
-      on conflict do nothing`
+      on conflict (message_id) do update
+        set findings_jsonb = excluded.findings_jsonb,
+            action = excluded.action,
+            resolution = excluded.resolution,
+            resolved_by = null,
+            resolved_at = null,
+            escalated_at = null`
 
     // -- a file, an invitation, consents, a name-change request -------------
     await sql`
