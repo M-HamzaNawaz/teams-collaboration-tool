@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth/session'
 import { createRateLimiter, rateLimitResponse } from '@/lib/auth/rate-limit'
 import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
+import { stripFormatting } from '@/lib/ui/message-format'
 import { sendEmail } from '@/lib/email/send'
 import { publicEnv } from '@/lib/env/public'
 import { logError } from '@/lib/log'
@@ -77,9 +78,22 @@ export async function POST(request: Request) {
     return Response.json({ error: authz.reason }, { status: authz.status })
   }
 
-  // The line the product stands on.
+  // The line the product stands on — run twice when formatting marks are
+  // present: `0300**123**4567` is split digits to the engine but a single
+  // number once the bubble renders it bold. The stripped pass sees what the
+  // READER will see; the worst verdict wins.
   const config = await workspaceDetectionConfig(service, workspaceId)
-  const verdict = detect(body, config)
+  let verdict = detect(body, config)
+  const stripped = stripFormatting(body)
+  if (stripped !== body) {
+    const strippedVerdict = detect(stripped, config)
+    const severity = { allow: 0, flag_only: 1, hold: 2 } as const
+    if (severity[strippedVerdict.action] > severity[verdict.action]) {
+      // Spans point into the STRIPPED text; the moderation UI bounds-checks
+      // spans and degrades to unhighlighted rather than trusting them.
+      verdict = strippedVerdict
+    }
+  }
 
   const { data, error } = await service.rpc('send_message', {
     p_workspace_id: workspaceId,

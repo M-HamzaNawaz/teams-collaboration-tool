@@ -22,6 +22,7 @@ import {
 import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+import { FormattedBody } from '@/lib/ui/message-format'
 
 import type { Me } from './chat-shell'
 import { MembersPanel } from './members-panel'
@@ -78,6 +79,10 @@ export function ChatPane(props: {
   >(new Map())
   const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Slack-style composer state.
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+  const [showToolbar, setShowToolbar] = useState(false)
+  const [popover, setPopover] = useState<'emoji' | 'mention' | null>(null)
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
@@ -574,6 +579,48 @@ export function ChatPane(props: {
     }
   }
 
+  // ── Composer formatting helpers (Slack-style). All operate on the real
+  // selection so keyboard shortcuts and toolbar buttons behave identically.
+  function surroundSelection(prefix: string, suffix = prefix) {
+    const el = composerRef.current
+    if (!el) return
+    const { selectionStart: s, selectionEnd: e, value } = el
+    const selected = value.slice(s, e) || 'text'
+    setDraft(value.slice(0, s) + prefix + selected + suffix + value.slice(e))
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(s + prefix.length, s + prefix.length + selected.length)
+    })
+  }
+
+  function prefixLines(linePrefix: string) {
+    const el = composerRef.current
+    if (!el) return
+    const { selectionStart: s, selectionEnd: e, value } = el
+    const start = value.lastIndexOf('\n', s - 1) + 1
+    const end = e
+    const block = value.slice(start, end)
+    const prefixed = block
+      .split('\n')
+      .map((line, i) =>
+        linePrefix === '1. ' ? `${i + 1}. ${line}` : `${linePrefix}${line}`,
+      )
+      .join('\n')
+    setDraft(value.slice(0, start) + prefixed + value.slice(end))
+    requestAnimationFrame(() => el.focus())
+  }
+
+  function insertAtCursor(text: string) {
+    const el = composerRef.current
+    if (!el) return
+    const { selectionStart: s, selectionEnd: e, value } = el
+    setDraft(value.slice(0, s) + text + value.slice(e))
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(s + text.length, s + text.length)
+    })
+  }
+
   function retry(message: ClientMessage) {
     if (message.status !== 'failed') return
     setNotice(null)
@@ -776,9 +823,9 @@ export function ChatPane(props: {
                               </span>
                             </button>
                           ) : (
-                            <p className="whitespace-pre-wrap wrap-break-word text-sm">
-                              {message.body}
-                            </p>
+                            <div className="text-sm">
+                              <FormattedBody body={message.body} />
+                            </div>
                           )}
                           {message.status === 'blocked' && (
                             <p className="mt-1 text-[11px] font-medium text-danger">
@@ -854,67 +901,215 @@ export function ChatPane(props: {
         </p>
       )}
 
-      {/* Composer */}
+      {/* Composer — Slack-style: toolbar on top, input, actions row */}
       <form
         onSubmit={send}
-        className="pb-safe flex items-end gap-2 border-t border-border bg-surface p-3"
+        className="pb-safe border-t border-border bg-surface p-3"
       >
-        {/* M7-02: attach — filename goes through detect() server-side */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) void uploadFile(file)
-            e.target.value = ''
-          }}
-        />
-        <button
-          type="button"
-          aria-label="Attach a file"
-          onClick={() => fileInputRef.current?.click()}
-          className="h-10.5 shrink-0 rounded-xl border border-border px-3 text-lg hover:bg-surface-2"
-        >
-          📎
-        </button>
-        <textarea
-          value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value)
-            // Typing signal, throttled — ephemeral broadcast (M5-06).
-            const now = Date.now()
-            if (now - lastTypingSent.current > 1500 && presenceRef.current) {
-              lastTypingSent.current = now
-              sendTyping(presenceRef.current, {
-                userId: props.me.userId,
-                displayName: props.me.displayName,
-              })
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              void send(e)
-            }
-          }}
-          rows={1}
-          placeholder={`Message ${props.group.name}…`}
-          className="max-h-40 min-h-10.5 flex-1 resize-y rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-brand-a"
-        />
-        <button
-          type="submit"
-          disabled={sending || !draft.trim()}
-          className="h-10.5 shrink-0 rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition-transform enabled:hover:scale-105 disabled:opacity-40"
-          style={{
-            backgroundImage:
-              'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-          }}
-        >
-          {sending ? '…' : 'Send'}
-        </button>
+        <div className="rounded-xl border border-border bg-background focus-within:border-brand-a">
+          {/* Formatting toolbar (Aa toggles it) */}
+          {showToolbar && (
+            <div className="flex items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
+              <ToolbarButton label="Bold (Ctrl+B)" onClick={() => surroundSelection('**')}>
+                <b>B</b>
+              </ToolbarButton>
+              <ToolbarButton label="Italic (Ctrl+I)" onClick={() => surroundSelection('_')}>
+                <i>I</i>
+              </ToolbarButton>
+              <ToolbarButton label="Strikethrough" onClick={() => surroundSelection('~')}>
+                <s>S</s>
+              </ToolbarButton>
+              <span className="mx-1 h-4 w-px bg-border" />
+              <ToolbarButton label="Bulleted list" onClick={() => prefixLines('- ')}>
+                ≔
+              </ToolbarButton>
+              <ToolbarButton label="Numbered list" onClick={() => prefixLines('1. ')}>
+                ⒈
+              </ToolbarButton>
+              <ToolbarButton label="Quote" onClick={() => prefixLines('> ')}>
+                ❝
+              </ToolbarButton>
+              <span className="mx-1 h-4 w-px bg-border" />
+              <ToolbarButton label="Inline code (Ctrl+E)" onClick={() => surroundSelection('`')}>
+                {'<>'}
+              </ToolbarButton>
+              <ToolbarButton label="Code block" onClick={() => surroundSelection('```\n', '\n```')}>
+                ⧉
+              </ToolbarButton>
+            </div>
+          )}
+
+          <textarea
+            ref={composerRef}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              // Typing signal, throttled — ephemeral broadcast (M5-06).
+              const now = Date.now()
+              if (now - lastTypingSent.current > 1500 && presenceRef.current) {
+                lastTypingSent.current = now
+                sendTyping(presenceRef.current, {
+                  userId: props.me.userId,
+                  displayName: props.me.displayName,
+                })
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                void send(e)
+                return
+              }
+              if (e.ctrlKey || e.metaKey) {
+                const key = e.key.toLowerCase()
+                if (key === 'b') { e.preventDefault(); surroundSelection('**') }
+                if (key === 'i') { e.preventDefault(); surroundSelection('_') }
+                if (key === 'e') { e.preventDefault(); surroundSelection('`') }
+                if (key === 'x' && e.shiftKey) { e.preventDefault(); surroundSelection('~') }
+              }
+            }}
+            rows={1}
+            placeholder={`Message ${props.group.name}…`}
+            className="max-h-40 min-h-10.5 w-full resize-y bg-transparent px-3.5 py-2.5 text-sm outline-none"
+          />
+
+          {/* Actions row */}
+          <div className="flex items-center gap-0.5 px-2 pb-1.5 text-muted">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void uploadFile(file)
+                e.target.value = ''
+              }}
+            />
+            <ToolbarButton label="Attach a file" onClick={() => fileInputRef.current?.click()}>
+              ＋
+            </ToolbarButton>
+            <ToolbarButton
+              label={showToolbar ? 'Hide formatting' : 'Show formatting'}
+              active={showToolbar}
+              onClick={() => setShowToolbar((v) => !v)}
+            >
+              Aa
+            </ToolbarButton>
+            <ToolbarButton
+              label="Emoji"
+              active={popover === 'emoji'}
+              onClick={() => setPopover(popover === 'emoji' ? null : 'emoji')}
+            >
+              ☺
+            </ToolbarButton>
+            <ToolbarButton
+              label="Mention someone"
+              active={popover === 'mention'}
+              onClick={() => setPopover(popover === 'mention' ? null : 'mention')}
+            >
+              @
+            </ToolbarButton>
+            <span className="mx-1 h-4 w-px bg-border" />
+            <ToolbarButton label="Video calls arrive in Phase 3" disabled>
+              🎥
+            </ToolbarButton>
+            <ToolbarButton label="Voice arrives in Phase 3" disabled>
+              🎙
+            </ToolbarButton>
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={sending || !draft.trim()}
+              className="ml-auto flex h-8 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-white shadow-sm transition-transform enabled:hover:scale-105 disabled:opacity-40"
+              style={{
+                backgroundImage:
+                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
+              }}
+            >
+              {sending ? '…' : '➤'}
+            </button>
+          </div>
+        </div>
+
+        {/* Emoji picker */}
+        {popover === 'emoji' && (
+          <div className="mt-2 grid max-w-sm grid-cols-10 gap-1 rounded-xl border border-border bg-surface p-2 text-xl shadow-lg">
+            {EMOJI.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="rounded-lg p-1 hover:bg-surface-2"
+                onClick={() => {
+                  insertAtCursor(emoji)
+                  setPopover(null)
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mention picker — masked names only, same as everywhere (M8) */}
+        {popover === 'mention' && (
+          <div className="mt-2 flex max-w-sm flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+            {[...names.entries()]
+              .filter(([userId]) => userId !== props.me.userId)
+              .map(([userId, name]) => (
+                <button
+                  key={userId}
+                  type="button"
+                  className="flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
+                  onClick={() => {
+                    insertAtCursor(`@${name} `)
+                    setPopover(null)
+                  }}
+                >
+                  <span
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={gradientStyle(userId)}
+                  >
+                    {initials(name)}
+                  </span>
+                  {name}
+                </button>
+              ))}
+            {names.size <= 1 && (
+              <p className="px-3 py-2 text-sm text-muted">Nobody else here yet.</p>
+            )}
+          </div>
+        )}
       </form>
     </div>
+  )
+}
+
+const EMOJI = [
+  '😀', '😂', '😊', '😍', '🤔', '😅', '😎', '🙌', '👍', '👎',
+  '👏', '🙏', '💪', '🔥', '✨', '🎉', '❤️', '💯', '✅', '❌',
+  '⚡', '💡', '📌', '📅', '⏰', '☕', '🍕', '🚀', '🐛', '👀',
+]
+
+function ToolbarButton(props: {
+  label: string
+  onClick?: () => void
+  active?: boolean
+  disabled?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      title={props.label}
+      aria-label={props.label}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-sm transition-colors ${
+        props.active ? 'bg-surface-2 text-foreground' : 'hover:bg-surface-2'
+      } disabled:opacity-35`}
+    >
+      {props.children}
+    </button>
   )
 }
 
