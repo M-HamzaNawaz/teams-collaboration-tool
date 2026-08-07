@@ -106,9 +106,27 @@ test('the full control loop: invite → consent → hold → approve → deliver
     'the held message is in the admin queue',
   ).toContain(smuggle)
 
+  // Surface client-side failures in the CI LOG, not just artifacts.
+  admin.on('pageerror', (e) => console.log('[admin pageerror]', String(e)))
+  admin.on('console', (m) => {
+    if (m.type() === 'error') console.log('[admin console.error]', m.text())
+  })
+
   await admin.goto('/app/moderation')
   const card = admin.locator('article', { hasText: smuggle })
-  await expect(card).toBeVisible({ timeout: 30_000 })
+  try {
+    await expect(card).toBeVisible({ timeout: 30_000 })
+  } catch (error) {
+    // The one question that matters: what IS the page showing instead?
+    console.log('[admin page text at failure] >>>')
+    console.log(await admin.evaluate(() => document.body.innerText.slice(0, 1500)))
+    console.log('<<<')
+    console.log(
+      '[queue API at failure]',
+      JSON.stringify(await (await admin.request.get('/api/moderation/queue')).json()).slice(0, 600),
+    )
+    throw error
+  }
   await card.getByRole('button', { name: /Approve/ }).click()
 
   // ── Delivery: the recipient receives it WITHOUT a reload.
