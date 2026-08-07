@@ -77,7 +77,9 @@ export function GroupList(props: {
 
   return (
     <div ref={listRef} className="flex h-full flex-col">
-      {/* Workspace header */}
+      {/* Workspace header — the theme toggle lives TOP-RIGHT here, matching
+          its position on every other page (auth corner, moderation and
+          audit headers). One place, everywhere. */}
       <header className="flex items-center gap-3 border-b border-border p-4">
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white"
@@ -88,10 +90,11 @@ export function GroupList(props: {
         >
           {initials(props.workspaceName)}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold">{props.workspaceName}</h1>
           <p className="truncate text-xs text-muted">Confide workspace</p>
         </div>
+        <ThemeToggle />
       </header>
 
       {/* Groups */}
@@ -231,7 +234,6 @@ export function GroupList(props: {
           <p className="truncate text-sm font-medium">{props.me.displayName}</p>
           <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
         </div>
-        <ThemeToggle />
         <LogoutButton />
       </footer>
     </div>
