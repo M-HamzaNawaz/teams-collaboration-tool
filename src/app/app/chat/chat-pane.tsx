@@ -636,7 +636,40 @@ export function ChatPane(props: {
       )
       .join('\n')
     setDraft(value.slice(0, start) + prefixed + value.slice(end))
-    requestAnimationFrame(() => el.focus())
+    const added = prefixed.length - block.length
+    requestAnimationFrame(() => {
+      el.focus()
+      if (s === e) {
+        // Nothing selected: caret goes AFTER the marker, so typing
+        // continues the bullet rather than landing in front of it.
+        const caret = start + (linePrefix === '1. ' ? 3 : linePrefix.length)
+        el.setSelectionRange(caret, caret)
+      } else {
+        el.setSelectionRange(start, end + added)
+      }
+    })
+  }
+
+  /**
+   * Link: with words selected, wrap them as [words](https://) and drop the
+   * caret inside the parens to paste the URL — selecting text and clicking
+   * link used to DELETE the text, which is the opposite of the intent.
+   */
+  function insertLink() {
+    const el = composerRef.current
+    if (!el) return
+    const { selectionStart: s, selectionEnd: e, value } = el
+    const selected = value.slice(s, e)
+    if (!selected) {
+      insertAtCursor('https://')
+      return
+    }
+    setDraft(value.slice(0, s) + `[${selected}](https://)` + value.slice(e))
+    requestAnimationFrame(() => {
+      el.focus()
+      const caret = s + selected.length + 11 // [ + text + ]( + https://
+      el.setSelectionRange(caret, caret)
+    })
   }
 
   function insertAtCursor(text: string) {
@@ -964,7 +997,7 @@ export function ChatPane(props: {
                 <StrikethroughIcon />
               </ToolbarButton>
               <span className="mx-1 h-4 w-px bg-border" />
-              <ToolbarButton label="Insert link" onClick={() => insertAtCursor('https://')}>
+              <ToolbarButton label="Insert link" onClick={insertLink}>
                 <LinkIcon />
               </ToolbarButton>
               <ToolbarButton label="Numbered list" onClick={() => prefixLines('1. ')}>

@@ -32,6 +32,27 @@ describe('FormattedBody', () => {
     expect((out.match(/<li>/g) ?? []).length).toBe(4)
   })
 
+  it('renders [label](url) links, http(s) only', () => {
+    const out = html('see [the docs](https://example.com) now')
+    expect(out).toContain('href="https://example.com"')
+    expect(out).toContain('>the docs</a>')
+    expect(out).not.toContain('](') // no raw markdown left over
+  })
+
+  it('REFUSES dangerous link schemes — renders them as text', () => {
+    for (const bad of [
+      '[click](javascript:alert(1))',
+      '[click](data:text/html,<script>alert(1)</script>)',
+      '[click](vbscript:msgbox)',
+    ]) {
+      const out = html(bad)
+      // The characters may appear as visible TEXT — that is harmless. What
+      // must never happen is an anchor carrying them as a destination.
+      expect(out).not.toContain('<a ')
+      expect(out).not.toMatch(/href="(?!https?:)/)
+    }
+  })
+
   it('links http(s) URLs with safe rel', () => {
     const out = html('see https://github.com/acme/api now')
     expect(out).toContain('href="https://github.com/acme/api"')
@@ -79,6 +100,8 @@ describe('FormattedBody', () => {
 describe('stripFormatting (the anti-reassembly helper)', () => {
   it('rejoins digits split by formatting marks', () => {
     expect(stripFormatting('0300**123**4567')).toBe('03001234567')
+    // link syntax must not hide contact data from detect() either
+    expect(stripFormatting('[0300](x)1234567')).toBe('0300x1234567')
     expect(stripFormatting('ahmed_k_@gmail._com')).toBe('ahmedk@gmail.com')
     expect(stripFormatting('`0300` `1234567`')).toBe('0300 1234567')
   })

@@ -24,13 +24,13 @@ const URL_RE = /https?:\/\/[^\s<>"')\]]+/g
  * dot followed by more word characters.
  */
 const INLINE_TOKEN_RE =
-  /(\*\*[^*\n]+\*\*|(?<!\w)__[^_\n]+__(?!\w|\.\w)|(?<!\w)_[^_\n]+_(?!\w|\.\w)|~[^~\n]+~|`[^`\n]+`)/g
+  /(\[[^\]\n]+\]\([^)\s]+\)|\*\*[^*\n]+\*\*|(?<!\w)__[^_\n]+__(?!\w|\.\w)|(?<!\w)_[^_\n]+_(?!\w|\.\w)|~[^~\n]+~|`[^`\n]+`)/g
 
 /** Remove formatting punctuation so split content re-joins for detect(). */
 export function stripFormatting(text: string): string {
   return text
     .replaceAll('```', '')
-    .replace(/[*_~`]/g, '')
+    .replace(/[*_~`[\]()]/g, '')
     .replace(/^\s*(?:>|-|\d+\.)\s+/gm, '')
 }
 
@@ -43,7 +43,27 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
   for (const piece of pieces) {
     if (!piece) continue
     const key = `${keyBase}-${index++}`
-    if (piece.startsWith('**') && piece.endsWith('**') && piece.length > 4) {
+    const link = /^\[([^\]\n]+)\]\(([^)\s]+)\)$/.exec(piece)
+    if (link) {
+      // http(s) ONLY — a javascript: or data: href would turn a chat
+      // message into a script the reader clicks.
+      const safe = /^https?:\/\//i.test(link[2])
+      out.push(
+        safe ? (
+          <a
+            key={key}
+            href={link[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-a underline underline-offset-2"
+          >
+            {link[1]}
+          </a>
+        ) : (
+          <span key={key}>{piece}</span>
+        ),
+      )
+    } else if (piece.startsWith('**') && piece.endsWith('**') && piece.length > 4) {
       out.push(<strong key={key}>{renderInline(piece.slice(2, -2), key)}</strong>)
     } else if (piece.startsWith('__') && piece.endsWith('__') && piece.length > 4) {
       out.push(<u key={key}>{renderInline(piece.slice(2, -2), key)}</u>)
