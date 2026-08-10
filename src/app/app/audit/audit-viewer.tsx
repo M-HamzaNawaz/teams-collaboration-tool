@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
 import { accentFor, initials } from '@/lib/ui/colors'
-import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
  * Audit viewer (M9-02): filters compose, payloads expand, CSV exports.
@@ -124,11 +123,8 @@ export function AuditViewer(props: {
   })
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col p-4 md:p-6">
+    <main className="mx-auto flex h-full w-full max-w-4xl flex-col overflow-y-auto p-4 md:p-6">
       <header className="mb-4 flex flex-wrap items-center gap-3">
-        <a href="/app" className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2">
-          ← Chat
-        </a>
         <div className="min-w-0">
           <h1 className="text-xl font-semibold">Audit log</h1>
           <p className="text-sm text-muted">Every action, forever — the evidence surface</p>
@@ -140,7 +136,6 @@ export function AuditViewer(props: {
           >
             ⬇ Export CSV
           </button>
-          <ThemeToggle />
         </div>
       </header>
 

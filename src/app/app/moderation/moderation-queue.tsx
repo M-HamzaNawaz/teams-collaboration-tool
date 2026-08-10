@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Finding } from '@/lib/detection'
 import { browserClient } from '@/lib/supabase/browser-client'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
-import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
  * The hold queue (M6-01/02/03).
@@ -149,14 +148,8 @@ export function ModerationQueue(props: {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col p-4 md:p-6">
+    <main className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-y-auto p-4 md:p-6">
       <header className="mb-5 flex items-center gap-3">
-        <a
-          href="/app"
-          className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
-        >
-          ← Chat
-        </a>
         <div>
           <h1 className="text-xl font-semibold">Moderation queue</h1>
           <p className="text-sm text-muted">
@@ -171,7 +164,6 @@ export function ModerationQueue(props: {
               {queue.length} waiting
             </span>
           )}
-          <ThemeToggle />
         </div>
       </header>
 

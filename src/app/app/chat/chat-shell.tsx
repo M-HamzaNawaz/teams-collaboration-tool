@@ -26,8 +26,6 @@ export function ChatShell(props: {
   workspaceName: string
   me: Me
   unreadByGroup?: Record<string, number>
-  moderation?: { pendingCount: number } | null
-  auditLink?: boolean
 }) {
   // Groups just created in THIS session appear instantly; router.refresh()
   // brings the server list up to date and the dedupe folds them together.
@@ -72,7 +70,7 @@ export function ChatShell(props: {
   }
 
   return (
-    <div ref={shellRef} className="flex h-dvh w-full overflow-hidden">
+    <div ref={shellRef} className="flex h-full w-full overflow-hidden">
       {/* Sidebar — hidden on mobile while a chat is open */}
       <aside
         data-anim="sidebar"
@@ -88,8 +86,6 @@ export function ChatShell(props: {
           onSelect={openGroup}
           onGroupCreated={onGroupCreated}
           unreadByGroup={props.unreadByGroup ?? {}}
-          moderation={props.moderation ?? null}
-          auditLink={props.auditLink ?? false}
         />
       </aside>
 

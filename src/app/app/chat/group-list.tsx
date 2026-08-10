@@ -7,9 +7,6 @@ import { useEffect, useRef, useState } from 'react'
 import type { GroupRow } from '@/lib/types'
 import { gradientStyle, initials } from '@/lib/ui/colors'
 
-import { ThemeToggle } from '@/lib/ui/theme-toggle'
-
-import { LogoutButton } from './logout-button'
 import type { Me } from './chat-shell'
 
 /**
@@ -25,8 +22,6 @@ export function GroupList(props: {
   onSelect: (group: GroupRow) => void
   onGroupCreated?: (group: GroupRow) => void
   unreadByGroup: Record<string, number>
-  moderation: { pendingCount: number } | null
-  auditLink?: boolean
 }) {
   const listRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -77,24 +72,13 @@ export function GroupList(props: {
 
   return (
     <div ref={listRef} className="flex h-full flex-col">
-      {/* Workspace header — the theme toggle lives TOP-RIGHT here, matching
-          its position on every other page (auth corner, moderation and
-          audit headers). One place, everywhere. */}
+      {/* Sidebar header: this pane is now purely the group list — app
+          navigation, workspace, theme and identity all live in the top bar. */}
       <header className="flex items-center gap-3 border-b border-border p-4">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white"
-          style={{
-            backgroundImage:
-              'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-          }}
-        >
-          {initials(props.workspaceName)}
-        </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-semibold">{props.workspaceName}</h1>
-          <p className="truncate text-xs text-muted">Confide workspace</p>
+          <h1 className="truncate font-semibold">Conversations</h1>
+          <p className="truncate text-xs text-muted">{props.workspaceName}</p>
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Groups */}
@@ -191,51 +175,8 @@ export function GroupList(props: {
         </ul>
       </nav>
 
-      {/* Moderation entry (M6-01) — admins and group managers only */}
-      {props.moderation && (
-        <a
-          href="/app/moderation"
-          className="mx-2 mb-2 flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-surface-2"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-hold/15 text-sm">
-            🛡
-          </span>
-          <span className="flex-1 text-sm font-medium">Moderation</span>
-          {props.moderation.pendingCount > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-hold px-1.5 text-[11px] font-bold text-white">
-              {props.moderation.pendingCount}
-            </span>
-          )}
-        </a>
-      )}
 
-      {/* Audit log (M9-02) — admins only */}
-      {props.auditLink && (
-        <a
-          href="/app/audit"
-          className="mx-2 mb-2 flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-surface-2"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-a/15 text-sm">
-            📜
-          </span>
-          <span className="flex-1 text-sm font-medium">Audit log</span>
-        </a>
-      )}
 
-      {/* Me */}
-      <footer className="pb-safe flex items-center gap-3 border-t border-border p-3">
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-          style={gradientStyle(props.me.userId)}
-        >
-          {initials(props.me.displayName)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{props.me.displayName}</p>
-          <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
-        </div>
-        <LogoutButton />
-      </footer>
     </div>
   )
 }

@@ -25,6 +25,9 @@ async function login(page: Page, who: { email: string; password: string }) {
   await page.fill('input[type=password]', who.password)
   await page.click('button[type=submit]')
   await page.waitForURL('**/app', { timeout: 45_000 })
+  // /app is the dashboard since the top-bar restructure; the journey below
+  // exercises the chat, so land there explicitly.
+  await page.goto('/app/chat')
 }
 
 async function loggedInPage(browser: Browser, who: { email: string; password: string }) {
@@ -73,6 +76,7 @@ test('the full control loop: invite → consent → hold → approve → deliver
   await invitee.check('input[type=checkbox]')
   await invitee.click('button[type=submit]')
   await invitee.waitForURL('**/app', { timeout: 45_000 })
+  await invitee.goto('/app/chat')
   await expect(invitee.getByText(groupName).first()).toBeVisible()
 
   // ── Recipient opens the group and stays on it.
