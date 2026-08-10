@@ -12,8 +12,11 @@ import {
   MessageSquareIcon,
   ScrollTextIcon,
   ShieldIcon,
+  UserPenIcon,
 } from '@/lib/ui/icons'
 import { ThemeToggle } from '@/lib/ui/theme-toggle'
+
+import { NameChangeDialog } from './name-change-dialog'
 
 /**
  * The app's only global chrome (48px): workspace switcher · navigation ·
@@ -26,6 +29,7 @@ type NavItem = {
   label: string
   Icon: () => React.ReactElement
   show: boolean
+  badge?: number
 }
 
 export function TopBar(props: {
@@ -34,10 +38,12 @@ export function TopBar(props: {
   me: { userId: string; displayName: string; roleLabel: string }
   canModerate: boolean
   isAdmin: boolean
+  pendingNames: number
 }) {
   const pathname = usePathname()
   const router = useRouter()
   const [menu, setMenu] = useState<'workspace' | 'user' | null>(null)
+  const [renaming, setRenaming] = useState(false)
   const barRef = useRef<HTMLElement>(null)
 
   // Click-away closes any open menu.
@@ -53,6 +59,13 @@ export function TopBar(props: {
     { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, show: true },
     { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, show: true },
     { href: '/app/moderation', label: 'Moderation', Icon: ShieldIcon, show: props.canModerate },
+    {
+      href: '/app/names',
+      label: 'Names',
+      Icon: UserPenIcon,
+      show: props.isAdmin,
+      badge: props.pendingNames,
+    },
     { href: '/app/audit', label: 'Audit', Icon: ScrollTextIcon, show: props.isAdmin },
   ].filter((item) => item.show)
 
@@ -156,6 +169,11 @@ export function TopBar(props: {
             >
               <item.Icon />
               <span className="hidden md:inline">{item.label}</span>
+              {!!item.badge && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-hold px-1 text-[10px] font-bold text-white">
+                  {item.badge}
+                </span>
+              )}
             </a>
           )
         })}
@@ -187,6 +205,15 @@ export function TopBar(props: {
             <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
           </div>
           <button
+            onClick={() => {
+              setMenu(null)
+              setRenaming(true)
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-surface-2"
+          >
+            Request a name change
+          </button>
+          <button
             onClick={signOut}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
           >
@@ -194,6 +221,13 @@ export function TopBar(props: {
             Sign out
           </button>
         </div>
+      )}
+
+      {renaming && (
+        <NameChangeDialog
+          currentName={props.me.displayName}
+          onClose={() => setRenaming(false)}
+        />
       )}
     </header>
   )

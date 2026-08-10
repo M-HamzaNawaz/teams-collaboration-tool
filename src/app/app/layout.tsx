@@ -57,6 +57,16 @@ export default async function AppLayout({
 
   const canModerate = isAdmin || (managed ?? []).length > 0
 
+  // Pending name-change requests — a badge, so the queue isn't a page
+  // nobody remembers to open (M4-07).
+  const { count: pendingNames } = isAdmin
+    ? await service
+        .from('name_change_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', session.profile.workspace_id)
+        .eq('status', 'pending')
+    : { count: 0 }
+
   return (
     <div className="flex h-dvh flex-col">
       <TopBar
@@ -73,6 +83,7 @@ export default async function AppLayout({
         }}
         canModerate={canModerate}
         isAdmin={isAdmin}
+        pendingNames={pendingNames ?? 0}
       />
       <div className="min-h-0 flex-1">{children}</div>
     </div>
