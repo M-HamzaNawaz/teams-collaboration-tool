@@ -50,6 +50,30 @@ describe('FormattedBody', () => {
     expect(out).not.toContain('<strong>')
     expect(out).not.toContain('<em>')
   })
+
+  // Agencies paste code, filenames and identifiers constantly. Underscores
+  // INSIDE a word (or before a file extension) are not emphasis — found by
+  // testing the composer against realistic text.
+  it.each([
+    'some_var_name = 1',
+    'my_file_name.txt',
+    'first_last@company.com',
+    '__init__.py',
+    'user_id and group_id',
+    'a * b * c',
+    '5 * 3 = 15',
+  ])('leaves code-like text alone: %s', (text) => {
+    expect(html(text)).not.toMatch(/<(strong|em|u|s)>/)
+  })
+
+  it.each([
+    ['hello _world_', '<em>'],
+    ['__underline__ here', '<u>'],
+    ['this is _important_.', '<em>'],
+    ['_start_ of line', '<em>'],
+  ])('still formats real emphasis: %s', (text, tag) => {
+    expect(html(text)).toContain(tag)
+  })
 })
 
 describe('stripFormatting (the anti-reassembly helper)', () => {

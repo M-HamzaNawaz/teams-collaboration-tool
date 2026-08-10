@@ -15,7 +15,16 @@ import React from 'react'
  */
 
 const URL_RE = /https?:\/\/[^\s<>"')\]]+/g
-const INLINE_TOKEN_RE = /(\*\*[^*\n]+\*\*|__[^_\n]+__|_[^_\n]+_|~[^~\n]+~|`[^`\n]+`)/g
+/**
+ * Underscore emphasis only counts when the delimiters stand OUTSIDE a word,
+ * and not immediately before a file extension. Without those guards a chat
+ * used by developers mangles everyday text: `some_var_name` italicised
+ * "var", `my_file_name.txt` italicised "file", `__init__.py` underlined
+ * "init". Prose like "_important_." still works — the guard only rejects a
+ * dot followed by more word characters.
+ */
+const INLINE_TOKEN_RE =
+  /(\*\*[^*\n]+\*\*|(?<!\w)__[^_\n]+__(?!\w|\.\w)|(?<!\w)_[^_\n]+_(?!\w|\.\w)|~[^~\n]+~|`[^`\n]+`)/g
 
 /** Remove formatting punctuation so split content re-joins for detect(). */
 export function stripFormatting(text: string): string {
