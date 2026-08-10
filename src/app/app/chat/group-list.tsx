@@ -1,19 +1,18 @@
 'use client'
 
 import gsap from 'gsap'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import type { GroupRow } from '@/lib/types'
 import { gradientStyle, initials } from '@/lib/ui/colors'
 
-import { CreateGroupDialog } from '../create-group-dialog'
 import type { Me } from './chat-shell'
 
 /**
- * Sidebar (M5-03): workspace header, the caller's groups (each with its
- * deterministic gradient), and the signed-in identity. Groups arrive
- * server-rendered — the stagger entrance is polish, not a loading state.
+ * Sidebar (M5-03): purely the caller's group list, each with its
+ * deterministic gradient. Navigation, identity and group CREATION all live
+ * outside this pane (top bar / dashboard), so nothing here competes with
+ * picking a conversation.
  */
 export function GroupList(props: {
   groups: GroupRow[]
@@ -21,14 +20,9 @@ export function GroupList(props: {
   me: Me
   selectedId: string | null
   onSelect: (group: GroupRow) => void
-  onGroupCreated?: (group: GroupRow) => void
   unreadByGroup: Record<string, number>
 }) {
   const listRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-  // I1: creating a group is the ONLY way a conversation starts, and only
-  // the admin gets the affordance — everyone else has no button at all.
-  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -61,14 +55,6 @@ export function GroupList(props: {
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Groups
           </p>
-          {props.me.isAdmin && (
-            <button
-              onClick={() => setCreating(true)}
-              className="rounded-lg px-2 py-0.5 text-xs font-semibold text-brand-a hover:bg-surface-2"
-            >
-              + New group
-            </button>
-          )}
         </div>
         {props.groups.length === 0 && (
           <p className="px-2 py-4 text-sm text-muted">
@@ -117,15 +103,6 @@ export function GroupList(props: {
         </ul>
       </nav>
 
-      {creating && (
-        <CreateGroupDialog
-          onClose={() => setCreating(false)}
-          onCreated={(group) => {
-            props.onGroupCreated?.(group)
-            router.refresh()
-          }}
-        />
-      )}
 
 
 

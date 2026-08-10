@@ -91,7 +91,11 @@ export function Dashboard(props: { data: DashboardData }) {
               </button>
               <button
                 onClick={() => setCreatingGroup(true)}
-                className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-2"
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
+                }}
               >
                 + Create group
               </button>
