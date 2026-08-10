@@ -22,28 +22,10 @@ import {
 import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
-import {
-  AtSignIcon,
-  BoldIcon,
-  ChevronDownIcon,
-  CodeBlockIcon,
-  CodeIcon,
-  ItalicIcon,
-  LinkIcon,
-  ListIcon,
-  ListOrderedIcon,
-  MicIcon,
-  PlusIcon,
-  QuoteIcon,
-  SendIcon,
-  SlashSquareIcon,
-  SmileIcon,
-  StrikethroughIcon,
-  UnderlineIcon,
-  UsersIcon,
-  VideoIcon,
-} from '@/lib/ui/icons'
+import { UsersIcon } from '@/lib/ui/icons'
 import { FormattedBody } from '@/lib/ui/message-format'
+
+import { RichComposer } from './rich-composer'
 
 import type { Me } from './chat-shell'
 import { GroupActions } from './group-actions'
@@ -90,7 +72,6 @@ export function ChatPane(props: {
   const [names, setNames] = useState<Map<string, string>>(new Map())
   const [hasMore, setHasMore] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
-  const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   // M5-06/07: presence + connection state.
@@ -100,12 +81,7 @@ export function ChatPane(props: {
   const [attachments, setAttachments] = useState<
     Map<string, { id: string; name: string; sizeBytes: number }>
   >(new Map())
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const attachmentsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Slack-style composer state.
-  const composerRef = useRef<HTMLTextAreaElement>(null)
-  const [showToolbar, setShowToolbar] = useState(false)
-  const [popover, setPopover] = useState<'emoji' | 'mention' | null>(null)
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
@@ -520,13 +496,10 @@ export function ChatPane(props: {
     [props.group.id, props.group.workspace_id, props.me.userId, replaceMessage],
   )
 
-  function send(event: React.FormEvent) {
-    event.preventDefault()
-    const body = draft.trim()
+  function send(body: string) {
     if (!body || sending) return
     setSending(true)
     setNotice(null)
-    setDraft('')
     stickToBottom.current = true
 
     const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -603,84 +576,6 @@ export function ChatPane(props: {
     } else {
       setNotice(data?.error ?? 'download failed')
     }
-  }
-
-  // ── Composer formatting helpers (Slack-style). All operate on the real
-  // selection so keyboard shortcuts and toolbar buttons behave identically.
-  function surroundSelection(prefix: string, suffix = prefix) {
-    const el = composerRef.current
-    if (!el) return
-    const { selectionStart: s, selectionEnd: e, value } = el
-    const selected = value.slice(s, e)
-    setDraft(value.slice(0, s) + prefix + selected + suffix + value.slice(e))
-    requestAnimationFrame(() => {
-      el.focus()
-      // No selection → the cursor lands BETWEEN the markers so you just
-      // start typing (never a "text" placeholder to delete first).
-      // With a selection → it stays selected, so a second click restyles.
-      el.setSelectionRange(s + prefix.length, s + prefix.length + selected.length)
-    })
-  }
-
-  function prefixLines(linePrefix: string) {
-    const el = composerRef.current
-    if (!el) return
-    const { selectionStart: s, selectionEnd: e, value } = el
-    const start = value.lastIndexOf('\n', s - 1) + 1
-    const end = e
-    const block = value.slice(start, end)
-    const prefixed = block
-      .split('\n')
-      .map((line, i) =>
-        linePrefix === '1. ' ? `${i + 1}. ${line}` : `${linePrefix}${line}`,
-      )
-      .join('\n')
-    setDraft(value.slice(0, start) + prefixed + value.slice(end))
-    const added = prefixed.length - block.length
-    requestAnimationFrame(() => {
-      el.focus()
-      if (s === e) {
-        // Nothing selected: caret goes AFTER the marker, so typing
-        // continues the bullet rather than landing in front of it.
-        const caret = start + (linePrefix === '1. ' ? 3 : linePrefix.length)
-        el.setSelectionRange(caret, caret)
-      } else {
-        el.setSelectionRange(start, end + added)
-      }
-    })
-  }
-
-  /**
-   * Link: with words selected, wrap them as [words](https://) and drop the
-   * caret inside the parens to paste the URL — selecting text and clicking
-   * link used to DELETE the text, which is the opposite of the intent.
-   */
-  function insertLink() {
-    const el = composerRef.current
-    if (!el) return
-    const { selectionStart: s, selectionEnd: e, value } = el
-    const selected = value.slice(s, e)
-    if (!selected) {
-      insertAtCursor('https://')
-      return
-    }
-    setDraft(value.slice(0, s) + `[${selected}](https://)` + value.slice(e))
-    requestAnimationFrame(() => {
-      el.focus()
-      const caret = s + selected.length + 11 // [ + text + ]( + https://
-      el.setSelectionRange(caret, caret)
-    })
-  }
-
-  function insertAtCursor(text: string) {
-    const el = composerRef.current
-    if (!el) return
-    const { selectionStart: s, selectionEnd: e, value } = el
-    setDraft(value.slice(0, s) + text + value.slice(e))
-    requestAnimationFrame(() => {
-      el.focus()
-      el.setSelectionRange(s + text.length, s + text.length)
-    })
   }
 
   function retry(message: ClientMessage) {
@@ -975,241 +870,27 @@ export function ChatPane(props: {
           post here — not even an admin.
         </div>
       ) : (
-      /* Composer — Slack-style: toolbar on top, input, actions row */
-      <form
-        onSubmit={send}
-        className="pb-safe border-t border-border bg-surface p-3"
-      >
-        <div className="rounded-xl border border-border bg-background focus-within:border-brand-a">
-          {/* Formatting toolbar (Aa toggles it) — icon order mirrors Slack */}
-          {showToolbar && (
-            <div className="flex items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
-              <ToolbarButton label="Bold (Ctrl+B)" onClick={() => surroundSelection('**')}>
-                <BoldIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Italic (Ctrl+I)" onClick={() => surroundSelection('_')}>
-                <ItalicIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Underline (Ctrl+U)" onClick={() => surroundSelection('__')}>
-                <UnderlineIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Strikethrough (Ctrl+Shift+X)" onClick={() => surroundSelection('~')}>
-                <StrikethroughIcon />
-              </ToolbarButton>
-              <span className="mx-1 h-4 w-px bg-border" />
-              <ToolbarButton label="Insert link" onClick={insertLink}>
-                <LinkIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Numbered list" onClick={() => prefixLines('1. ')}>
-                <ListOrderedIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Bulleted list" onClick={() => prefixLines('- ')}>
-                <ListIcon />
-              </ToolbarButton>
-              <span className="mx-1 h-4 w-px bg-border" />
-              <ToolbarButton label="Quote" onClick={() => prefixLines('> ')}>
-                <QuoteIcon />
-              </ToolbarButton>
-              <span className="mx-1 h-4 w-px bg-border" />
-              <ToolbarButton label="Inline code (Ctrl+E)" onClick={() => surroundSelection('`')}>
-                <CodeIcon />
-              </ToolbarButton>
-              <ToolbarButton label="Code block" onClick={() => surroundSelection('```\n', '\n```')}>
-                <CodeBlockIcon />
-              </ToolbarButton>
-            </div>
-          )}
-
-          <textarea
-            ref={composerRef}
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value)
-              // Typing signal, throttled — ephemeral broadcast (M5-06).
-              const now = Date.now()
-              if (now - lastTypingSent.current > 1500 && presenceRef.current) {
-                lastTypingSent.current = now
-                sendTyping(presenceRef.current, {
-                  userId: props.me.userId,
-                  displayName: props.me.displayName,
-                })
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                void send(e)
-                return
-              }
-              if (e.ctrlKey || e.metaKey) {
-                const key = e.key.toLowerCase()
-                if (key === 'b') { e.preventDefault(); surroundSelection('**') }
-                if (key === 'i') { e.preventDefault(); surroundSelection('_') }
-                if (key === 'u') { e.preventDefault(); surroundSelection('__') }
-                if (key === 'e') { e.preventDefault(); surroundSelection('`') }
-                if (key === 'x' && e.shiftKey) { e.preventDefault(); surroundSelection('~') }
-              }
-            }}
-            rows={1}
-            placeholder={`Message ${props.group.name}…`}
-            className="max-h-40 min-h-10.5 w-full resize-y bg-transparent px-3.5 py-2.5 text-sm outline-none"
-          />
-
-          {/* Actions row */}
-          <div className="flex items-center gap-0.5 px-2 pb-1.5 text-muted">
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) void uploadFile(file)
-                e.target.value = ''
-              }}
-            />
-            <ToolbarButton label="Attach a file" onClick={() => fileInputRef.current?.click()}>
-              <PlusIcon />
-            </ToolbarButton>
-            <ToolbarButton
-              label={showToolbar ? 'Hide formatting' : 'Show formatting'}
-              active={showToolbar}
-              onClick={() => setShowToolbar((v) => !v)}
-            >
-              <span className="text-[13px] font-semibold underline underline-offset-2">Aa</span>
-            </ToolbarButton>
-            <ToolbarButton
-              label="Emoji"
-              active={popover === 'emoji'}
-              onClick={() => setPopover(popover === 'emoji' ? null : 'emoji')}
-            >
-              <SmileIcon />
-            </ToolbarButton>
-            <ToolbarButton
-              label="Mention someone"
-              active={popover === 'mention'}
-              onClick={() => setPopover(popover === 'mention' ? null : 'mention')}
-            >
-              <AtSignIcon />
-            </ToolbarButton>
-            <span className="mx-1 h-4 w-px bg-border" />
-            <ToolbarButton label="Video calls arrive in Phase 3" disabled>
-              <VideoIcon />
-            </ToolbarButton>
-            <ToolbarButton label="Voice arrives in Phase 3" disabled>
-              <MicIcon />
-            </ToolbarButton>
-            <ToolbarButton label="Shortcuts arrive later" disabled>
-              <SlashSquareIcon />
-            </ToolbarButton>
-            <div className="ml-auto flex items-center overflow-hidden rounded-lg shadow-sm">
-              <button
-                type="submit"
-                aria-label="Send message"
-                disabled={sending || !draft.trim()}
-                className="flex h-8 items-center px-3.5 text-white transition-transform enabled:hover:scale-105 disabled:opacity-40"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-                }}
-              >
-                {sending ? '…' : <SendIcon />}
-              </button>
-              <button
-                type="button"
-                aria-label="Send options arrive later"
-                disabled
-                className="flex h-8 items-center border-l border-white/25 px-1.5 text-white disabled:opacity-40"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(135deg, var(--brand-b), var(--brand-b))',
-                }}
-              >
-                <ChevronDownIcon />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Emoji picker */}
-        {popover === 'emoji' && (
-          <div className="mt-2 grid max-w-sm grid-cols-10 gap-1 rounded-xl border border-border bg-surface p-2 text-xl shadow-lg">
-            {EMOJI.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                className="rounded-lg p-1 hover:bg-surface-2"
-                onClick={() => {
-                  insertAtCursor(emoji)
-                  setPopover(null)
-                }}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Mention picker — masked names only, same as everywhere (M8) */}
-        {popover === 'mention' && (
-          <div className="mt-2 flex max-w-sm flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
-            {[...names.entries()]
-              .filter(([userId]) => userId !== props.me.userId)
-              .map(([userId, name]) => (
-                <button
-                  key={userId}
-                  type="button"
-                  className="flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
-                  onClick={() => {
-                    insertAtCursor(`@${name} `)
-                    setPopover(null)
-                  }}
-                >
-                  <span
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                    style={gradientStyle(userId)}
-                  >
-                    {initials(name)}
-                  </span>
-                  {name}
-                </button>
-              ))}
-            {names.size <= 1 && (
-              <p className="px-3 py-2 text-sm text-muted">Nobody else here yet.</p>
-            )}
-          </div>
-        )}
-      </form>
+        <RichComposer
+          placeholder={`Message ${props.group.name}…`}
+          sending={sending}
+          mentions={[...names.entries()]
+            .filter(([userId]) => userId !== props.me.userId)
+            .map(([userId, name]) => ({ userId, name }))}
+          onSend={send}
+          onTyping={() => {
+            const now = Date.now()
+            if (now - lastTypingSent.current > 1500 && presenceRef.current) {
+              lastTypingSent.current = now
+              sendTyping(presenceRef.current, {
+                userId: props.me.userId,
+                displayName: props.me.displayName,
+              })
+            }
+          }}
+          onAttach={(file) => void uploadFile(file)}
+        />
       )}
     </div>
-  )
-}
-
-const EMOJI = [
-  '😀', '😂', '😊', '😍', '🤔', '😅', '😎', '🙌', '👍', '👎',
-  '👏', '🙏', '💪', '🔥', '✨', '🎉', '❤️', '💯', '✅', '❌',
-  '⚡', '💡', '📌', '📅', '⏰', '☕', '🍕', '🚀', '🐛', '👀',
-]
-
-function ToolbarButton(props: {
-  label: string
-  onClick?: () => void
-  active?: boolean
-  disabled?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      title={props.label}
-      aria-label={props.label}
-      disabled={props.disabled}
-      onClick={props.onClick}
-      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-sm transition-colors ${
-        props.active ? 'bg-surface-2 text-foreground' : 'hover:bg-surface-2'
-      } disabled:opacity-35`}
-    >
-      {props.children}
-    </button>
   )
 }
 

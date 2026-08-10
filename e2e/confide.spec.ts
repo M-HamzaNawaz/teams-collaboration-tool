@@ -85,8 +85,10 @@ test('the full control loop: invite → consent → hold → approve → deliver
 
   // ── The client tries to hand over a phone number.
   const smuggle = `you can also call me on +92 300 5550${String(run).slice(-3)}`
-  await invitee.fill('textarea', smuggle)
-  await invitee.press('textarea', 'Enter')
+  // The composer is a contenteditable surface since the WYSIWYG rewrite.
+  await invitee.click('.composer-editor')
+  await invitee.keyboard.type(smuggle)
+  await invitee.keyboard.press('Enter')
 
   // Sender sees pending review — never silently gone.
   await expect(invitee.getByText('pending review').first()).toBeVisible({ timeout: 10_000 })
