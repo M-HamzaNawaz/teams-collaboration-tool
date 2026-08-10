@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { gradientStyle, initials } from '@/lib/ui/colors'
 
+import { InviteDialog } from '../invite-dialog'
 import type { Me } from './chat-shell'
 
 /**
@@ -32,6 +33,7 @@ export function MembersPanel(props: {
   const [pickRole, setPickRole] = useState<'member' | 'manager'>('member')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [inviting, setInviting] = useState(false)
 
   const load = useCallback(async () => {
     const memberResponse = await fetch(`/api/groups/${props.groupId}/profiles`)
@@ -201,7 +203,23 @@ export function MembersPanel(props: {
               </button>
             </div>
             {error && <p className="text-xs text-danger">{error}</p>}
+            <button
+              type="button"
+              onClick={() => setInviting(true)}
+              className="rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
+            >
+              + Invite someone new by email
+            </button>
           </form>
+        )}
+
+        {inviting && (
+          <InviteDialog
+            groupId={props.groupId}
+            groupName={props.groupName}
+            onClose={() => setInviting(false)}
+            onInvited={load}
+          />
         )}
       </aside>
     </div>

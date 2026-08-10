@@ -1,10 +1,12 @@
 'use client'
 
 import gsap from 'gsap'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { MemberRole } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+
+import { InviteDialog } from './invite-dialog'
 
 export type DashboardData = {
   role: MemberRole
@@ -27,6 +29,7 @@ export type DashboardData = {
 
 export function Dashboard(props: { data: DashboardData }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [inviting, setInviting] = useState(false)
   const { data } = props
 
   useEffect(() => {
@@ -59,16 +62,32 @@ export function Dashboard(props: { data: DashboardData }) {
   return (
     <div ref={ref} className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl p-4 md:p-6">
-        <header className="mb-5">
-          <h1 className="text-2xl font-semibold">Hello, {greeting}</h1>
-          <p className="text-sm text-muted">
-            {data.oversight
-              ? data.oversight.scope === 'workspace'
-                ? "Here's what's happening across the workspace."
-                : "Here's what needs you in the groups you manage."
-              : "Here's where your conversations stand."}
-          </p>
+        <header className="mb-5 flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-semibold">Hello, {greeting}</h1>
+            <p className="text-sm text-muted">
+              {data.oversight
+                ? data.oversight.scope === 'workspace'
+                  ? "Here's what's happening across the workspace."
+                  : "Here's what needs you in the groups you manage."
+                : "Here's where your conversations stand."}
+            </p>
+          </div>
+          {data.role === 'admin' && (
+            <button
+              onClick={() => setInviting(true)}
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
+              }}
+            >
+              + Invite people
+            </button>
+          )}
         </header>
+
+        {inviting && <InviteDialog onClose={() => setInviting(false)} />}
 
         {/* ── Stat row ─────────────────────────────────────────────── */}
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
