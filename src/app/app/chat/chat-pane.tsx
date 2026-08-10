@@ -40,6 +40,7 @@ import {
   SmileIcon,
   StrikethroughIcon,
   UnderlineIcon,
+  UsersIcon,
   VideoIcon,
 } from '@/lib/ui/icons'
 import { FormattedBody } from '@/lib/ui/message-format'
@@ -726,9 +727,10 @@ export function ChatPane(props: {
         <button
           onClick={() => setShowMembers(true)}
           aria-label="Group members"
-          className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
         >
-          👥 Members
+          <UsersIcon />
+          <span className="hidden sm:inline">Members</span>
         </button>
       </header>
 

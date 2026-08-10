@@ -4,7 +4,15 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { gradientStyle, initials } from '@/lib/ui/colors'
-import { ChevronDownIcon } from '@/lib/ui/icons'
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  MessageSquareIcon,
+  ScrollTextIcon,
+  ShieldIcon,
+} from '@/lib/ui/icons'
 import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
@@ -13,7 +21,12 @@ import { ThemeToggle } from '@/lib/ui/theme-toggle'
  * steals height or wraps on a phone.
  */
 
-type NavItem = { href: string; label: string; icon: string; show: boolean }
+type NavItem = {
+  href: string
+  label: string
+  Icon: () => React.ReactElement
+  show: boolean
+}
 
 export function TopBar(props: {
   workspaces: Array<{ id: string; name: string }>
@@ -37,10 +50,10 @@ export function TopBar(props: {
   }, [])
 
   const nav: NavItem[] = [
-    { href: '/app', label: 'Dashboard', icon: '▦', show: true },
-    { href: '/app/chat', label: 'Chat', icon: '💬', show: true },
-    { href: '/app/moderation', label: 'Moderation', icon: '🛡', show: props.canModerate },
-    { href: '/app/audit', label: 'Audit', icon: '📜', show: props.isAdmin },
+    { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, show: true },
+    { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, show: true },
+    { href: '/app/moderation', label: 'Moderation', Icon: ShieldIcon, show: props.canModerate },
+    { href: '/app/audit', label: 'Audit', Icon: ScrollTextIcon, show: props.isAdmin },
   ].filter((item) => item.show)
 
   async function switchWorkspace(workspaceId: string) {
@@ -107,7 +120,9 @@ export function TopBar(props: {
               </span>
               <span className="flex-1 truncate">{workspace.name}</span>
               {workspace.id === props.activeWorkspace.id && (
-                <span className="text-brand-b">✓</span>
+                <span className="text-brand-b">
+                  <CheckIcon />
+                </span>
               )}
             </button>
           ))}
@@ -139,7 +154,7 @@ export function TopBar(props: {
                   : 'text-muted hover:bg-surface-2/60'
               }`}
             >
-              <span aria-hidden="true">{item.icon}</span>
+              <item.Icon />
               <span className="hidden md:inline">{item.label}</span>
             </a>
           )
@@ -173,8 +188,9 @@ export function TopBar(props: {
           </div>
           <button
             onClick={signOut}
-            className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
           >
+            <LogOutIcon />
             Sign out
           </button>
         </div>

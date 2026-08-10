@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { MoonIcon, SunIcon } from './icons'
+
 /**
  * Light/dark toggle. The choice lands on <html data-theme> (which pins
  * color-scheme — every light-dark() token flips instantly) and persists in
@@ -43,9 +45,17 @@ export function ThemeToggle() {
         theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
       }
       title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-base hover:bg-surface-2"
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-foreground"
     >
-      {theme === null ? '◐' : theme === 'dark' ? '☀️' : '🌙'}
+      {/* Placeholder until mounted: theme is a browser fact, and rendering
+          either icon on the server would flash the wrong one. */}
+      {theme === null ? (
+        <span className="h-[18px] w-[18px]" />
+      ) : theme === 'dark' ? (
+        <SunIcon />
+      ) : (
+        <MoonIcon />
+      )}
     </button>
   )
 }
