@@ -35,6 +35,12 @@ export function AuditViewer(props: {
 }) {
   const [entries, setEntries] = useState<Entry[] | null>(null)
   const [nextBefore, setNextBefore] = useState<number | null>(null)
+  // Keyset pagination: cursors[i] is the `before` value that produced page
+  // i, so Previous is a pop rather than an offset (stable while the
+  // append-only log keeps growing underneath).
+  const [cursors, setCursors] = useState<Array<number | null>>([null])
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(50)
   const [expanded, setExpanded] = useState<number | null>(null)
   const [check, setCheck] = useState<ChainCheck | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -50,6 +56,7 @@ export function AuditViewer(props: {
       if (groupId) params.set('groupId', groupId)
       if (actorName) params.set('actorName', actorName)
       if (eventType) params.set('eventType', eventType)
+      params.set('limit', String(pageSize))
       if (before) params.set('before', String(before))
       const response = await fetch(`/api/audit?${params}`)
       if (!response.ok) {
@@ -64,24 +71,41 @@ export function AuditViewer(props: {
         entries: Entry[]
         nextBefore: number | null
       }
-      setEntries((current) =>
-        before ? [...(current ?? []), ...data.entries] : data.entries,
-      )
+      setEntries(data.entries)
       setNextBefore(data.nextBefore)
     },
-    [groupId, actorName, eventType],
+    [groupId, actorName, eventType, pageSize],
   )
 
+  // Changing a filter or the page size starts a fresh first page.
   useEffect(() => {
-    // Deferred (React 19 lint: no sync setState in effects); doubles as the
-    // typing debounce.
-    const clear = setTimeout(() => setEntries(null), 0)
-    const t = setTimeout(() => void load(), 250)
+    const clear = setTimeout(() => {
+      setEntries(null)
+      setCursors([null])
+      setPageIndex(0)
+    }, 0)
+    const t = setTimeout(() => void load(), 250) // doubles as typing debounce
     return () => {
       clearTimeout(clear)
       clearTimeout(t)
     }
   }, [load])
+
+  function goNext() {
+    if (nextBefore === null) return
+    setCursors((c) => [...c.slice(0, pageIndex + 1), nextBefore])
+    setPageIndex((i) => i + 1)
+    setEntries(null)
+    void load(nextBefore)
+  }
+
+  function goPrevious() {
+    if (pageIndex === 0) return
+    const target = cursors[pageIndex - 1]
+    setPageIndex((i) => i - 1)
+    setEntries(null)
+    void load(target)
+  }
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -267,14 +291,43 @@ export function AuditViewer(props: {
             </div>
           ))
         )}
-        {nextBefore && (
-          <button
-            onClick={() => void load(nextBefore)}
-            className="mt-2 rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
+
+      </div>
+
+      {/* Pager */}
+      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-sm">
+        <label className="flex items-center gap-2 text-muted">
+          Rows
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="rounded-lg border border-border bg-surface px-2 py-1 text-sm text-foreground"
           >
-            Load older entries
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </label>
+        <span className="text-muted">
+          Page {pageIndex + 1}
+          {entries?.length ? ` · ${entries.length} entries` : ''}
+        </span>
+        <div className="ml-auto flex gap-2">
+          <button
+            onClick={goPrevious}
+            disabled={pageIndex === 0}
+            className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-40"
+          >
+            ← Newer
           </button>
-        )}
+          <button
+            onClick={goNext}
+            disabled={nextBefore === null}
+            className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-40"
+          >
+            Older →
+          </button>
+        </div>
       </div>
     </main>
   )

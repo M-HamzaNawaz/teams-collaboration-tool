@@ -31,7 +31,15 @@ export default async function AppPage() {
         .from('groups')
         .select('*')
         .eq('workspace_id', session.profile.workspace_id)
-        .eq('status', 'active')
+        // Admins keep archived groups in view: archiving must not hide the
+        // group from the only person who can then delete it (M4-02 is a
+        // two-step lifecycle, and step two needs a door).
+        .in(
+          'status',
+          session.profile.member_role === 'admin'
+            ? ['active', 'archived']
+            : ['active'],
+        )
         .order('created_at', { ascending: false }),
       supabase
         .from('workspaces')

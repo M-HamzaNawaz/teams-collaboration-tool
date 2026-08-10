@@ -70,7 +70,7 @@ export function GroupList(props: {
                   onClick={() => props.onSelect(group)}
                   className={`group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors ${
                     active ? 'bg-surface-2' : 'hover:bg-surface-2/60'
-                  }`}
+                  } ${group.status === 'archived' ? 'opacity-60' : ''}`}
                 >
                   <span
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white shadow-sm transition-transform group-hover:scale-105"
@@ -83,7 +83,11 @@ export function GroupList(props: {
                       {group.name}
                     </span>
                     <span className="block truncate text-xs text-muted">
-                      {active ? 'Open' : 'Tap to open'}
+                      {group.status === 'archived'
+                        ? 'Archived · read-only'
+                        : active
+                          ? 'Open'
+                          : 'Tap to open'}
                     </span>
                   </span>
                   {/* Unread badge (M6-05) — counts by delivered_at, so a

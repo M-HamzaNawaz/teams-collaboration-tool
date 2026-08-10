@@ -46,6 +46,7 @@ import {
 import { FormattedBody } from '@/lib/ui/message-format'
 
 import type { Me } from './chat-shell'
+import { GroupActions } from './group-actions'
 import { MembersPanel } from './members-panel'
 
 /**
@@ -83,6 +84,7 @@ export function ChatPane(props: {
   group: GroupRow
   me: Me
   onBack: () => void
+  onGroupChanged: () => void
 }) {
   const [messages, setMessages] = useState<ClientMessage[] | null>(null)
   const [names, setNames] = useState<Map<string, string>>(new Map())
@@ -107,6 +109,9 @@ export function ChatPane(props: {
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
+  // I3: an archived group is read-only for everyone, admins included. The
+  // API enforces it; the composer must not pretend otherwise.
+  const archived = props.group.status !== 'active'
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
@@ -721,7 +726,9 @@ export function ChatPane(props: {
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-semibold">{props.group.name}</h2>
           <p className="text-xs text-muted">
-            Messages are screened for contact info
+            {archived
+              ? 'Archived — read-only'
+              : 'Messages are screened for contact info'}
           </p>
         </div>
         <button
@@ -732,6 +739,9 @@ export function ChatPane(props: {
           <UsersIcon />
           <span className="hidden sm:inline">Members</span>
         </button>
+        {props.me.isAdmin && (
+          <GroupActions group={props.group} onChanged={props.onGroupChanged} />
+        )}
       </header>
 
       {showMembers && (
@@ -923,7 +933,13 @@ export function ChatPane(props: {
         </p>
       )}
 
-      {/* Composer — Slack-style: toolbar on top, input, actions row */}
+      {archived ? (
+        <div className="pb-safe border-t border-border bg-surface p-4 text-center text-sm text-muted">
+          This group is archived. Its history stays intact, but nobody can
+          post here — not even an admin.
+        </div>
+      ) : (
+      /* Composer — Slack-style: toolbar on top, input, actions row */
       <form
         onSubmit={send}
         className="pb-safe border-t border-border bg-surface p-3"
@@ -1127,6 +1143,7 @@ export function ChatPane(props: {
           </div>
         )}
       </form>
+      )}
     </div>
   )
 }

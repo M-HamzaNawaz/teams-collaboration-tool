@@ -87,6 +87,7 @@ export function ChatShell(props: {
             group={selected}
             me={props.me}
             onBack={() => setMobileView('list')}
+            onGroupChanged={() => setSelected(null)}
           />
         ) : (
           <div className="flex flex-1 items-center justify-center p-6 text-center">
