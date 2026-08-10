@@ -1,11 +1,13 @@
 'use client'
 
 import gsap from 'gsap'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { MemberRole } from '@/lib/types'
 import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
 
+import { CreateGroupDialog } from './create-group-dialog'
 import { InviteDialog } from './invite-dialog'
 
 export type DashboardData = {
@@ -29,7 +31,9 @@ export type DashboardData = {
 
 export function Dashboard(props: { data: DashboardData }) {
   const ref = useRef<HTMLDivElement>(null)
+  const router = useRouter()
   const [inviting, setInviting] = useState(false)
+  const [creatingGroup, setCreatingGroup] = useState(false)
   const { data } = props
 
   useEffect(() => {
@@ -74,20 +78,34 @@ export function Dashboard(props: { data: DashboardData }) {
             </p>
           </div>
           {data.role === 'admin' && (
-            <button
-              onClick={() => setInviting(true)}
-              className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-              }}
-            >
-              + Invite people
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => setInviting(true)}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
+                }}
+              >
+                + Invite people
+              </button>
+              <button
+                onClick={() => setCreatingGroup(true)}
+                className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-2"
+              >
+                + Create group
+              </button>
+            </div>
           )}
         </header>
 
         {inviting && <InviteDialog onClose={() => setInviting(false)} />}
+        {creatingGroup && (
+          <CreateGroupDialog
+            onClose={() => setCreatingGroup(false)}
+            onCreated={() => router.push('/app/chat')}
+          />
+        )}
 
         {/* ── Stat row ─────────────────────────────────────────────── */}
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">

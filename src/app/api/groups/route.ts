@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { audit } from '@/lib/audit/audit'
 import { getSession } from '@/lib/auth/session'
 import { authorize } from '@/lib/authz/authorize'
+import { groupSettingsSchema } from '@/lib/groups/settings'
 import { serviceClient } from '@/lib/supabase/service-client'
 import { userClient } from '@/lib/supabase/user-client'
 import type { GroupRow } from '@/lib/types'
@@ -22,6 +23,8 @@ import type { GroupRow } from '@/lib/types'
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(80),
+  /** Per-group rules chosen at creation; omitted keys inherit. */
+  settings: groupSettingsSchema.optional(),
 })
 
 export async function POST(request: Request) {
@@ -55,6 +58,7 @@ export async function POST(request: Request) {
       name: parsed.data.name,
       status: 'active',
       created_by: session.userId,
+      settings_jsonb: parsed.data.settings ?? {},
     })
     .select()
     .single()
@@ -74,7 +78,9 @@ export async function POST(request: Request) {
     groupId: group.id,
     groupName: group.name,
     eventType: 'group.created',
-    payload: { members: [] },
+    // The rules a group was born with belong in the record: "why did that
+    // message deliver?" is answerable years later.
+    payload: { members: [], settings: parsed.data.settings ?? {} },
   })
 
   return Response.json({ group }, { status: 201 })

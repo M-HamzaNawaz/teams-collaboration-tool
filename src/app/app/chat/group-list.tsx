@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { GroupRow } from '@/lib/types'
 import { gradientStyle, initials } from '@/lib/ui/colors'
 
+import { CreateGroupDialog } from '../create-group-dialog'
 import type { Me } from './chat-shell'
 
 /**
@@ -28,33 +29,6 @@ export function GroupList(props: {
   // I1: creating a group is the ONLY way a conversation starts, and only
   // the admin gets the affordance — everyone else has no button at all.
   const [creating, setCreating] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-
-  async function createGroup(event: React.FormEvent) {
-    event.preventDefault()
-    const name = newName.trim()
-    if (name.length < 2 || busy) return
-    setBusy(true)
-    setCreateError(null)
-    const response = await fetch('/api/groups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    })
-    if (response.status === 201) {
-      const { group } = (await response.json()) as { group: GroupRow }
-      setNewName('')
-      setCreating(false)
-      props.onGroupCreated?.(group)
-      router.refresh()
-    } else {
-      const data = (await response.json().catch(() => null)) as { error?: string } | null
-      setCreateError(data?.error ?? 'could not create the group')
-    }
-    setBusy(false)
-  }
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -87,7 +61,7 @@ export function GroupList(props: {
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Groups
           </p>
-          {props.me.isAdmin && !creating && (
+          {props.me.isAdmin && (
             <button
               onClick={() => setCreating(true)}
               className="rounded-lg px-2 py-0.5 text-xs font-semibold text-brand-a hover:bg-surface-2"
@@ -96,38 +70,6 @@ export function GroupList(props: {
             </button>
           )}
         </div>
-        {creating && (
-          <form onSubmit={createGroup} className="mb-2 flex flex-col gap-1.5 px-2">
-            <input
-              autoFocus
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Escape' && setCreating(false)}
-              placeholder="Group name (e.g. Client — Website)"
-              minLength={2}
-              maxLength={80}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
-            />
-            {createError && <p className="text-xs text-danger">{createError}</p>}
-            <div className="flex gap-1.5">
-              <button
-                type="submit"
-                disabled={busy || newName.trim().length < 2}
-                className="flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
-                style={{ backgroundImage: 'linear-gradient(135deg, var(--brand-a), var(--brand-b))' }}
-              >
-                {busy ? 'Creating…' : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCreating(false)}
-                className="rounded-xl border border-border px-3 py-1.5 text-xs"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
         {props.groups.length === 0 && (
           <p className="px-2 py-4 text-sm text-muted">
             No groups yet — your admin adds you when a project starts.
@@ -174,6 +116,16 @@ export function GroupList(props: {
           })}
         </ul>
       </nav>
+
+      {creating && (
+        <CreateGroupDialog
+          onClose={() => setCreating(false)}
+          onCreated={(group) => {
+            props.onGroupCreated?.(group)
+            router.refresh()
+          }}
+        />
+      )}
 
 
 

@@ -33,6 +33,8 @@ export type GroupRow = {
   created_at: string
   archived_at: string | null
   deleted_at: string | null
+  /** Per-group moderation rules; see lib/groups/settings.ts. */
+  settings_jsonb: Record<string, unknown>
 }
 
 export type GroupMemberRow = {

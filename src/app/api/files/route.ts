@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth/session'
 import { createRateLimiter, rateLimitResponse } from '@/lib/auth/rate-limit'
 import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
+import { resolveGroupSettings } from '@/lib/groups/settings'
 import { scanner } from '@/lib/files/scanner'
 import { serviceClient } from '@/lib/supabase/service-client'
 
@@ -64,12 +65,25 @@ export async function POST(request: Request) {
     return Response.json({ error: authz.reason }, { status: authz.status })
   }
 
-  // Workspace-configurable size ceiling.
+  // Per-group rules: a group may forbid uploads outright, or skip filename
+  // scanning. Neither can disable the audit entry or the virus-scan seam.
   const { data: ws } = await service
     .from('workspaces')
     .select('settings_jsonb')
     .eq('id', workspaceId)
     .single()
+  const groupRules = resolveGroupSettings(
+    authz.group?.settings_jsonb,
+    (ws?.settings_jsonb as { moderation?: unknown } | null)?.moderation,
+  )
+  if (!groupRules.allowFiles) {
+    return Response.json(
+      { error: 'file sharing is turned off for this group' },
+      { status: 403 },
+    )
+  }
+
+  // Workspace-configurable size ceiling.
   const maxBytes =
     ((ws?.settings_jsonb as { files?: { max_bytes?: number } } | null)?.files
       ?.max_bytes as number | undefined) ?? DEFAULT_MAX_BYTES
@@ -89,7 +103,9 @@ export async function POST(request: Request) {
   const detectionSettings = (
     ws?.settings_jsonb as { detection?: Partial<DetectionConfig> } | null
   )?.detection
-  const verdict = detect(filename, detectionSettings)
+  const verdict = groupRules.scanFilenames
+    ? detect(filename, detectionSettings)
+    : { action: 'allow' as const, findings: [] }
 
   const bytes = await file.arrayBuffer()
   const scanStatus = await scanner.scan({

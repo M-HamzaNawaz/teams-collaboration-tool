@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth/session'
 import { createRateLimiter, rateLimitResponse } from '@/lib/auth/rate-limit'
 import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
+import { resolveGroupSettings } from '@/lib/groups/settings'
 import { stripFormatting } from '@/lib/ui/message-format'
 import { sendEmail } from '@/lib/email/send'
 import { publicEnv } from '@/lib/env/public'
@@ -32,21 +33,6 @@ const bodySchema = z.object({
 
 /** 30 messages per minute per sender — chat-speed, flood-hostile. */
 const messageLimiter = createRateLimiter({ windowMs: 60_000, max: 30 })
-
-async function workspaceDetectionConfig(
-  service: ReturnType<typeof serviceClient>,
-  workspaceId: string,
-): Promise<Partial<DetectionConfig> | undefined> {
-  const { data } = await service
-    .from('workspaces')
-    .select('settings_jsonb')
-    .eq('id', workspaceId)
-    .single()
-  const settings = data?.settings_jsonb as
-    | { detection?: Partial<DetectionConfig> }
-    | null
-  return settings?.detection
-}
 
 export async function POST(request: Request) {
   const session = await getSession()
@@ -82,7 +68,13 @@ export async function POST(request: Request) {
   // present: `0300**123**4567` is split digits to the engine but a single
   // number once the bubble renders it bold. The stripped pass sees what the
   // READER will see; the worst verdict wins.
-  const config = await workspaceDetectionConfig(service, workspaceId)
+  const { data: ws } = await service
+    .from('workspaces')
+    .select('settings_jsonb')
+    .eq('id', workspaceId)
+    .single()
+  const config = (ws?.settings_jsonb as { detection?: Partial<DetectionConfig> } | null)
+    ?.detection
   let verdict = detect(body, config)
   const stripped = stripFormatting(body)
   if (stripped !== body) {
@@ -93,6 +85,18 @@ export async function POST(request: Request) {
       // spans and degrades to unhighlighted rather than trusting them.
       verdict = strippedVerdict
     }
+  }
+
+  // Per-group rule: a group may choose that findings FLAG rather than HOLD
+  // (e.g. an internal team room). Detection still ran, the flag row is
+  // still written, the audit entry still records it — only delivery
+  // differs. There is no setting that skips detection.
+  const groupRules = resolveGroupSettings(
+    authz.group?.settings_jsonb,
+    (ws?.settings_jsonb as { moderation?: unknown } | null)?.moderation,
+  )
+  if (verdict.action === 'hold' && !groupRules.holdContactInfo) {
+    verdict = { action: 'flag_only', findings: verdict.findings }
   }
 
   const { data, error } = await service.rpc('send_message', {
