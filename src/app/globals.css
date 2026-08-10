@@ -130,3 +130,30 @@ body {
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ── Attention dot: "something is waiting", no number ──────────────── */
+.alert-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.alert-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--danger);
+  opacity: 0.75;
+  animation: alert-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes alert-ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-dot::after {
+    animation: none;
+  }
+}

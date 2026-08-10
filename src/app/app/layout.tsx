@@ -53,12 +53,12 @@ export default async function AppLayout({
           .eq('user_id', session.userId)
           .eq('group_role', 'manager')
           .is('removed_at', null)
-          .limit(1)
 
   const canModerate = isAdmin || (managed ?? []).length > 0
 
-  // Pending name-change requests — a badge, so the queue isn't a page
-  // nobody remembers to open (M4-07).
+  // What's waiting, per role. Surfaced as a quiet dot rather than a count:
+  // the point is "something needs you", and the queue itself does the
+  // counting once you're there.
   const { count: pendingNames } = isAdmin
     ? await service
         .from('name_change_requests')
@@ -66,6 +66,19 @@ export default async function AppLayout({
         .eq('workspace_id', session.profile.workspace_id)
         .eq('status', 'pending')
     : { count: 0 }
+
+  const managedGroupIds = (managed ?? []).map((m) => m.group_id as string)
+  let pendingModeration = 0
+  if (canModerate) {
+    let query = service
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', session.profile.workspace_id)
+      .eq('status', 'pending')
+    if (!isAdmin) query = query.in('group_id', managedGroupIds)
+    const { count } = await query
+    pendingModeration = count ?? 0
+  }
 
   return (
     <div className="flex h-dvh flex-col">
@@ -83,7 +96,10 @@ export default async function AppLayout({
         }}
         canModerate={canModerate}
         isAdmin={isAdmin}
-        pendingNames={pendingNames ?? 0}
+        alerts={{
+          moderation: pendingModeration > 0,
+          names: (pendingNames ?? 0) > 0,
+        }}
       />
       <div className="min-h-0 flex-1">{children}</div>
     </div>

@@ -29,7 +29,8 @@ type NavItem = {
   label: string
   Icon: () => React.ReactElement
   show: boolean
-  badge?: number
+  /** Something is waiting here — shown as a quiet dot, never a number. */
+  alert?: boolean
 }
 
 export function TopBar(props: {
@@ -38,7 +39,7 @@ export function TopBar(props: {
   me: { userId: string; displayName: string; roleLabel: string }
   canModerate: boolean
   isAdmin: boolean
-  pendingNames: number
+  alerts: { moderation: boolean; names: boolean }
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -58,13 +59,19 @@ export function TopBar(props: {
   const nav: NavItem[] = [
     { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, show: true },
     { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, show: true },
-    { href: '/app/moderation', label: 'Moderation', Icon: ShieldIcon, show: props.canModerate },
+    {
+      href: '/app/moderation',
+      label: 'Moderation',
+      Icon: ShieldIcon,
+      show: props.canModerate,
+      alert: props.alerts.moderation,
+    },
     {
       href: '/app/names',
       label: 'Names',
       Icon: UserPenIcon,
       show: props.isAdmin,
-      badge: props.pendingNames,
+      alert: props.alerts.names,
     },
     { href: '/app/audit', label: 'Audit', Icon: ScrollTextIcon, show: props.isAdmin },
   ].filter((item) => item.show)
@@ -167,13 +174,16 @@ export function TopBar(props: {
                   : 'text-muted hover:bg-surface-2/60'
               }`}
             >
-              <item.Icon />
+              <span className="relative flex">
+                <item.Icon />
+                {item.alert && (
+                  <span
+                    className="alert-dot absolute -right-1 -top-0.5 h-2 w-2 rounded-full"
+                    aria-label="needs attention"
+                  />
+                )}
+              </span>
               <span className="hidden md:inline">{item.label}</span>
-              {!!item.badge && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-hold px-1 text-[10px] font-bold text-white">
-                  {item.badge}
-                </span>
-              )}
             </a>
           )
         })}
