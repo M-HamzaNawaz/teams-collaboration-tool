@@ -611,10 +611,13 @@ export function ChatPane(props: {
     const el = composerRef.current
     if (!el) return
     const { selectionStart: s, selectionEnd: e, value } = el
-    const selected = value.slice(s, e) || 'text'
+    const selected = value.slice(s, e)
     setDraft(value.slice(0, s) + prefix + selected + suffix + value.slice(e))
     requestAnimationFrame(() => {
       el.focus()
+      // No selection → the cursor lands BETWEEN the markers so you just
+      // start typing (never a "text" placeholder to delete first).
+      // With a selection → it stays selected, so a second click restyles.
       el.setSelectionRange(s + prefix.length, s + prefix.length + selected.length)
     })
   }
