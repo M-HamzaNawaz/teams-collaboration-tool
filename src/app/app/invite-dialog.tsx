@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+import { useEscape } from '@/lib/ui/dismiss'
+
 /**
  * Invite someone into the workspace (M4-04's UI).
  *
@@ -36,6 +38,8 @@ export function InviteDialog(props: {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const [copied, setCopied] = useState(false)
+
+  useEscape(props.onClose)
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -87,16 +91,19 @@ export function InviteDialog(props: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invite-dialog-title"
+        className="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-e2"
       >
         <header className="mb-4 flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold">
+            <h2 id="invite-dialog-title" className="text-lg font-semibold">
               {result ? 'Invitation sent' : 'Invite someone'}
             </h2>
             <p className="text-sm text-muted">
@@ -131,34 +138,24 @@ export function InviteDialog(props: {
                   readOnly
                   value={result.url}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 font-mono text-xs"
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-3 py-2 font-mono text-xs"
                 />
                 <button
                   onClick={async () => {
                     await navigator.clipboard.writeText(result.url!)
                     setCopied(true)
                   }}
-                  className="shrink-0 rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
+                  className="btn btn-secondary shrink-0"
                 >
                   {copied ? 'Copied ✓' : 'Copy'}
                 </button>
               </div>
             )}
             <div className="mt-1 flex gap-2">
-              <button
-                onClick={inviteAnother}
-                className="flex-1 rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
-              >
+              <button onClick={inviteAnother} className="btn btn-secondary flex-1">
                 Invite another
               </button>
-              <button
-                onClick={props.onClose}
-                className="flex-1 rounded-xl px-3 py-2 text-sm font-semibold text-white"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-                }}
-              >
+              <button onClick={props.onClose} className="btn btn-primary flex-1">
                 Done
               </button>
             </div>
@@ -174,7 +171,7 @@ export function InviteDialog(props: {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="person@company.com"
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
               />
             </label>
 
@@ -189,7 +186,7 @@ export function InviteDialog(props: {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ahmed K."
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
               />
             </label>
 
@@ -201,7 +198,7 @@ export function InviteDialog(props: {
                   onChange={(e) =>
                     setRole(e.target.value as 'member' | 'client' | 'admin')
                   }
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                  className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                 >
                   <option value="member">Team member</option>
                   <option value="client">Client</option>
@@ -215,12 +212,12 @@ export function InviteDialog(props: {
                   value={roleLabel}
                   onChange={(e) => setRoleLabel(e.target.value)}
                   placeholder="Developer"
-                  className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
+                  className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
                 />
               </label>
             </div>
 
-            <p className="rounded-xl bg-surface-2/60 p-2.5 text-xs text-muted">
+            <p className="rounded-[10px] bg-surface-2 p-2.5 text-xs text-muted">
               {role === 'client'
                 ? 'Clients see masked identities: display names and job titles only — never emails, phone numbers, or nicknames.'
                 : 'Team members see each other normally. Real contact details stay admin-only either way.'}
@@ -231,11 +228,7 @@ export function InviteDialog(props: {
             <button
               type="submit"
               disabled={busy || !email.trim() || !displayName.trim()}
-              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-              }}
+              className="btn btn-primary py-2.5"
             >
               {busy ? 'Sending…' : 'Send invitation'}
             </button>

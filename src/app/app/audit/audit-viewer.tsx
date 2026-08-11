@@ -4,7 +4,10 @@ import gsap from 'gsap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
-import { accentFor, initials } from '@/lib/ui/colors'
+import { PersonMark } from '@/lib/ui/avatar'
+import { prefersReducedMotion } from '@/lib/ui/dismiss'
+import { DownloadIcon, LockIcon } from '@/lib/ui/icons'
+import { PageHeader } from '@/lib/ui/page-header'
 
 /**
  * Audit viewer (M9-02): filters compose, payloads expand, CSV exports.
@@ -116,7 +119,7 @@ export function AuditViewer(props: {
   }, [])
 
   useEffect(() => {
-    if (!entries?.length || !listRef.current) return
+    if (!entries?.length || !listRef.current || prefersReducedMotion()) return
     gsap.fromTo(
       listRef.current.querySelectorAll('[data-row]:nth-child(-n+15)'),
       { opacity: 0, y: 6 },
@@ -147,57 +150,67 @@ export function AuditViewer(props: {
   })
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-4xl flex-col overflow-y-auto p-4 md:p-6">
-      <header className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold">Audit log</h1>
-          <p className="text-sm text-muted">Every action, forever — the evidence surface</p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={exportCsv}
-            className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
-          >
-            ⬇ Export CSV
+    <main className="mx-auto flex h-full w-full max-w-[940px] flex-col overflow-y-auto p-4 md:px-10 md:py-8">
+      <PageHeader
+        breadcrumb="Track"
+        title="Audit log"
+        description="Every action, forever — the evidence surface"
+        actions={
+          <button onClick={exportCsv} className="btn btn-secondary">
+            <DownloadIcon /> Export CSV
           </button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Chain status (M9-03) */}
       <div
-        className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-sm ${
+        className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-sm shadow-e1 ${
           check && !check.ok
             ? 'border-danger bg-danger/10'
             : 'border-border bg-surface'
         }`}
       >
-        <span className="text-lg">{check ? (check.ok ? '🔒' : '🚨') : '⏳'}</span>
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+            check && !check.ok ? 'bg-danger/15 text-danger' : 'bg-sel text-teal-t'
+          }`}
+        >
+          <LockIcon />
+        </span>
         <span className="min-w-0 flex-1">
           {check === null && 'Chain not yet verified.'}
-          {check?.ok &&
-            `Hash chain verified intact · ${timeFormat.format(new Date(check.checked_at))}`}
+          {check?.ok && (
+            <>
+              Hash chain verified intact ·{' '}
+              <span className="font-mono text-xs tabular-nums">
+                {timeFormat.format(new Date(check.checked_at))}
+              </span>
+            </>
+          )}
           {check && !check.ok && (
             <span className="font-semibold text-danger">
-              CHAIN BROKEN at entry #{check.first_bad_id} — records after this
-              point may have been altered.
+              CHAIN BROKEN at entry{' '}
+              <span className="font-mono">#{check.first_bad_id}</span> — records
+              after this point may have been altered.
             </span>
           )}
         </span>
         <button
           onClick={runVerify}
           disabled={verifying}
-          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2 disabled:opacity-50"
+          className="btn btn-secondary px-3 py-1.5 text-xs"
         >
           {verifying ? 'Verifying…' : 'Verify now'}
         </button>
       </div>
 
-      {/* Filters (compose) */}
-      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {/* Filters (compose) — 1 / 1.4 / 1 */}
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1.4fr_1fr]">
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+          aria-label="Filter by group"
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
         >
           <option value="">All groups</option>
           {props.groups.map((g) => (
@@ -210,13 +223,15 @@ export function AuditViewer(props: {
         <input
           value={actorName}
           onChange={(e) => setActorName(e.target.value)}
+          aria-label="Filter by member name"
           placeholder="Filter by member name…"
-          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-brand-a"
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
         />
         <select
           value={eventType}
           onChange={(e) => setEventType(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+          aria-label="Filter by event type"
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
         >
           <option value="">All events</option>
           {EVENT_TYPES.map((t) => (
@@ -228,11 +243,11 @@ export function AuditViewer(props: {
       </div>
 
       {loadError && (
-        <div className="mb-3 flex items-center gap-3 rounded-xl border border-danger bg-danger/10 p-3 text-sm">
+        <div className="mb-3 flex items-center gap-3 rounded-[10px] border border-danger bg-danger/10 p-3 text-sm">
           <span className="flex-1 font-medium text-danger">{loadError}</span>
           <button
             onClick={() => void load()}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2"
+            className="btn btn-secondary px-3 py-1.5 text-xs"
           >
             Retry
           </button>
@@ -240,11 +255,16 @@ export function AuditViewer(props: {
       )}
 
       {/* Entries */}
-      <div ref={listRef} className="flex flex-col gap-1">
+      <div
+        ref={listRef}
+        className="flex flex-col rounded-xl border border-border bg-surface p-1.5 shadow-e1"
+      >
         {entries === null ? (
-          Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton h-12" />)
+          Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="skeleton mb-1 h-12" />
+          ))
         ) : entries.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted">
+          <p className="p-8 text-center text-sm text-muted">
             No entries match these filters.
           </p>
         ) : (
@@ -254,24 +274,21 @@ export function AuditViewer(props: {
                 onClick={() =>
                   setExpanded(expanded === entry.id ? null : entry.id)
                 }
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-surface-2/60"
+                className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left hover:bg-rowhover"
               >
-                <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{
-                    background: entry.actor_id
-                      ? accentFor(entry.actor_id)
-                      : 'var(--muted)',
-                  }}
-                >
-                  {initials(entry.actor_display_name || 'Sys')}
-                </span>
+                {entry.actor_id ? (
+                  <PersonMark name={entry.actor_display_name || 'M'} size={28} />
+                ) : (
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[10px] font-semibold text-muted">
+                    SY
+                  </span>
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm">
-                    <span className="font-medium">
+                    <span className="font-semibold">
                       {entry.actor_display_name || 'system'}
                     </span>{' '}
-                    <span className="font-mono text-xs text-brand-a">
+                    <span className="rounded bg-sel px-1 font-mono text-xs text-teal-t">
                       {entry.event_type}
                     </span>
                     {entry.group_name && (
@@ -279,19 +296,18 @@ export function AuditViewer(props: {
                     )}
                   </span>
                 </span>
-                <span className="shrink-0 text-xs text-muted">
+                <span className="shrink-0 font-mono text-xs tabular-nums text-muted">
                   {timeFormat.format(new Date(entry.created_at))}
                 </span>
               </button>
               {expanded === entry.id && (
-                <pre className="mx-3 mb-2 overflow-x-auto rounded-lg bg-surface-2/70 p-3 text-xs text-muted">
+                <pre className="mx-3 mb-2 overflow-x-auto rounded-lg bg-surface-2 p-3 font-mono text-xs text-ink-2">
                   {JSON.stringify(entry.payload_jsonb, null, 2)}
                 </pre>
               )}
             </div>
           ))
         )}
-
       </div>
 
       {/* Pager */}
@@ -301,14 +317,14 @@ export function AuditViewer(props: {
           <select
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
-            className="rounded-lg border border-border bg-surface px-2 py-1 text-sm text-foreground"
+            className="rounded-lg border border-border bg-surface px-2 py-1 font-mono text-sm tabular-nums text-foreground"
           >
             <option value={25}>25</option>
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
         </label>
-        <span className="text-muted">
+        <span className="font-mono text-xs tabular-nums text-muted">
           Page {pageIndex + 1}
           {entries?.length ? ` · ${entries.length} entries` : ''}
         </span>
@@ -316,14 +332,14 @@ export function AuditViewer(props: {
           <button
             onClick={goPrevious}
             disabled={pageIndex === 0}
-            className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-40"
+            className="btn btn-secondary px-3 py-1.5"
           >
             ← Newer
           </button>
           <button
             onClick={goNext}
             disabled={nextBefore === null}
-            className="rounded-lg border border-border px-3 py-1.5 hover:bg-surface-2 disabled:opacity-40"
+            className="btn btn-secondary px-3 py-1.5"
           >
             Older →
           </button>

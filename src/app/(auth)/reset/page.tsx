@@ -10,6 +10,7 @@ import {
   inputClass,
   primaryButtonClass,
   primaryButtonStyle,
+  SuccessToast,
 } from '../auth-ui'
 
 /**
@@ -84,6 +85,9 @@ export default function ResetPage() {
           <p className="text-center text-sm text-muted">
             <a href="/login" className="underline hover:text-foreground">Back to sign in</a>
           </p>
+          {message && (
+            <SuccessToast message="Reset link on its way — check your inbox" />
+          )}
         </form>
       ) : (
         <form onSubmit={updatePassword} className="flex flex-col gap-4">

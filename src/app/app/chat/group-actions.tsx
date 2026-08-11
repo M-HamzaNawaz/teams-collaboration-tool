@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
+import { useEscape } from '@/lib/ui/dismiss'
 
 /**
  * Admin lifecycle controls for a group (M4-02's UI).
@@ -33,6 +34,11 @@ export function GroupActions(props: {
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
   }, [])
+
+  useEscape(() => {
+    setOpen(false)
+    setConfirming(false)
+  })
 
   async function archive() {
     setBusy(true)
@@ -76,13 +82,13 @@ export function GroupActions(props: {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Group settings"
-        className="rounded-lg border border-border px-2.5 py-1.5 text-sm hover:bg-surface-2"
+        className="rounded-lg border border-border-2 px-2.5 py-1.5 text-sm hover:bg-hover"
       >
         ⋯
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-40 w-64 overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+        <div className="absolute right-0 top-10 z-40 w-64 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
           <p className="border-b border-border px-3 py-2 text-xs text-muted">
             {props.group.status === 'active'
               ? 'This group is active.'
@@ -120,14 +126,17 @@ export function GroupActions(props: {
 
       {confirming && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
           onClick={() => setConfirming(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-danger bg-surface p-5 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-group-title"
+            className="w-full max-w-md rounded-xl border border-danger bg-surface p-5 shadow-e2"
           >
-            <h2 className="text-lg font-semibold text-danger">
+            <h2 id="delete-group-title" className="text-lg font-semibold text-danger">
               Delete “{props.group.name}” permanently?
             </h2>
             <p className="mt-2 text-sm text-muted">
@@ -142,21 +151,21 @@ export function GroupActions(props: {
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={props.group.name}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-danger"
+                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-danger"
               />
             </label>
             {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             <div className="mt-4 flex gap-2">
               <button
                 onClick={() => setConfirming(false)}
-                className="flex-1 rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
+                className="btn btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={destroy}
                 disabled={busy || typed !== props.group.name}
-                className="flex-1 rounded-xl bg-danger px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                className="btn btn-danger flex-1"
               >
                 {busy ? 'Deleting…' : 'Delete permanently'}
               </button>

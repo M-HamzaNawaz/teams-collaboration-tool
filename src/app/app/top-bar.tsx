@@ -1,80 +1,55 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-import { gradientStyle, initials } from '@/lib/ui/colors'
+import { GroupMark, PersonMark } from '@/lib/ui/avatar'
 import {
+  BellIcon,
   CheckIcon,
   ChevronDownIcon,
-  LayoutDashboardIcon,
   LogOutIcon,
-  MessageSquareIcon,
-  ScrollTextIcon,
-  ShieldIcon,
-  UserPenIcon,
+  MenuIcon,
+  SearchIcon,
 } from '@/lib/ui/icons'
 import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 import { NameChangeDialog } from './name-change-dialog'
 
 /**
- * The app's only global chrome (48px): workspace switcher · navigation ·
- * theme · identity. Labels collapse to icons under md so the bar never
- * steals height or wraps on a phone.
+ * Frosted top bar (JobPulse §3.2): workspace name on the left, centered
+ * ⌘K search, bell + theme + account on the right. Navigation itself lives
+ * in the icon dock; below lg the dock is off-canvas behind the menu button.
  */
-
-type NavItem = {
-  href: string
-  label: string
-  Icon: () => React.ReactElement
-  show: boolean
-  /** Something is waiting here — shown as a quiet dot, never a number. */
-  alert?: boolean
-}
 
 export function TopBar(props: {
   workspaces: Array<{ id: string; name: string }>
   activeWorkspace: { id: string; name: string }
   me: { userId: string; displayName: string; roleLabel: string }
-  canModerate: boolean
-  isAdmin: boolean
   alerts: { moderation: boolean; names: boolean }
+  onOpenDock: () => void
+  onOpenSearch: () => void
 }) {
-  const pathname = usePathname()
   const router = useRouter()
-  const [menu, setMenu] = useState<'workspace' | 'user' | null>(null)
+  const [menu, setMenu] = useState<'workspace' | 'user' | 'bell' | null>(null)
   const [renaming, setRenaming] = useState(false)
   const barRef = useRef<HTMLElement>(null)
 
-  // Click-away closes any open menu.
+  // Click-away or Escape closes any open menu.
   useEffect(() => {
     function onDown(event: MouseEvent) {
       if (!barRef.current?.contains(event.target as Node)) setMenu(null)
     }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenu(null)
+    }
     document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
-
-  const nav: NavItem[] = [
-    { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, show: true },
-    { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, show: true },
-    {
-      href: '/app/moderation',
-      label: 'Moderation',
-      Icon: ShieldIcon,
-      show: props.canModerate,
-      alert: props.alerts.moderation,
-    },
-    {
-      href: '/app/names',
-      label: 'Names',
-      Icon: UserPenIcon,
-      show: props.isAdmin,
-      alert: props.alerts.names,
-    },
-    { href: '/app/audit', label: 'Audit', Icon: ScrollTextIcon, show: props.isAdmin },
-  ].filter((item) => item.show)
 
   async function switchWorkspace(workspaceId: string) {
     if (workspaceId === props.activeWorkspace.id) return setMenu(null)
@@ -94,35 +69,37 @@ export function TopBar(props: {
     router.refresh()
   }
 
+  const hasAlert = props.alerts.moderation || props.alerts.names
+
   return (
     <header
       ref={barRef}
-      className="relative z-30 flex h-12 shrink-0 items-center gap-1 border-b border-border bg-surface px-2 sm:px-3"
+      className="frosted relative z-40 flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:px-4"
     >
-      {/* Workspace switcher */}
+      {/* Off-canvas dock trigger (below lg the dock is a drawer) */}
+      <button
+        onClick={props.onOpenDock}
+        aria-label="Open navigation"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-2 hover:bg-hover lg:hidden"
+      >
+        <MenuIcon />
+      </button>
+
+      {/* Workspace */}
       <button
         onClick={() => setMenu(menu === 'workspace' ? null : 'workspace')}
-        className="flex max-w-[45vw] items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-2 sm:max-w-none"
+        aria-haspopup="menu"
+        aria-expanded={menu === 'workspace'}
+        className="flex max-w-[45vw] items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-hover sm:max-w-none"
       >
-        <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-          style={{
-            backgroundImage:
-              'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-          }}
-        >
-          {initials(props.activeWorkspace.name)}
-        </span>
-        {/* Name hides on phones — the initials mark identifies the
-            workspace, and tapping opens the switcher with full names. */}
-        <span className="hidden truncate text-sm font-semibold sm:inline">
+        <span className="truncate text-sm font-semibold">
           {props.activeWorkspace.name}
         </span>
         {props.workspaces.length > 1 && <ChevronDownIcon />}
       </button>
 
       {menu === 'workspace' && (
-        <div className="absolute left-2 top-12 w-64 overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+        <div className="absolute left-3 top-14 w-64 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
           <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted">
             Workspaces
           </p>
@@ -130,17 +107,12 @@ export function TopBar(props: {
             <button
               key={workspace.id}
               onClick={() => switchWorkspace(workspace.id)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover"
             >
-              <span
-                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
-                style={gradientStyle(workspace.id)}
-              >
-                {initials(workspace.name)}
-              </span>
+              <GroupMark name={workspace.name} size={24} />
               <span className="flex-1 truncate">{workspace.name}</span>
               {workspace.id === props.activeWorkspace.id && (
-                <span className="text-brand-b">
+                <span className="text-teal-t">
                   <CheckIcon />
                 </span>
               )}
@@ -154,64 +126,91 @@ export function TopBar(props: {
         </div>
       )}
 
-      <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+      {/* Search (⌘K) — opens the quick switch */}
+      <div className="flex min-w-0 flex-1 justify-center px-2">
+        <button
+          onClick={props.onOpenSearch}
+          className="flex h-9 w-full max-w-[520px] items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-muted hover:bg-hover"
+        >
+          <SearchIcon />
+          <span className="min-w-0 flex-1 truncate text-left">Search</span>
+          <span className="hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] sm:inline">
+            ⌘K
+          </span>
+        </button>
+      </div>
 
-      {/* Navigation */}
-      <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
-        {nav.map((item) => {
-          const active =
-            item.href === '/app'
-              ? pathname === '/app'
-              : pathname.startsWith(item.href)
-          return (
+      {/* Bell — the dot means "something needs you"; the menu says what */}
+      <button
+        onClick={() => setMenu(menu === 'bell' ? null : 'bell')}
+        aria-label={hasAlert ? 'Notifications — something needs attention' : 'Notifications'}
+        aria-haspopup="menu"
+        aria-expanded={menu === 'bell'}
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-ink-2 hover:bg-hover"
+      >
+        <BellIcon />
+        {hasAlert && (
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-teal-d ring-2 ring-surface" />
+        )}
+      </button>
+
+      {menu === 'bell' && (
+        <div className="absolute right-14 top-14 w-72 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
+          <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted">
+            Waiting on you
+          </p>
+          {props.alerts.moderation && (
             <a
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors ${
-                active
-                  ? 'bg-surface-2 font-semibold text-foreground'
-                  : 'text-muted hover:bg-surface-2/60'
-              }`}
+              href="/app/moderation"
+              onClick={() => setMenu(null)}
+              className="block px-3 py-2.5 text-sm hover:bg-hover"
             >
-              <span className="relative flex">
-                <item.Icon />
-                {item.alert && (
-                  <span
-                    className="alert-dot absolute -right-1 -top-0.5 h-2 w-2 rounded-full"
-                    aria-label="needs attention"
-                  />
-                )}
+              <span className="block font-medium">Messages held for review</span>
+              <span className="block text-xs text-muted">
+                Open the moderation queue →
               </span>
-              <span className="hidden md:inline">{item.label}</span>
             </a>
-          )
-        })}
-      </nav>
+          )}
+          {props.alerts.names && (
+            <a
+              href="/app/names"
+              onClick={() => setMenu(null)}
+              className="block px-3 py-2.5 text-sm hover:bg-hover"
+            >
+              <span className="block font-medium">Name changes requested</span>
+              <span className="block text-xs text-muted">
+                Review the requests →
+              </span>
+            </a>
+          )}
+          {!hasAlert && (
+            <p className="px-3 py-4 text-center text-sm text-muted">
+              You&apos;re all caught up.
+            </p>
+          )}
+        </div>
+      )}
 
       <ThemeToggle />
 
-      {/* Identity */}
+      {/* Account */}
       <button
         onClick={() => setMenu(menu === 'user' ? null : 'user')}
         aria-label="Account menu"
-        className="ml-0.5 flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-surface-2"
+        aria-haspopup="menu"
+        aria-expanded={menu === 'user'}
+        className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-hover"
       >
-        <span
-          className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white"
-          style={gradientStyle(props.me.userId)}
-        >
-          {initials(props.me.displayName)}
+        <span className="hidden text-sm font-medium lg:inline">
+          {props.me.displayName}
         </span>
-        <span className="hidden text-sm lg:inline">{props.me.displayName}</span>
+        <PersonMark name={props.me.displayName} size={26} />
       </button>
 
       {menu === 'user' && (
-        <div className="absolute right-2 top-12 w-56 overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+        <div className="absolute right-3 top-14 w-56 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
           <div className="border-b border-border px-3 py-2">
-            <p className="truncate text-sm font-medium">
-              {props.me.displayName}
-            </p>
+            <p className="truncate text-sm font-medium">{props.me.displayName}</p>
             <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
           </div>
           <button
@@ -219,13 +218,13 @@ export function TopBar(props: {
               setMenu(null)
               setRenaming(true)
             }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-surface-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-hover"
           >
             Request a name change
           </button>
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-hover"
           >
             <LogOutIcon />
             Sign out

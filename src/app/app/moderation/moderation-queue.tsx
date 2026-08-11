@@ -5,7 +5,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Finding } from '@/lib/detection'
 import { browserClient } from '@/lib/supabase/browser-client'
-import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+import { PersonMark } from '@/lib/ui/avatar'
+import { prefersReducedMotion } from '@/lib/ui/dismiss'
+import { AlertTriangleIcon, CheckIcon, XIcon } from '@/lib/ui/icons'
+import { PageHeader } from '@/lib/ui/page-header'
 
 /**
  * The hold queue (M6-01/02/03).
@@ -122,12 +125,13 @@ export function ModerationQueue(props: {
       body: JSON.stringify({ decision }),
     })
     if (response.ok || response.status === 409) {
-      if (card) {
+      if (card && !prefersReducedMotion()) {
+        // Fade + lift out (JobPulse §5 dismiss), then the counts re-run.
         await gsap
           .to(card, {
-            x: decision === 'approved' ? 60 : -60,
+            y: -14,
             opacity: 0,
-            duration: 0.25,
+            duration: 0.26,
             ease: 'power2.in',
           })
           .then()
@@ -148,31 +152,30 @@ export function ModerationQueue(props: {
   }
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-y-auto p-4 md:p-6">
-      <header className="mb-5 flex items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Moderation queue</h1>
-          <p className="text-sm text-muted">
-            {props.me.isAdmin
-              ? 'Every held message in the workspace'
-              : 'Held messages in groups you manage'}
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          {queue !== null && queue.length > 0 && (
-            <span className="rounded-full bg-hold/15 px-3 py-1 text-sm font-semibold text-hold">
+    <main className="mx-auto flex h-full w-full max-w-[760px] flex-col overflow-y-auto p-4 md:px-10 md:py-8">
+      <PageHeader
+        breadcrumb="Track"
+        title="Moderation queue"
+        description={
+          props.me.isAdmin
+            ? 'Every held message in the workspace'
+            : 'Held messages in groups you manage'
+        }
+        actions={
+          queue !== null && queue.length > 0 ? (
+            <span className="pill-wait rounded-full bg-sel px-3 py-1 font-mono text-sm font-semibold tabular-nums text-teal-t">
               {queue.length} waiting
             </span>
-          )}
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       {loadError && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-danger bg-danger/10 p-3 text-sm">
+        <div className="mb-4 flex items-center gap-3 rounded-[10px] border border-danger bg-danger/10 p-3 text-sm">
           <span className="flex-1 font-medium text-danger">{loadError}</span>
           <button
             onClick={() => void refetch()}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2"
+            className="btn btn-secondary px-3 py-1.5 text-xs"
           >
             Retry now
           </button>
@@ -187,9 +190,11 @@ export function ModerationQueue(props: {
             <div className="skeleton h-36" />
           </>
         ) : queue.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-surface p-10 text-center">
-            <p className="text-2xl">🎉</p>
-            <p className="mt-2 font-medium">Queue is clear</p>
+          <div className="rounded-xl border border-border bg-surface p-10 text-center shadow-e1">
+            <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-sel text-teal-t">
+              <CheckIcon />
+            </span>
+            <p className="mt-3 font-medium">Queue is clear</p>
             <p className="mt-1 text-sm text-muted">
               Held messages appear here the moment they&apos;re caught.
             </p>
@@ -199,40 +204,45 @@ export function ModerationQueue(props: {
             <article
               key={item.id}
               data-qid={item.id}
-              className={`rounded-2xl border bg-surface p-4 shadow-sm ${
-                item.escalated ? 'border-hold' : 'border-border'
+              className={`rounded-xl border bg-surface p-4 shadow-e1 ${
+                item.escalated ? 'border-teal-d' : 'border-border'
               }`}
             >
-              <div className="mb-3 flex items-center gap-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={gradientStyle(item.senderId)}
-                >
-                  {initials(item.senderName)}
-                </span>
+              <div className="mb-3 flex items-start gap-3">
+                <PersonMark name={item.senderName} size={34} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">
-                    <span
-                      className="font-semibold"
-                      style={{ color: accentFor(item.senderId) }}
-                    >
-                      {item.senderName}
-                    </span>{' '}
+                    <span className="font-semibold">{item.senderName}</span>{' '}
                     <span className="text-muted">in</span>{' '}
-                    <span className="font-medium">{item.groupName}</span>
+                    <span className="font-semibold">{item.groupName}</span>
                   </p>
-                  <p className="text-xs text-muted">
-                    waiting {formatWait(item.waitingSeconds)}
+                  <p className="flex items-center gap-2 text-xs text-muted">
+                    <span className="font-mono tabular-nums">
+                      waiting {formatWait(item.waitingSeconds)}
+                    </span>
                     {item.escalated && (
-                      <span className="ml-2 font-semibold text-hold">
-                        ⚠ escalated
+                      <span className="flex items-center gap-1 font-semibold text-teal-t">
+                        <AlertTriangleIcon /> escalated
                       </span>
                     )}
                   </p>
                 </div>
+                {/* Rule chips — which detectors tripped */}
+                <span className="flex max-w-[40%] flex-wrap justify-end gap-1">
+                  {[...new Set(item.findings.map((f) => f.rule_id))]
+                    .slice(0, 3)
+                    .map((rule) => (
+                      <span
+                        key={rule}
+                        className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-ink-2"
+                      >
+                        {rule}
+                      </span>
+                    ))}
+                </span>
               </div>
 
-              <blockquote className="rounded-xl bg-surface-2/60 p-3 text-sm leading-relaxed">
+              <blockquote className="rounded-[10px] bg-surface-2 p-3 text-sm leading-relaxed">
                 <HighlightedBody body={item.body} findings={item.findings} />
               </blockquote>
 
@@ -248,16 +258,16 @@ export function ModerationQueue(props: {
                 <button
                   onClick={() => resolve(item, 'approved')}
                   disabled={busy === item.id}
-                  className="flex-1 rounded-xl bg-brand-b/15 px-4 py-2 text-sm font-semibold text-brand-b transition-transform enabled:hover:scale-[1.02] disabled:opacity-50"
+                  className="btn btn-approve flex-1"
                 >
-                  ✓ Approve & deliver
+                  <CheckIcon /> Approve & deliver
                 </button>
                 <button
                   onClick={() => resolve(item, 'blocked')}
                   disabled={busy === item.id}
-                  className="flex-1 rounded-xl bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-transform enabled:hover:scale-[1.02] disabled:opacity-50"
+                  className="btn btn-secondary flex-1"
                 >
-                  ✕ Block
+                  <XIcon /> Block
                 </button>
               </div>
             </article>
@@ -267,7 +277,10 @@ export function ModerationQueue(props: {
 
       {/* Toast (M6-03) */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm shadow-lg">
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-[500] -translate-x-1/2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm shadow-e2"
+        >
           {toast}
         </div>
       )}
@@ -307,9 +320,10 @@ function HighlightedBody(props: { body: string; findings: Finding[] }) {
     if (start < cursor) continue // overlapping finding — already covered
     if (start > cursor) parts.push(props.body.slice(cursor, start))
     parts.push(
+      // The caught span reads as a teal-tint MONO chip (JobPulse §4.2/4.3).
       <mark
         key={start}
-        className="rounded bg-hold/25 px-0.5 font-medium text-hold"
+        className="rounded bg-sel px-1 font-mono text-[0.92em] font-medium text-teal-t"
       >
         {props.body.slice(start, end)}
       </mark>,

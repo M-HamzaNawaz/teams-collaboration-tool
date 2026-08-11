@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
+import { useEscape } from '@/lib/ui/dismiss'
 
 /**
  * Create a group and choose the rules it lives by.
@@ -38,6 +39,8 @@ export function CreateGroupDialog(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEscape(props.onClose)
+
   function toggle(key: 'hold_contact_info' | 'scan_filenames' | 'allow_files') {
     setRules((current) => ({ ...current, [key]: !current[key] }))
   }
@@ -68,16 +71,19 @@ export function CreateGroupDialog(props: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-group-title"
+        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface p-5 shadow-e2"
       >
         <header className="mb-4 flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold">New group</h2>
+            <h2 id="create-group-title" className="text-lg font-semibold">New group</h2>
             <p className="text-sm text-muted">
               A group is the only place conversations happen — there are no
               private chats.
@@ -103,7 +109,7 @@ export function CreateGroupDialog(props: {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Acme Corp — Website redesign"
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
             />
           </label>
 
@@ -147,7 +153,7 @@ export function CreateGroupDialog(props: {
                     escalate_minutes: Number(e.target.value),
                   }))
                 }
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               >
                 <option value={15}>15 minutes</option>
                 <option value={30}>30 minutes</option>
@@ -165,7 +171,7 @@ export function CreateGroupDialog(props: {
                     auto_approve_hours: Number(e.target.value),
                   }))
                 }
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               >
                 <option value={4}>4 hours</option>
                 <option value={8}>8 hours</option>
@@ -185,11 +191,7 @@ export function CreateGroupDialog(props: {
           <button
             type="submit"
             disabled={busy || name.trim().length < 2}
-            className="rounded-xl px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-            style={{
-              backgroundImage:
-                'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-            }}
+            className="btn btn-primary py-2.5"
           >
             {busy ? 'Creating…' : 'Create group'}
           </button>
@@ -209,8 +211,8 @@ function RuleCheckbox(props: {
 }) {
   return (
     <label
-      className={`flex items-start gap-2.5 rounded-xl p-2.5 ${
-        props.disabled ? 'opacity-50' : 'hover:bg-surface-2/60'
+      className={`flex items-start gap-2.5 rounded-[10px] p-2.5 ${
+        props.disabled ? 'opacity-50' : 'hover:bg-rowhover'
       }`}
     >
       <input

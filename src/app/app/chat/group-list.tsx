@@ -4,15 +4,15 @@ import gsap from 'gsap'
 import { useEffect, useRef } from 'react'
 
 import type { GroupRow } from '@/lib/types'
-import { gradientStyle, initials } from '@/lib/ui/colors'
+import { GroupMark } from '@/lib/ui/avatar'
+import { prefersReducedMotion } from '@/lib/ui/dismiss'
 
 import type { Me } from './chat-shell'
 
 /**
- * Sidebar (M5-03): purely the caller's group list, each with its
- * deterministic gradient. Navigation, identity and group CREATION all live
- * outside this pane (top bar / dashboard), so nothing here competes with
- * picking a conversation.
+ * Sidebar card (JobPulse §4.2): purely the caller's group list. Selected
+ * row carries the teal selection tint; unread counts are teal mono pills.
+ * Navigation, identity and group CREATION all live outside this pane.
  */
 export function GroupList(props: {
   groups: GroupRow[]
@@ -25,6 +25,7 @@ export function GroupList(props: {
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (prefersReducedMotion()) return
     const ctx = gsap.context(() => {
       gsap.from('[data-anim="group-item"]', {
         y: 12,
@@ -40,8 +41,6 @@ export function GroupList(props: {
 
   return (
     <div ref={listRef} className="flex h-full flex-col">
-      {/* Sidebar header: this pane is now purely the group list — app
-          navigation, workspace, theme and identity all live in the top bar. */}
       <header className="flex items-center gap-3 border-b border-border p-4">
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold">Conversations</h1>
@@ -50,7 +49,7 @@ export function GroupList(props: {
       </header>
 
       {/* Groups */}
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2">
         <div className="flex items-center justify-between px-2 pb-1 pt-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Groups
@@ -68,18 +67,17 @@ export function GroupList(props: {
               <li key={group.id} data-anim="group-item">
                 <button
                   onClick={() => props.onSelect(group)}
-                  className={`group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors ${
-                    active ? 'bg-surface-2' : 'hover:bg-surface-2/60'
+                  className={`group flex w-full items-center gap-3 rounded-[10px] px-2 py-2 text-left transition-colors ${
+                    active ? 'bg-sel' : 'hover:bg-rowhover'
                   } ${group.status === 'archived' ? 'opacity-60' : ''}`}
                 >
-                  <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white shadow-sm transition-transform group-hover:scale-105"
-                    style={gradientStyle(group.id)}
-                  >
-                    {initials(group.name)}
-                  </span>
+                  <GroupMark name={group.name} size={34} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">
+                    <span
+                      className={`block truncate text-sm font-medium ${
+                        active ? 'text-teal-t' : ''
+                      }`}
+                    >
                       {group.name}
                     </span>
                     <span className="block truncate text-xs text-muted">
@@ -93,10 +91,7 @@ export function GroupList(props: {
                   {/* Unread badge (M6-05) — counts by delivered_at, so a
                       released-after-review message drives it too. */}
                   {(props.unreadByGroup[group.id] ?? 0) > 0 && !active && (
-                    <span
-                      className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white"
-                      style={gradientStyle(group.id)}
-                    >
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-teal px-1.5 font-mono text-[11px] font-semibold tabular-nums text-[#1a1a1a]">
                       {props.unreadByGroup[group.id]}
                     </span>
                   )}
@@ -106,10 +101,6 @@ export function GroupList(props: {
           })}
         </ul>
       </nav>
-
-
-
-
     </div>
   )
 }

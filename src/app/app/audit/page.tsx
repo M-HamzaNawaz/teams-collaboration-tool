@@ -11,7 +11,7 @@ export default async function AuditPage() {
 
   if (session.profile.member_role !== 'admin') {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main className="flex h-full items-center justify-center p-6">
         <p className="text-muted">The audit log is for workspace admins.</p>
       </main>
     )

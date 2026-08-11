@@ -71,7 +71,7 @@ export function AcceptForm(props: {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
 
-      <div className="rounded-xl border border-border bg-surface-2/50 p-4 text-sm">
+      <div className="rounded-[10px] border border-border bg-surface-2 p-4 text-sm">
         <p>
           You&apos;ll join as{' '}
           <span className="font-medium">{props.displayName}</span>
@@ -102,7 +102,7 @@ export function AcceptForm(props: {
         </>
       )}
 
-      <div className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-border bg-background p-4 text-sm text-muted">
+      <div className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-[10px] border border-border bg-surface-2 p-4 text-sm text-muted">
         {props.consentText}
       </div>
 

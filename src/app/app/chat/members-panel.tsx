@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import { gradientStyle, initials } from '@/lib/ui/colors'
+import { PersonMark } from '@/lib/ui/avatar'
+import { useEscape } from '@/lib/ui/dismiss'
 
 import { InviteDialog } from '../invite-dialog'
 import type { Me } from './chat-shell'
@@ -34,6 +35,8 @@ export function MembersPanel(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviting, setInviting] = useState(false)
+
+  useEscape(props.onClose)
 
   const load = useCallback(async () => {
     const memberResponse = await fetch(`/api/groups/${props.groupId}/profiles`)
@@ -97,16 +100,19 @@ export function MembersPanel(props: {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex justify-end bg-black/30"
+      className="fixed inset-0 z-[300] flex justify-end bg-black/30 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <aside
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-sm flex-col border-l border-border bg-surface shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="members-panel-title"
+        className="flex h-full w-full max-w-sm flex-col border-l border-border bg-surface shadow-e2"
       >
         <header className="flex items-center gap-3 border-b border-border p-4">
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-semibold">Members</h2>
+            <h2 id="members-panel-title" className="truncate font-semibold">Members</h2>
             <p className="truncate text-xs text-muted">{props.groupName}</p>
           </div>
           <button
@@ -132,12 +138,7 @@ export function MembersPanel(props: {
                   key={member.userId}
                   className="flex items-center gap-3 rounded-xl px-2 py-2"
                 >
-                  <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                    style={gradientStyle(member.userId)}
-                  >
-                    {initials(member.displayName ?? 'M')}
-                  </span>
+                  <PersonMark name={member.displayName ?? 'M'} size={34} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {member.displayName ?? 'Member'}
@@ -175,7 +176,7 @@ export function MembersPanel(props: {
             <select
               value={pickId}
               onChange={(e) => setPickId(e.target.value)}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
             >
               <option value="">Choose a person…</option>
               {addable.map((p) => (
@@ -188,7 +189,7 @@ export function MembersPanel(props: {
               <select
                 value={pickRole}
                 onChange={(e) => setPickRole(e.target.value as 'member' | 'manager')}
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               >
                 <option value="member">Member</option>
                 <option value="manager">Manager</option>
@@ -196,8 +197,7 @@ export function MembersPanel(props: {
               <button
                 type="submit"
                 disabled={busy || !pickId}
-                className="flex-1 rounded-xl px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
-                style={{ backgroundImage: 'linear-gradient(135deg, var(--brand-a), var(--brand-b))' }}
+                className="btn btn-primary flex-1"
               >
                 {busy ? '…' : 'Add to group'}
               </button>
@@ -206,7 +206,7 @@ export function MembersPanel(props: {
             <button
               type="button"
               onClick={() => setInviting(true)}
-              className="rounded-xl border border-border px-3 py-2 text-sm hover:bg-surface-2"
+              className="btn btn-secondary"
             >
               + Invite someone new by email
             </button>

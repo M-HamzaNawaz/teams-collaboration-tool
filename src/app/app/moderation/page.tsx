@@ -31,7 +31,7 @@ export default async function ModerationPage() {
 
   if (!isAdmin && !isManager) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main className="flex h-full items-center justify-center p-6">
         <p className="text-muted">
           The moderation queue is for workspace admins and group managers.
         </p>

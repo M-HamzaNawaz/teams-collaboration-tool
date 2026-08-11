@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
+
+import { useEscape } from '@/lib/ui/dismiss'
 
 /**
  * Ask an admin to change your display name (M4-07's member side).
@@ -10,6 +13,11 @@ import { useState } from 'react'
  * this form is not an unscanned channel into a field every client reads —
  * but the requester is never told WHICH rule tripped, only that it will be
  * reviewed. Telling them would be a free lesson in evading the scanner.
+ *
+ * PORTALED to document.body: one call site sits inside the frosted top bar,
+ * and a backdrop-filter ancestor becomes the containing block for
+ * position:fixed — without the portal the "full-screen" scrim would resolve
+ * against the 56px header and the card would vanish above the viewport.
  */
 export function NameChangeDialog(props: {
   currentName: string
@@ -19,6 +27,8 @@ export function NameChangeDialog(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+
+  useEscape(props.onClose)
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -43,18 +53,21 @@ export function NameChangeDialog(props: {
     setBusy(false)
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="name-change-title"
+        className="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-e2"
       >
         <header className="mb-4 flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold">
+            <h2 id="name-change-title" className="text-lg font-semibold">
               {sent ? 'Request sent' : 'Request a name change'}
             </h2>
             <p className="text-sm text-muted">
@@ -73,19 +86,12 @@ export function NameChangeDialog(props: {
         </header>
 
         {sent ? (
-          <button
-            onClick={props.onClose}
-            className="w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-white"
-            style={{
-              backgroundImage:
-                'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-            }}
-          >
+          <button onClick={props.onClose} className="btn btn-primary w-full py-2.5">
             Done
           </button>
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-3">
-            <div className="rounded-xl border border-border bg-surface-2/50 p-3 text-sm">
+            <div className="rounded-[10px] border border-border bg-surface-2 p-3 text-sm">
               <p className="text-xs text-muted">Currently</p>
               <p className="font-medium">{props.currentName}</p>
             </div>
@@ -99,11 +105,11 @@ export function NameChangeDialog(props: {
                 value={requested}
                 onChange={(e) => setRequested(e.target.value)}
                 placeholder="Ahmed Khan"
-                className="rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-a"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
               />
             </label>
 
-            <p className="rounded-xl bg-surface-2/60 p-2.5 text-xs text-muted">
+            <p className="rounded-[10px] bg-surface-2 p-2.5 text-xs text-muted">
               Names are screened like messages — a name carrying an email,
               phone number or link is flagged for the admin reviewing it.
             </p>
@@ -113,17 +119,14 @@ export function NameChangeDialog(props: {
             <button
               type="submit"
               disabled={busy || !requested.trim()}
-              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-              }}
+              className="btn btn-primary py-2.5"
             >
               {busy ? 'Sending…' : 'Send request'}
             </button>
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

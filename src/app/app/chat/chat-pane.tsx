@@ -21,8 +21,9 @@ import {
 } from '@/lib/realtime/presence'
 import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
-import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
-import { UsersIcon } from '@/lib/ui/icons'
+import { GroupMark } from '@/lib/ui/avatar'
+import { prefersReducedMotion } from '@/lib/ui/dismiss'
+import { LockIcon, PaperclipIcon, UsersIcon } from '@/lib/ui/icons'
 import { FormattedBody } from '@/lib/ui/message-format'
 
 import { RichComposer } from './rich-composer'
@@ -419,7 +420,7 @@ export function ChatPane(props: {
       lastIdRef.current = lastId
       if (isFirstRender || stickToBottom.current) {
         el.scrollTop = el.scrollHeight
-        if (!isFirstRender && paneRef.current) {
+        if (!isFirstRender && paneRef.current && !prefersReducedMotion()) {
           const bubbles = paneRef.current.querySelectorAll(
             '[data-anim="bubble"]',
           )
@@ -648,15 +649,11 @@ export function ChatPane(props: {
         >
           ←
         </button>
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white"
-          style={gradientStyle(props.group.id)}
-        >
-          {initials(props.group.name)}
-        </span>
+        <GroupMark name={props.group.name} size={36} />
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-semibold">{props.group.name}</h2>
-          <p className="text-xs text-muted">
+          <p className="flex items-center gap-1 text-xs text-muted">
+            <LockIcon />
             {archived
               ? 'Archived — read-only'
               : 'Messages are screened for contact info'}
@@ -665,7 +662,7 @@ export function ChatPane(props: {
         <button
           onClick={() => setShowMembers(true)}
           aria-label="Group members"
-          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-surface-2"
+          className="btn btn-secondary px-3 py-1.5"
         >
           <UsersIcon />
           <span className="hidden sm:inline">Members</span>
@@ -688,7 +685,7 @@ export function ChatPane(props: {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto p-4"
+        className="flex-1 overflow-y-auto bg-background p-4"
       >
         {messages === null ? (
           <MessageSkeletons />
@@ -722,7 +719,7 @@ export function ChatPane(props: {
                     {separator && (
                       <div className="flex items-center gap-3 py-3">
                         <span className="h-px flex-1 bg-border" />
-                        <span className="rounded-full bg-surface-2 px-3 py-1 text-[11px] font-medium text-muted">
+                        <span className="rounded-lg bg-surface px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-muted">
                           {separator}
                         </span>
                         <span className="h-px flex-1 bg-border" />
@@ -739,20 +736,17 @@ export function ChatPane(props: {
                         }`}
                       >
                         {firstOfRun && !own && (
-                          <p
-                            className="mb-1 px-1 text-xs font-semibold"
-                            style={{ color: accentFor(message.sender_id) }}
-                          >
+                          <p className="mb-1 px-1 text-xs font-semibold text-teal-t">
                             {names.get(message.sender_id) ?? 'Member'}
                           </p>
                         )}
                         <div
                           onClick={() => retry(message)}
-                          className={`rounded-2xl border px-3.5 py-2 shadow-sm ${
+                          className={`rounded-xl border px-3.5 py-2 shadow-e1 ${
                             own
                               ? 'rounded-br-md border-transparent bg-bubble-own'
                               : 'rounded-bl-md border-border bg-bubble-other'
-                          } ${message.status === 'pending' ? 'border-hold/60' : ''} ${
+                          } ${message.status === 'pending' ? 'border-teal-d/60' : ''} ${
                             message.status === 'sending' ? 'opacity-60' : ''
                           } ${
                             message.status === 'failed'
@@ -772,7 +766,9 @@ export function ChatPane(props: {
                               }
                               className="flex items-center gap-2 rounded-lg bg-surface-2/70 px-2.5 py-2 text-left text-sm hover:bg-surface-2"
                             >
-                              <span className="text-lg">📎</span>
+                              <span className="text-muted">
+                                <PaperclipIcon />
+                              </span>
                               <span className="min-w-0">
                                 <span className="block truncate font-medium">
                                   {attachments.get(message.id)!.name}
@@ -797,8 +793,8 @@ export function ChatPane(props: {
                           )}
                           <p className="mt-1 flex items-center justify-end gap-2 text-[10px] text-muted">
                             {message.status === 'pending' && (
-                              <span className="font-semibold text-hold">
-                                ⏳ pending review
+                              <span className="rounded bg-sel px-1 font-mono font-medium text-teal-t">
+                                pending review
                               </span>
                             )}
                             {/* M6-05: held-then-approved returns to its
@@ -808,7 +804,7 @@ export function ChatPane(props: {
                               Date.parse(message.delivered_at) -
                                 Date.parse(message.created_at) >
                                 60_000 && (
-                                <span className="font-medium text-brand-b">
+                                <span className="font-medium text-teal-t">
                                   ✓ released after review
                                 </span>
                               )}
@@ -816,13 +812,22 @@ export function ChatPane(props: {
                               <span className="font-medium">sending…</span>
                             )}
                             {message.status === 'failed' && (
-                              <span className="font-semibold text-danger">
+                              // A real button: keyboards and screen readers
+                              // must be able to retry, not just pointers.
+                              <button
+                                type="button"
+                                onClick={() => retry(message)}
+                                className="font-semibold text-danger underline underline-offset-2"
+                              >
                                 ⚠ failed — tap to retry
-                              </span>
+                              </button>
                             )}
                             {message.status !== 'sending' &&
-                              message.status !== 'failed' &&
-                              timeFormat.format(new Date(message.created_at))}
+                              message.status !== 'failed' && (
+                                <span className="font-mono tabular-nums">
+                                  {timeFormat.format(new Date(message.created_at))}
+                                </span>
+                              )}
                           </p>
                         </div>
                         {receipt?.id === message.id && (

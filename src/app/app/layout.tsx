@@ -2,17 +2,17 @@ import { redirect } from 'next/navigation'
 
 import { getSession } from '@/lib/auth/session'
 import { serviceClient } from '@/lib/supabase/service-client'
+import { userClient } from '@/lib/supabase/user-client'
 import type { WorkspaceRow } from '@/lib/types'
 
-import { TopBar } from './top-bar'
+import { AppShell } from './shell'
 
 /**
- * Shell for every /app page: a slim top bar over a flexible content area.
+ * Shell for every /app page: icon dock + frosted top bar (JobPulse §3).
  *
- * The bar is the ONE piece of global chrome — navigation, workspace
- * switching, theme, and identity all live here, so no page invents its own
- * placement (the inconsistency that crept in when each screen carried its
- * own toggle).
+ * The shell is the ONE piece of global chrome — navigation, workspace
+ * switching, search, theme, and identity all live here, so no page invents
+ * its own placement.
  */
 export default async function AppLayout({
   children,
@@ -26,7 +26,7 @@ export default async function AppLayout({
 
   // Workspaces this person belongs to — the switcher's options. Multi-
   // workspace is a real scenario (one person, two agencies, a different
-  // masked identity in each) that until now had no UI at all.
+  // masked identity in each).
   const { data: workspaces } = await service
     .from('workspaces')
     .select('id, name')
@@ -80,28 +80,36 @@ export default async function AppLayout({
     pendingModeration = count ?? 0
   }
 
+  // The caller's own groups (RLS-scoped) feed the ⌘K quick switch.
+  const supabase = await userClient()
+  const { data: myGroups } = await supabase
+    .from('groups')
+    .select('id, name')
+    .eq('workspace_id', session.profile.workspace_id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+
   return (
-    <div className="flex h-dvh flex-col">
-      <TopBar
-        workspaces={(workspaces ?? []) as Array<{ id: string; name: string }>}
-        activeWorkspace={{
-          id: session.profile.workspace_id,
-          name: active?.name ?? 'Workspace',
-        }}
-        me={{
-          userId: session.userId,
-          displayName: session.profile.display_name,
-          roleLabel:
-            session.profile.role_label || session.profile.member_role,
-        }}
-        canModerate={canModerate}
-        isAdmin={isAdmin}
-        alerts={{
-          moderation: pendingModeration > 0,
-          names: (pendingNames ?? 0) > 0,
-        }}
-      />
-      <div className="min-h-0 flex-1">{children}</div>
-    </div>
+    <AppShell
+      workspaces={(workspaces ?? []) as Array<{ id: string; name: string }>}
+      activeWorkspace={{
+        id: session.profile.workspace_id,
+        name: active?.name ?? 'Workspace',
+      }}
+      me={{
+        userId: session.userId,
+        displayName: session.profile.display_name,
+        roleLabel: session.profile.role_label || session.profile.member_role,
+      }}
+      canModerate={canModerate}
+      isAdmin={isAdmin}
+      alerts={{
+        moderation: pendingModeration > 0,
+        names: (pendingNames ?? 0) > 0,
+      }}
+      groups={(myGroups ?? []) as Array<{ id: string; name: string }>}
+    >
+      {children}
+    </AppShell>
   )
 }

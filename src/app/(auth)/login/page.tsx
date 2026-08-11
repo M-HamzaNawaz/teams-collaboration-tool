@@ -30,7 +30,14 @@ function LoginForm() {
     })
 
     if (response.ok) {
-      router.push(searchParams.get('next') ?? '/app')
+      // Same-origin paths only: an attacker-supplied ?next= must not be able
+      // to bounce a fresh login onto their own domain (open redirect).
+      const next = searchParams.get('next')
+      const safe =
+        next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')
+          ? next
+          : '/app'
+      router.push(safe as Parameters<typeof router.push>[0])
       router.refresh()
       return
     }

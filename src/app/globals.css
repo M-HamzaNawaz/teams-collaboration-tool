@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 /**
- * Confide design tokens (M5-03).
+ * Confide — JobPulse design system.
  *
- * Multicolor identity system: every group and person gets a deterministic
- * gradient from the wheel in src/lib/ui/colors.ts (picked by id hash), on a
- * calm neutral canvas so the color carries meaning without noise.
- */
-/*
- * One definition per color via light-dark() (M10 polish + theme toggle).
- * The effective scheme comes from color-scheme:
+ * Strict 3-color, 60-30-10: white surfaces (~60%), near-black ink (~30%),
+ * teal accent (~10%, meaning only — active/positive/attention, never
+ * decoration). Inter for UI, JetBrains Mono for every CHANGING number
+ * (counts, timestamps, ids). Solid white cards with hairline borders;
+ * frosted glass ONLY on the top bar and overlays.
+ *
+ * The palette is defined once per token via light-dark(); the dark scheme
+ * is a faithful translation (same teal, near-black surfaces) so the theme
+ * toggle the user asked for keeps working:
  *   - default: `light dark` → follows the OS preference
  *   - <html data-theme="light"|"dark"> → the user's explicit choice,
  *     set by the ThemeToggle and restored pre-paint in layout.tsx.
@@ -17,20 +19,42 @@
 :root {
   color-scheme: light dark;
 
-  --background: light-dark(#f7f7fb, #0d0d13);
-  --surface: light-dark(#ffffff, #15151d);
-  --surface-2: light-dark(#f0f0f6, #1c1c26);
-  --foreground: light-dark(#16161d, #ececf2);
-  --muted: light-dark(#6e6e7a, #9a9aa8);
-  --border: light-dark(#e5e5ef, #262633);
+  /* Surfaces */
+  --background: light-dark(#f5f7f7, #121415);
+  --surface: light-dark(#ffffff, #1a1d1e);
+  --surface-2: light-dark(#f1f3f4, #212526); /* sunken */
+  --hover: light-dark(#f4f6f6, #202425);
+  --rowhover: light-dark(#f7f9f9, #1e2223);
 
-  --brand-a: #6d5cff; /* violet */
-  --brand-b: #00b3a4; /* teal   */
-  --hold: #f59e0b;    /* amber — "pending review" */
-  --danger: #ef4444;
+  /* Ink */
+  --foreground: light-dark(#1a1a1a, #ecedee);
+  --ink-2: light-dark(#4b4b4b, #b9bebf);
+  --muted: light-dark(#767676, #8e9495);
+  --disabled: light-dark(#a6a6a6, #5e6566);
 
-  --bubble-own: light-dark(#e9e6ff, #2c2752);
-  --bubble-other: light-dark(#ffffff, #1c1c26);
+  /* Borders */
+  --border: light-dark(#e5e7eb, #2a2f30);
+  --border-2: light-dark(#d5d8dd, #3a4142); /* strong */
+
+  /* Teal — the ONLY hue. Darken for clickable, deepen for text. */
+  --teal: #a2cfc9;
+  --teal-d: #5fa69e;
+  --teal-t: light-dark(#3f6f69, #a2cfc9);
+  --sel: light-dark(rgba(162, 207, 201, 0.28), rgba(162, 207, 201, 0.16));
+  --ring: 0 0 0 3px rgba(162, 207, 201, 0.5);
+
+  /* Legacy token names kept so every class keeps resolving. */
+  --brand-a: var(--teal-t);
+  --brand-b: var(--teal-t);
+  --hold: var(--teal-t); /* "pending review" is teal in the mono palette */
+  --danger: light-dark(#b3352e, #e5766b); /* destructive/broken ONLY */
+
+  --bubble-own: var(--sel);
+  --bubble-other: var(--surface);
+
+  /* Elevation */
+  --e1: 0 1px 2px rgba(26, 26, 26, 0.04), 0 6px 16px rgba(26, 26, 26, 0.06);
+  --e2: 0 8px 30px rgba(26, 26, 26, 0.12);
 }
 
 :root[data-theme='light'] {
@@ -44,17 +68,28 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-hover: var(--hover);
+  --color-rowhover: var(--rowhover);
   --color-foreground: var(--foreground);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
+  --color-disabled: var(--disabled);
   --color-border: var(--border);
+  --color-border-2: var(--border-2);
+  --color-teal: var(--teal);
+  --color-teal-d: var(--teal-d);
+  --color-teal-t: var(--teal-t);
+  --color-sel: var(--sel);
   --color-brand-a: var(--brand-a);
   --color-brand-b: var(--brand-b);
   --color-hold: var(--hold);
   --color-danger: var(--danger);
   --color-bubble-own: var(--bubble-own);
   --color-bubble-other: var(--bubble-other);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --shadow-e1: var(--e1);
+  --shadow-e2: var(--e2);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jbmono);
 }
 
 body {
@@ -63,7 +98,84 @@ body {
   font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
-/* ── Skeleton shimmer (M5-03) ─────────────────────────────────────── */
+/* ── Frosted glass: top bar + overlay scrims ONLY ─────────────────── */
+.frosted {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+}
+
+/* ── Buttons: near-black primary, white secondary, teal approve ───── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem; /* 8px */
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition:
+    background-color 120ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 120ms cubic-bezier(0.2, 0, 0, 1),
+    filter 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.btn:disabled {
+  opacity: 0.4;
+}
+.btn-primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+.btn-primary:not(:disabled):hover {
+  opacity: 0.88;
+}
+.btn-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  color: var(--foreground);
+  font-weight: 500;
+}
+.btn-secondary:not(:disabled):hover {
+  background: var(--hover);
+}
+.btn-approve {
+  background: var(--teal-d);
+  color: #ffffff;
+}
+.btn-approve:not(:disabled):hover {
+  filter: brightness(0.94);
+}
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+.btn-danger:not(:disabled):hover {
+  filter: brightness(0.94);
+}
+
+/* ── Visible teal focus ring (AA) ─────────────────────────────────── */
+:where(button, a, input, select, textarea, [contenteditable], [role='button']):focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ── Waiting pill pulse — color is paired with a number, never alone ─ */
+.pill-wait {
+  animation: pill-pulse 1.6s cubic-bezier(0.2, 0, 0, 1) infinite;
+}
+@keyframes pill-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-wait {
+    animation: none;
+  }
+}
+
+/* ── Skeleton shimmer (matches final geometry, zero layout shift) ─── */
 .skeleton {
   position: relative;
   overflow: hidden;
@@ -131,7 +243,9 @@ body {
   background: transparent;
 }
 
-/* ── Attention dot: "something is waiting", no number ──────────────── */
+/* ── Attention dot: "something is waiting", no number ──────────────
+     The one deliberate red in the palette — the user asked for a quiet
+     red dot, and a teal dot on a teal-active item would say nothing. ── */
 .alert-dot {
   background: var(--danger);
   box-shadow: 0 0 0 2px var(--surface);
@@ -158,6 +272,27 @@ body {
   }
 }
 
+/* ── Icon dock: JS sets the magnification transform; the label is ONE
+     fixed tooltip outside the scroll container (which would clip it). ── */
+.dock-item {
+  transform-origin: left center;
+}
+.dock-item.dock-reset {
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+.dock-label {
+  opacity: 0;
+  transform: translateY(-50%) translateX(-4px);
+  transition:
+    opacity 120ms cubic-bezier(0.2, 0, 0, 1),
+    transform 120ms cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+}
+.dock-label.dock-label-show {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
 /* ── WYSIWYG composer ─────────────────────────────────────────────── */
 .composer-editor:empty::before,
 .composer-editor:has(> br:only-child)::before {
@@ -174,7 +309,7 @@ body {
   padding-left: 1.25rem;
 }
 .composer-editor blockquote {
-  border-left: 2px solid color-mix(in oklab, var(--brand-a) 50%, transparent);
+  border-left: 2px solid color-mix(in oklab, var(--teal-d) 60%, transparent);
   padding-left: 0.625rem;
   color: var(--muted);
 }
@@ -187,6 +322,6 @@ body {
   white-space: pre-wrap;
 }
 .composer-editor a {
-  color: var(--brand-a);
+  color: var(--teal-t);
   text-decoration: underline;
 }

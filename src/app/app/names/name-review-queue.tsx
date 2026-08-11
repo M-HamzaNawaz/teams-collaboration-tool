@@ -4,7 +4,10 @@ import gsap from 'gsap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Finding } from '@/lib/detection'
-import { accentFor, gradientStyle, initials } from '@/lib/ui/colors'
+import { PersonMark } from '@/lib/ui/avatar'
+import { prefersReducedMotion } from '@/lib/ui/dismiss'
+import { AlertTriangleIcon, CheckIcon, XIcon } from '@/lib/ui/icons'
+import { PageHeader } from '@/lib/ui/page-header'
 
 /**
  * Name-change review (M4-07).
@@ -34,6 +37,8 @@ export function NameReviewQueue() {
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  // Cards already animated in — the 60s poll must not replay the entrance.
+  const animatedIds = useRef<Set<string>>(new Set())
 
   const refetch = useCallback(async (): Promise<boolean> => {
     try {
@@ -72,23 +77,33 @@ export function NameReviewQueue() {
 
   useEffect(() => {
     if (!queue?.length || !listRef.current) return
-    gsap.from(listRef.current.querySelectorAll('[data-card]'), {
-      y: 10,
-      opacity: 0,
-      duration: 0.3,
-      stagger: 0.05,
-      ease: 'power2.out',
-    })
+    const fresh = Array.from(
+      listRef.current.querySelectorAll<HTMLElement>('[data-card]'),
+    ).filter((el) => !animatedIds.current.has(el.dataset.card ?? ''))
+    for (const el of fresh) animatedIds.current.add(el.dataset.card ?? '')
+    if (fresh.length === 0 || prefersReducedMotion()) return
+    gsap.fromTo(
+      fresh,
+      { y: 10, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'power2.out' },
+    )
   }, [queue])
 
   async function review(item: RequestItem, decision: 'approved' | 'rejected') {
     setBusy(item.id)
+    const card = listRef.current?.querySelector(`[data-card="${item.id}"]`)
     const response = await fetch(`/api/name-change-requests/${item.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ decision }),
     })
     if (response.ok || response.status === 404) {
+      if (card && !prefersReducedMotion()) {
+        // Fade + lift out (JobPulse §5 dismiss).
+        await gsap
+          .to(card, { y: -14, opacity: 0, duration: 0.26, ease: 'power2.in' })
+          .then()
+      }
       setQueue((current) => (current ?? []).filter((q) => q.id !== item.id))
       setToast(
         decision === 'approved'
@@ -107,27 +122,26 @@ export function NameReviewQueue() {
   }
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-y-auto p-4 md:p-6">
-      <header className="mb-5 flex items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Name changes</h1>
-          <p className="text-sm text-muted">
-            Members ask; you decide. Requested names are screened first.
-          </p>
-        </div>
-        {queue !== null && queue.length > 0 && (
-          <span className="ml-auto rounded-full bg-hold/15 px-3 py-1 text-sm font-semibold text-hold">
-            {queue.length} waiting
-          </span>
-        )}
-      </header>
+    <main className="mx-auto flex h-full w-full max-w-[760px] flex-col overflow-y-auto p-4 md:px-10 md:py-8">
+      <PageHeader
+        breadcrumb="Track"
+        title="Name changes"
+        description="Members ask; you decide. Requested names are screened first."
+        actions={
+          queue !== null && queue.length > 0 ? (
+            <span className="pill-wait rounded-full bg-sel px-3 py-1 font-mono text-sm font-semibold tabular-nums text-teal-t">
+              {queue.length} waiting
+            </span>
+          ) : undefined
+        }
+      />
 
       {loadError && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-danger bg-danger/10 p-3 text-sm">
+        <div className="mb-4 flex items-center gap-3 rounded-[10px] border border-danger bg-danger/10 p-3 text-sm">
           <span className="flex-1 font-medium text-danger">{loadError}</span>
           <button
             onClick={() => void refetch()}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-2"
+            className="btn btn-secondary px-3 py-1.5 text-xs"
           >
             Retry now
           </button>
@@ -141,8 +155,11 @@ export function NameReviewQueue() {
             <div className="skeleton h-32" />
           </>
         ) : queue.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-surface p-10 text-center">
-            <p className="mt-2 font-medium">No requests waiting</p>
+          <div className="rounded-xl border border-border bg-surface p-10 text-center shadow-e1">
+            <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-sel text-teal-t">
+              <CheckIcon />
+            </span>
+            <p className="mt-3 font-medium">All settled</p>
             <p className="mt-1 text-sm text-muted">
               When someone asks to change their display name, it lands here.
             </p>
@@ -151,37 +168,27 @@ export function NameReviewQueue() {
           queue.map((item) => (
             <article
               key={item.id}
-              data-card
-              className={`rounded-2xl border bg-surface p-4 shadow-sm ${
-                item.flagged ? 'border-hold' : 'border-border'
+              data-card={item.id}
+              className={`rounded-xl border bg-surface p-4 shadow-e1 ${
+                item.flagged ? 'border-teal-d' : 'border-border'
               }`}
             >
               <div className="mb-3 flex items-center gap-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={gradientStyle(item.userId)}
-                >
-                  {initials(item.currentName || '?')}
-                </span>
+                <PersonMark name={item.currentName || '?'} size={34} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">
-                    <span
-                      className="font-semibold"
-                      style={{ color: accentFor(item.userId) }}
-                    >
-                      {item.currentName}
-                    </span>{' '}
+                    <span className="font-semibold">{item.currentName}</span>{' '}
                     <span className="text-muted">wants to be called</span>
                   </p>
                   {item.flagged && (
-                    <p className="text-xs font-semibold text-hold">
-                      ⚠ contains contact details
+                    <p className="flex items-center gap-1 text-xs font-semibold text-teal-t">
+                      <AlertTriangleIcon /> contains contact details
                     </p>
                   )}
                 </div>
               </div>
 
-              <p className="rounded-xl bg-surface-2/60 p-3 text-lg">
+              <p className="rounded-[10px] bg-surface-2 p-3 text-lg font-semibold">
                 <HighlightedName
                   name={item.requestedName}
                   findings={item.findings}
@@ -200,16 +207,16 @@ export function NameReviewQueue() {
                 <button
                   onClick={() => review(item, 'approved')}
                   disabled={busy === item.id}
-                  className="flex-1 rounded-xl bg-brand-b/15 px-4 py-2 text-sm font-semibold text-brand-b transition-transform enabled:hover:scale-[1.02] disabled:opacity-50"
+                  className="btn btn-approve flex-1"
                 >
-                  ✓ Approve name
+                  <CheckIcon /> Approve name
                 </button>
                 <button
                   onClick={() => review(item, 'rejected')}
                   disabled={busy === item.id}
-                  className="flex-1 rounded-xl bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition-transform enabled:hover:scale-[1.02] disabled:opacity-50"
+                  className="btn btn-secondary flex-1"
                 >
-                  ✕ Reject
+                  <XIcon /> Reject
                 </button>
               </div>
             </article>
@@ -218,7 +225,10 @@ export function NameReviewQueue() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm shadow-lg">
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-[500] -translate-x-1/2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm shadow-e2"
+        >
           {toast}
         </div>
       )}
@@ -250,7 +260,10 @@ function HighlightedName(props: { name: string; findings: Finding[] }) {
     if (start < cursor) continue
     if (start > cursor) parts.push(props.name.slice(cursor, start))
     parts.push(
-      <mark key={start} className="rounded bg-hold/25 px-0.5 font-medium text-hold">
+      <mark
+        key={start}
+        className="rounded bg-sel px-1 font-mono text-[0.92em] font-medium text-teal-t"
+      >
         {props.name.slice(start, end)}
       </mark>,
     )

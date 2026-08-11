@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { gradientStyle, initials } from '@/lib/ui/colors'
+import { PersonMark } from '@/lib/ui/avatar'
 import {
   AtSignIcon,
   BoldIcon,
-  ChevronDownIcon,
   CodeBlockIcon,
   CodeIcon,
   ItalicIcon,
@@ -232,7 +231,7 @@ export function RichComposer(props: {
       }}
       className="pb-safe border-t border-border bg-surface p-3"
     >
-      <div className="rounded-xl border border-border bg-background focus-within:border-brand-a">
+      <div className="rounded-[10px] border border-border bg-surface focus-within:border-teal-d">
         {showToolbar && (
           <div className="flex items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
             <ToolbarButton label="Bold (Ctrl+B)" active={active.bold} onClick={() => exec('bold')}>
@@ -352,34 +351,20 @@ export function RichComposer(props: {
           <ToolbarButton label="Shortcuts arrive later" disabled>
             <SlashSquareIcon />
           </ToolbarButton>
-          <div className="ml-auto flex items-center overflow-hidden rounded-lg shadow-sm">
-            <button
-              type="submit"
-              aria-label="Send message"
-              disabled={props.sending || empty}
-              className="flex h-8 items-center px-3.5 text-white transition-transform enabled:hover:scale-105 disabled:opacity-40"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, var(--brand-a), var(--brand-b))',
-              }}
-            >
-              {props.sending ? '…' : <SendIcon />}
-            </button>
-            <button
-              type="button"
-              aria-label="Send options arrive later"
-              disabled
-              className="flex h-8 items-center border-l border-white/25 px-1.5 text-white disabled:opacity-40"
-              style={{ backgroundImage: 'linear-gradient(135deg, var(--brand-b), var(--brand-b))' }}
-            >
-              <ChevronDownIcon />
-            </button>
-          </div>
+          {/* 40px teal-dark send (JobPulse §4.2) */}
+          <button
+            type="submit"
+            aria-label="Send message"
+            disabled={props.sending || empty}
+            className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg bg-teal-d text-white shadow-e1 transition-transform enabled:hover:scale-105 disabled:opacity-40"
+          >
+            {props.sending ? '…' : <SendIcon />}
+          </button>
         </div>
       </div>
 
       {popover === 'emoji' && (
-        <div className="mt-2 grid max-w-sm grid-cols-10 gap-1 rounded-xl border border-border bg-surface p-2 text-xl shadow-lg">
+        <div className="mt-2 grid max-w-sm grid-cols-10 gap-1 rounded-[10px] border border-border bg-surface p-2 text-xl shadow-e2">
           {EMOJI.map((emoji) => (
             <button
               key={emoji}
@@ -397,23 +382,18 @@ export function RichComposer(props: {
       )}
 
       {popover === 'mention' && (
-        <div className="mt-2 flex max-w-sm flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+        <div className="mt-2 flex max-w-sm flex-col overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
           {props.mentions.map((person) => (
             <button
               key={person.userId}
               type="button"
-              className="flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
+              className="flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover"
               onClick={() => {
                 insertText(`@${person.name} `)
                 setPopover(null)
               }}
             >
-              <span
-                className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                style={gradientStyle(person.userId)}
-              >
-                {initials(person.name)}
-              </span>
+              <PersonMark name={person.name} size={24} />
               {person.name}
             </button>
           ))}

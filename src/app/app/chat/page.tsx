@@ -10,12 +10,15 @@ import { ChatShell } from './chat-shell'
  * members get their active groups, nothing else. There is no group
  * directory and no "start a chat" affordance anywhere in this tree (I1).
  */
-export default async function AppPage() {
+export default async function AppPage(props: {
+  searchParams: Promise<{ g?: string }>
+}) {
   const session = await getSession()
+  const { g: requestedGroupId } = await props.searchParams
 
   if (!session) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main className="flex h-full items-center justify-center p-6">
         <p className="text-muted">
           Your account isn&apos;t part of a workspace yet. Ask your agency
           admin for an invitation.
@@ -85,7 +88,11 @@ export default async function AppPage() {
 
   return (
     <ChatShell
+      // Keyed by the deep link: navigating /app/chat?g=x → ?g=y while
+      // already on the chat remounts the shell so the new group opens.
+      key={requestedGroupId ?? 'none'}
       groups={groupRows}
+      initialGroupId={requestedGroupId ?? null}
       workspaceName={(workspace as WorkspaceRow | null)?.name ?? 'Workspace'}
       me={{
         userId: session.userId,
