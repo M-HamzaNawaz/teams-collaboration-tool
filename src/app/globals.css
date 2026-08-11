@@ -272,12 +272,13 @@ body {
   }
 }
 
-/* ── Icon dock: JS sets the magnification transform; the label is ONE
-     fixed tooltip outside the scroll container (which would clip it). ── */
-.dock-item {
-  transform-origin: left center;
+/* ── Icon dock: JS magnifies .dock-scale (the icon INSIDE the item —
+     scaling the 48px hit-box itself would grow it over the neighbour and
+     steal its :hover/click); the label is ONE fixed tooltip. ── */
+.dock-scale {
+  transform-origin: center;
 }
-.dock-item.dock-reset {
+.dock-scale.dock-reset {
   transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 .dock-label {

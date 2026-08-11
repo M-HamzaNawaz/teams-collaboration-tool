@@ -60,12 +60,16 @@ export function Dock(props: {
       let nearest: { el: HTMLElement; rect: DOMRect } | null = null
       let nearestDist = Infinity
       for (const item of items()) {
-        item.classList.remove('dock-reset')
+        // Scale the ICON inside, never the 48px hit-box: a scaled box
+        // grows over its neighbour and steals :hover (and the click) from
+        // the button the cursor is visually on.
+        const icon = item.querySelector<HTMLElement>('.dock-scale')
+        icon?.classList.remove('dock-reset')
         const rect = item.getBoundingClientRect()
         const dist = Math.abs(event.clientY - (rect.top + rect.height / 2))
-        if (!reduced.matches) {
+        if (!reduced.matches && icon) {
           const scale = 1 + Math.max(0, 1 - dist / 130) * 0.32
-          item.style.transform = `scale(${scale.toFixed(3)})`
+          icon.style.transform = `scale(${scale.toFixed(3)})`
         }
         if (dist < 34 && dist < nearestDist) {
           nearestDist = dist
@@ -87,8 +91,11 @@ export function Dock(props: {
 
     function onLeave() {
       for (const item of items()) {
-        item.classList.add('dock-reset')
-        item.style.transform = 'scale(1)'
+        const icon = item.querySelector<HTMLElement>('.dock-scale')
+        if (icon) {
+          icon.classList.add('dock-reset')
+          icon.style.transform = 'scale(1)'
+        }
       }
       tooltip?.classList.remove('dock-label-show')
     }
@@ -179,7 +186,11 @@ export function Dock(props: {
                       active ? 'bg-sel text-teal-t' : 'text-ink-2 hover:bg-hover'
                     }`}
                   >
-                    <item.Icon />
+                    {/* Only this inner span magnifies — the hit-box above
+                        stays put, so hover/click always hit THIS button. */}
+                    <span className="dock-scale flex items-center justify-center">
+                      <item.Icon />
+                    </span>
                     {item.alert && (
                       <span
                         className="alert-dot absolute right-2 top-2 h-2 w-2 rounded-full"
