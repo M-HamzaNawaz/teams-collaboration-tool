@@ -272,14 +272,24 @@ body {
   }
 }
 
-/* ── Icon dock: JS magnifies .dock-scale (the icon INSIDE the item —
-     scaling the 48px hit-box itself would grow it over the neighbour and
-     steal its :hover/click); the label is ONE fixed tooltip. ── */
+/* ── Icon dock: ONLY the hovered item's icon magnifies — pure CSS
+     :hover on .dock-scale (the icon INSIDE the 48px hit-box), so the
+     zoom, the highlight and the click can never disagree, and
+     neighbours never move. The label is ONE fixed tooltip (JS). ── */
 .dock-scale {
   transform-origin: center;
-}
-.dock-scale.dock-reset {
   transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+.dock-item:hover .dock-scale {
+  transform: scale(1.32);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-scale {
+    transition: none;
+  }
+  .dock-item:hover .dock-scale {
+    transform: none;
+  }
 }
 .dock-label {
   opacity: 0;

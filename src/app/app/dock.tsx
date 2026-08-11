@@ -10,17 +10,18 @@ import { NameChangeDialog } from './name-change-dialog'
 
 /**
  * The left icon dock (JobPulse §3.1): 76px, solid white, grouped icon-only
- * items with hover labels — and macOS-style cursor-distance magnification.
+ * items with hover labels and a hover zoom.
  *
- * scale = 1 + max(0, 1 - dist/130) * 0.32, where dist is the vertical
- * distance from the cursor to the item's center; the label shows when
- * dist < 34. Under prefers-reduced-motion the SCALING is disabled but the
- * labels still work — motion is the flourish, the label is information.
+ * The zoom is pure CSS: `.dock-item:hover .dock-scale { scale(1.32) }` on
+ * the icon INSIDE the fixed 48px hit-box. Only the hovered icon moves —
+ * the original cursor-distance falloff also scaled the neighbours, which
+ * read as the hover landing on other buttons. prefers-reduced-motion turns
+ * the zoom off in CSS; the labels still work — motion is the flourish, the
+ * label is information (shown when the cursor is within 34px of an item's
+ * center).
  *
- * The label is ONE fixed-position tooltip living OUTSIDE the item list:
- * inside it, the list's overflow-y clipping and the items' scale transforms
- * (both establish clip/containing blocks) would keep it from ever painting
- * over the page.
+ * The label is ONE fixed-position tooltip living OUTSIDE the item list,
+ * so no clip/containing block can ever hide it.
  */
 
 export type DockItem = {
@@ -46,12 +47,12 @@ export function Dock(props: {
   const [accountOpen, setAccountOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
 
-  // ── Magnification + tooltip ──────────────────────────────────────
+  // ── Tooltip (the zoom itself is pure CSS :hover on .dock-scale, so
+  // only the hovered icon ever scales — neighbours stay still) ───────
   useEffect(() => {
     const list = listRef.current
     const tooltip = tooltipRef.current
     if (!list || !tooltip) return
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
 
     const items = () =>
       Array.from(list.querySelectorAll<HTMLElement>('.dock-item'))
@@ -60,25 +61,15 @@ export function Dock(props: {
       let nearest: { el: HTMLElement; rect: DOMRect } | null = null
       let nearestDist = Infinity
       for (const item of items()) {
-        // Scale the ICON inside, never the 48px hit-box: a scaled box
-        // grows over its neighbour and steals :hover (and the click) from
-        // the button the cursor is visually on.
-        const icon = item.querySelector<HTMLElement>('.dock-scale')
-        icon?.classList.remove('dock-reset')
         const rect = item.getBoundingClientRect()
         const dist = Math.abs(event.clientY - (rect.top + rect.height / 2))
-        if (!reduced.matches && icon) {
-          const scale = 1 + Math.max(0, 1 - dist / 130) * 0.32
-          icon.style.transform = `scale(${scale.toFixed(3)})`
-        }
         if (dist < 34 && dist < nearestDist) {
           nearestDist = dist
           nearest = { el: item, rect }
         }
       }
       if (nearest && tooltip) {
-        // Anchor to the RAIL's edge, not the item's — the item's rect
-        // breathes with the magnification and would jiggle the label.
+        // Anchor to the RAIL's edge so the label never jiggles.
         const railRight = list.getBoundingClientRect().right
         tooltip.textContent = nearest.el.dataset.label ?? ''
         tooltip.style.left = `${Math.round(railRight + 14)}px`
@@ -90,13 +81,6 @@ export function Dock(props: {
     }
 
     function onLeave() {
-      for (const item of items()) {
-        const icon = item.querySelector<HTMLElement>('.dock-scale')
-        if (icon) {
-          icon.classList.add('dock-reset')
-          icon.style.transform = 'scale(1)'
-        }
-      }
       tooltip?.classList.remove('dock-label-show')
     }
 
