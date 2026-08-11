@@ -100,6 +100,9 @@ export default async function AppLayout({
         userId: session.userId,
         displayName: session.profile.display_name,
         roleLabel: session.profile.role_label || session.profile.member_role,
+        // The raw stored value (may be empty) — Edit profile prefills from
+        // this, so the member_role fallback never gets written back as data.
+        rawRoleLabel: session.profile.role_label ?? '',
       }}
       canModerate={canModerate}
       isAdmin={isAdmin}

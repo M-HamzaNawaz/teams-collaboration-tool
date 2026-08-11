@@ -14,6 +14,7 @@ import {
 } from '@/lib/ui/icons'
 import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
+import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 
 /**
@@ -25,7 +26,13 @@ import { NameChangeDialog } from './name-change-dialog'
 export function TopBar(props: {
   workspaces: Array<{ id: string; name: string }>
   activeWorkspace: { id: string; name: string }
-  me: { userId: string; displayName: string; roleLabel: string }
+  me: {
+    userId: string
+    displayName: string
+    roleLabel: string
+    rawRoleLabel: string
+  }
+  isAdmin: boolean
   alerts: { moderation: boolean; names: boolean }
   onOpenDock: () => void
   onOpenSearch: () => void
@@ -213,6 +220,8 @@ export function TopBar(props: {
             <p className="truncate text-sm font-medium">{props.me.displayName}</p>
             <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
           </div>
+          {/* The admin IS the identity authority — they edit directly.
+              Everyone else asks, and an admin reviews (I2). */}
           <button
             onClick={() => {
               setMenu(null)
@@ -220,7 +229,7 @@ export function TopBar(props: {
             }}
             className="w-full px-3 py-2 text-left text-sm hover:bg-hover"
           >
-            Request a name change
+            {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
           <button
             onClick={signOut}
@@ -232,12 +241,19 @@ export function TopBar(props: {
         </div>
       )}
 
-      {renaming && (
-        <NameChangeDialog
-          currentName={props.me.displayName}
-          onClose={() => setRenaming(false)}
-        />
-      )}
+      {renaming &&
+        (props.isAdmin ? (
+          <EditProfileDialog
+            currentName={props.me.displayName}
+            currentRoleLabel={props.me.rawRoleLabel}
+            onClose={() => setRenaming(false)}
+          />
+        ) : (
+          <NameChangeDialog
+            currentName={props.me.displayName}
+            onClose={() => setRenaming(false)}
+          />
+        ))}
     </header>
   )
 }

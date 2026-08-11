@@ -36,11 +36,19 @@ export function NameChangeDialog(props: {
     setBusy(true)
     setError(null)
 
-    const response = await fetch('/api/name-change-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestedName: requested.trim() }),
-    })
+    let response: Response
+    try {
+      response = await fetch('/api/name-change-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestedName: requested.trim() }),
+      })
+    } catch {
+      // Network down — never leave the button stuck on "Sending…".
+      setError('could not reach the server — check your connection')
+      setBusy(false)
+      return
+    }
     const data = (await response.json().catch(() => null)) as
       | { request?: { status: string }; error?: string }
       | null

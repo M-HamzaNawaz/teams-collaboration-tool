@@ -23,7 +23,12 @@ import { TopBar } from './top-bar'
 export function AppShell(props: {
   workspaces: Array<{ id: string; name: string }>
   activeWorkspace: { id: string; name: string }
-  me: { userId: string; displayName: string; roleLabel: string }
+  me: {
+    userId: string
+    displayName: string
+    roleLabel: string
+    rawRoleLabel: string
+  }
   canModerate: boolean
   isAdmin: boolean
   alerts: { moderation: boolean; names: boolean }
@@ -82,7 +87,7 @@ export function AppShell(props: {
     <div className="flex h-dvh">
       {/* Dock — fixed rail from lg up */}
       <aside className="hidden h-full lg:block">
-        <Dock items={items} me={props.me} />
+        <Dock items={items} me={props.me} isAdmin={props.isAdmin} />
       </aside>
 
       {/* Dock — off-canvas drawer below lg */}
@@ -95,7 +100,12 @@ export function AppShell(props: {
             className="panel-in-left h-full shadow-e2"
             onClick={(e) => e.stopPropagation()}
           >
-            <Dock items={items} me={props.me} onNavigate={() => setDockOpen(false)} />
+            <Dock
+              items={items}
+              me={props.me}
+              isAdmin={props.isAdmin}
+              onNavigate={() => setDockOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -105,6 +115,7 @@ export function AppShell(props: {
           workspaces={props.workspaces}
           activeWorkspace={props.activeWorkspace}
           me={props.me}
+          isAdmin={props.isAdmin}
           alerts={props.alerts}
           onOpenDock={() => setDockOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}

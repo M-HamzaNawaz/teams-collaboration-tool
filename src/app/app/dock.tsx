@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { PersonMark } from '@/lib/ui/avatar'
 import { LogOutIcon } from '@/lib/ui/icons'
 
+import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 
 /**
@@ -35,7 +36,13 @@ export type DockItem = {
 
 export function Dock(props: {
   items: DockItem[]
-  me: { userId: string; displayName: string; roleLabel: string }
+  me: {
+    userId: string
+    displayName: string
+    roleLabel: string
+    rawRoleLabel: string
+  }
+  isAdmin: boolean
   /** Drawer mode (mobile): item clicks close the drawer. */
   onNavigate?: () => void
 }) {
@@ -53,9 +60,11 @@ export function Dock(props: {
     const list = listRef.current
     const tooltip = tooltipRef.current
     if (!list || !tooltip) return
+    // Re-bind post-guard so the non-null type survives into the closures.
+    const rail = list
 
     const items = () =>
-      Array.from(list.querySelectorAll<HTMLElement>('.dock-item'))
+      Array.from(rail.querySelectorAll<HTMLElement>('.dock-item'))
 
     function onMove(event: MouseEvent) {
       let nearest: { el: HTMLElement; rect: DOMRect } | null = null
@@ -70,7 +79,7 @@ export function Dock(props: {
       }
       if (nearest && tooltip) {
         // Anchor to the RAIL's edge so the label never jiggles.
-        const railRight = list.getBoundingClientRect().right
+        const railRight = rail.getBoundingClientRect().right
         tooltip.textContent = nearest.el.dataset.label ?? ''
         tooltip.style.left = `${Math.round(railRight + 14)}px`
         tooltip.style.top = `${Math.round(nearest.rect.top + nearest.rect.height / 2)}px`
@@ -223,7 +232,7 @@ export function Dock(props: {
             }}
             className="w-full px-3 py-2 text-left text-sm hover:bg-hover"
           >
-            Request a name change
+            {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
           <button
             onClick={signOut}
@@ -235,12 +244,19 @@ export function Dock(props: {
         </div>
       )}
 
-      {renaming && (
-        <NameChangeDialog
-          currentName={props.me.displayName}
-          onClose={() => setRenaming(false)}
-        />
-      )}
+      {renaming &&
+        (props.isAdmin ? (
+          <EditProfileDialog
+            currentName={props.me.displayName}
+            currentRoleLabel={props.me.rawRoleLabel}
+            onClose={() => setRenaming(false)}
+          />
+        ) : (
+          <NameChangeDialog
+            currentName={props.me.displayName}
+            onClose={() => setRenaming(false)}
+          />
+        ))}
     </div>
   )
 }
