@@ -57,7 +57,7 @@ export function QuickSwitch(props: {
 
   return (
     <div
-      className="fixed inset-0 z-[400] flex items-start justify-center bg-black/30 p-4 pt-[12vh] backdrop-blur-[2px]"
+      className="overlay-in fixed inset-0 z-[400] flex items-start justify-center bg-black/30 p-4 pt-[12vh] backdrop-blur-[2px]"
       onClick={props.onClose}
       role="dialog"
       aria-modal="true"

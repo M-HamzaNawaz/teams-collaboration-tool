@@ -71,7 +71,7 @@ export function CreateGroupDialog(props: {
 
   return (
     <div
-      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
+      className="overlay-in fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <div
@@ -79,7 +79,7 @@ export function CreateGroupDialog(props: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-group-title"
-        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface p-5 shadow-e2"
+        className="card-in max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface p-5 shadow-e2"
       >
         <header className="mb-4 flex items-start gap-3">
           <div className="min-w-0 flex-1">

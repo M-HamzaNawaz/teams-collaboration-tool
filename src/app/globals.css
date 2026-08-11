@@ -160,6 +160,49 @@ body {
   box-shadow: var(--ring);
 }
 
+/* ── Overlay entrances: scrims fade, cards pop, panels slide ──────── */
+.overlay-in {
+  animation: overlay-in 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+.card-in {
+  animation: card-in 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+.panel-in {
+  animation: panel-in 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes panel-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+.panel-in-left {
+  animation: panel-in-left 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes panel-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overlay-in,
+  .card-in,
+  .panel-in,
+  .panel-in-left {
+    animation: none;
+  }
+}
+
 /* ── Waiting pill pulse — color is paired with a number, never alone ─ */
 .pill-wait {
   animation: pill-pulse 1.6s cubic-bezier(0.2, 0, 0, 1) infinite;

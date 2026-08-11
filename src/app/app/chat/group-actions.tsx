@@ -126,7 +126,7 @@ export function GroupActions(props: {
 
       {confirming && (
         <div
-          className="fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
+          className="overlay-in fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
           onClick={() => setConfirming(false)}
         >
           <div
@@ -134,7 +134,7 @@ export function GroupActions(props: {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-group-title"
-            className="w-full max-w-md rounded-xl border border-danger bg-surface p-5 shadow-e2"
+            className="card-in w-full max-w-md rounded-xl border border-danger bg-surface p-5 shadow-e2"
           >
             <h2 id="delete-group-title" className="text-lg font-semibold text-danger">
               Delete “{props.group.name}” permanently?

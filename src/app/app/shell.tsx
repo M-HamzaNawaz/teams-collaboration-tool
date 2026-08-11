@@ -88,10 +88,13 @@ export function AppShell(props: {
       {/* Dock — off-canvas drawer below lg */}
       {dockOpen && (
         <div
-          className="fixed inset-0 z-[300] flex bg-black/30 backdrop-blur-[2px] lg:hidden"
+          className="overlay-in fixed inset-0 z-[300] flex bg-black/30 backdrop-blur-[2px] lg:hidden"
           onClick={() => setDockOpen(false)}
         >
-          <div className="h-full shadow-e2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="panel-in-left h-full shadow-e2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Dock items={items} me={props.me} onNavigate={() => setDockOpen(false)} />
           </div>
         </div>

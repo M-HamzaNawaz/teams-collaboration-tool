@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import gsap from 'gsap'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { PersonMark } from '@/lib/ui/avatar'
-import { useEscape } from '@/lib/ui/dismiss'
+import { prefersReducedMotion, useEscape } from '@/lib/ui/dismiss'
 
 import { InviteDialog } from '../invite-dialog'
 import type { Me } from './chat-shell'
@@ -35,8 +36,27 @@ export function MembersPanel(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviting, setInviting] = useState(false)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLElement>(null)
+  const closing = useRef(false)
 
-  useEscape(props.onClose)
+  // Entrance is CSS (.overlay-in/.panel-in); the EXIT slides the panel
+  // back out before unmounting — closing must feel like the open, reversed.
+  const { onClose } = props
+  const close = useCallback(() => {
+    if (closing.current) return
+    closing.current = true
+    if (prefersReducedMotion() || !overlayRef.current || !panelRef.current) {
+      onClose()
+      return
+    }
+    gsap
+      .timeline({ onComplete: onClose })
+      .to(panelRef.current, { x: '100%', duration: 0.22, ease: 'power2.in' })
+      .to(overlayRef.current, { opacity: 0, duration: 0.18 }, '<')
+  }, [onClose])
+
+  useEscape(close)
 
   const load = useCallback(async () => {
     const memberResponse = await fetch(`/api/groups/${props.groupId}/profiles`)
@@ -100,15 +120,17 @@ export function MembersPanel(props: {
 
   return (
     <div
-      className="fixed inset-0 z-[300] flex justify-end bg-black/30 backdrop-blur-[2px]"
-      onClick={props.onClose}
+      ref={overlayRef}
+      className="overlay-in fixed inset-0 z-[300] flex justify-end bg-black/30 backdrop-blur-[2px]"
+      onClick={close}
     >
       <aside
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="members-panel-title"
-        className="flex h-full w-full max-w-sm flex-col border-l border-border bg-surface shadow-e2"
+        className="panel-in flex h-full w-full max-w-sm flex-col border-l border-border bg-surface shadow-e2"
       >
         <header className="flex items-center gap-3 border-b border-border p-4">
           <div className="min-w-0 flex-1">
@@ -116,7 +138,7 @@ export function MembersPanel(props: {
             <p className="truncate text-xs text-muted">{props.groupName}</p>
           </div>
           <button
-            onClick={props.onClose}
+            onClick={close}
             aria-label="Close members panel"
             className="rounded-lg p-2 hover:bg-surface-2"
           >
