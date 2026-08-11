@@ -149,10 +149,11 @@ export function Dock(props: {
         C
       </a>
 
-      <div
-        ref={listRef}
-        className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-2"
-      >
+      {/* No overflow here, ever: the magnification scales items past the
+          box, and an auto scrollbar would pop in on hover — shifting the
+          icons under the cursor and flickering. Five items always fit;
+          a spacer below pins the avatar to the bottom instead. */}
+      <div ref={listRef} className="flex flex-col items-center px-2">
         {groups.map((group) => {
           const members = props.items.filter((item) => item.group === group)
           if (members.length === 0) return null
@@ -192,6 +193,9 @@ export function Dock(props: {
           )
         })}
       </div>
+
+      {/* Spacer: pins the avatar to the rail's bottom */}
+      <div className="flex-1" />
 
       {/* The one hover label — fixed, so no scroll container can clip it */}
       <span
