@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+
 import { getSession } from '@/lib/auth/session'
 import { serviceClient } from '@/lib/supabase/service-client'
 import { userClient } from '@/lib/supabase/user-client'
@@ -30,6 +32,10 @@ export default async function DashboardPage() {
   const workspaceId = session.profile.workspace_id
   const role = session.profile.member_role
   const isAdmin = role === 'admin'
+
+  // The dashboard is the ADMIN's control surface. Members and clients live
+  // in the chat — that's their whole product — so they land there directly.
+  if (!isAdmin) redirect('/app/chat')
   const supabase = await userClient()
   const service = serviceClient()
 

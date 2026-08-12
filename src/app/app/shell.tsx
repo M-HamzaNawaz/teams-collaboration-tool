@@ -51,7 +51,18 @@ export function AppShell(props: {
   }, [])
 
   const items: DockItem[] = [
-    { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, group: 'WORK' },
+    // The dashboard is the admin's control surface — members and clients
+    // land in the chat (the /app route redirects them there too).
+    ...(props.isAdmin
+      ? [
+          {
+            href: '/app',
+            label: 'Dashboard',
+            Icon: LayoutDashboardIcon,
+            group: 'WORK' as const,
+          },
+        ]
+      : []),
     { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, group: 'WORK' },
     ...(props.canModerate
       ? [
