@@ -11,6 +11,7 @@ import {
 } from '@/lib/ui/icons'
 
 import { Dock, type DockItem } from './dock'
+import { NotificationCenter } from './notification-center'
 import { QuickSwitch } from './quick-switch'
 import { TopBar } from './top-bar'
 
@@ -141,6 +142,9 @@ export function AppShell(props: {
           onClose={() => setSearchOpen(false)}
         />
       )}
+
+      {/* Desktop notifications — behaviour only, listens across all groups */}
+      <NotificationCenter me={{ userId: props.me.userId }} groups={props.groups} />
     </div>
   )
 }

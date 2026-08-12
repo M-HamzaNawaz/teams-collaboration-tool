@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
+import { NotifyMenuItem } from './notify-menu-item'
 
 /**
  * Frosted top bar (JobPulse §3.2): workspace name on the left, centered
@@ -231,6 +232,7 @@ export function TopBar(props: {
           >
             {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
+          <NotifyMenuItem />
           <button
             onClick={signOut}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-hover"
