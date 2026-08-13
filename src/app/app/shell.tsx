@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
+import { PresenceProvider } from '@/lib/presence/presence'
 import {
   LayoutDashboardIcon,
   MessageSquareIcon,
@@ -96,7 +97,11 @@ export function AppShell(props: {
   ]
 
   return (
-    <div className="flex h-dvh">
+    <PresenceProvider
+      workspaceId={props.activeWorkspace.id}
+      me={{ userId: props.me.userId }}
+    >
+      <div className="flex h-dvh">
       {/* Dock — fixed rail from lg up */}
       <aside className="hidden h-full lg:block">
         <Dock items={items} me={props.me} isAdmin={props.isAdmin} />
@@ -145,6 +150,7 @@ export function AppShell(props: {
 
       {/* Desktop notifications — behaviour only, listens across all groups */}
       <NotificationCenter me={{ userId: props.me.userId }} groups={props.groups} />
-    </div>
+      </div>
+    </PresenceProvider>
   )
 }

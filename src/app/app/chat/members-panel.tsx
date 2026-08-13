@@ -3,6 +3,7 @@
 import gsap from 'gsap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useOnlineUsers } from '@/lib/presence/presence'
 import { PersonMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion, useEscape } from '@/lib/ui/dismiss'
 
@@ -36,6 +37,7 @@ export function MembersPanel(props: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviting, setInviting] = useState(false)
+  const onlineUsers = useOnlineUsers()
   const overlayRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const closing = useRef(false)
@@ -160,7 +162,11 @@ export function MembersPanel(props: {
                   key={member.userId}
                   className="flex items-center gap-3 rounded-xl px-2 py-2"
                 >
-                  <PersonMark name={member.displayName ?? 'M'} size={34} />
+                  <PersonMark
+                    name={member.displayName ?? 'M'}
+                    size={34}
+                    online={onlineUsers.has(member.userId)}
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">
                       {member.displayName ?? 'Member'}
