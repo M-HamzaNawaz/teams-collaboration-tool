@@ -12,11 +12,10 @@ import {
   MenuIcon,
   SearchIcon,
 } from '@/lib/ui/icons'
-import { ThemeToggle } from '@/lib/ui/theme-toggle'
-
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 import { NotifyMenuItem } from './notify-menu-item'
+import { ThemeMenuItem } from './theme-menu-item'
 
 /**
  * Frosted top bar (JobPulse §3.2): workspace name on the left, centered
@@ -199,8 +198,6 @@ export function TopBar(props: {
         </div>
       )}
 
-      <ThemeToggle />
-
       {/* Account */}
       <button
         onClick={() => setMenu(menu === 'user' ? null : 'user')}
@@ -232,6 +229,7 @@ export function TopBar(props: {
           >
             {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
+          <ThemeMenuItem />
           <NotifyMenuItem />
           <button
             onClick={signOut}

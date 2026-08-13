@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 
 import { PresenceProvider } from '@/lib/presence/presence'
+import { useApplyServerTheme } from '@/lib/theme/apply'
+import { isValidTheme } from '@/lib/theme/themes'
 import {
   LayoutDashboardIcon,
   MessageSquareIcon,
@@ -14,6 +16,7 @@ import {
 import { Dock, type DockItem } from './dock'
 import { NotificationCenter } from './notification-center'
 import { QuickSwitch } from './quick-switch'
+import { ThemeDialog } from './theme-dialog'
 import { TopBar } from './top-bar'
 
 /**
@@ -30,6 +33,7 @@ export function AppShell(props: {
     displayName: string
     roleLabel: string
     rawRoleLabel: string
+    theme: string | null
   }
   canModerate: boolean
   isAdmin: boolean
@@ -39,6 +43,11 @@ export function AppShell(props: {
 }) {
   const [dockOpen, setDockOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  // First-login theme picker: shown until the user has ever chosen a theme.
+  const [pickingTheme, setPickingTheme] = useState(!isValidTheme(props.me.theme))
+
+  // The DB theme wins over whatever the pre-paint boot script applied.
+  useApplyServerTheme(props.me.theme)
 
   // ⌘K / Ctrl+K opens the quick switch anywhere in the app.
   useEffect(() => {
@@ -150,6 +159,11 @@ export function AppShell(props: {
 
       {/* Desktop notifications — behaviour only, listens across all groups */}
       <NotificationCenter me={{ userId: props.me.userId }} groups={props.groups} />
+
+      {/* First-login: choose a theme (dismiss = keep whatever is applied) */}
+      {pickingTheme && (
+        <ThemeDialog firstRun onClose={() => setPickingTheme(false)} />
+      )}
       </div>
     </PresenceProvider>
   )

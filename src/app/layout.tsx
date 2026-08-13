@@ -45,11 +45,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Restore the saved theme BEFORE first paint — no flash. Runs
-            ahead of hydration; suppressHydrationWarning covers the attr. */}
+        {/* Apply the saved color theme BEFORE first paint — no flash. Runs
+            ahead of hydration; suppressHydrationWarning covers the attr. The
+            id is validated against the real palette after mount (an unknown
+            value just falls back to the Classic Light :root defaults). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('confide-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('confide-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
           }}
         />
       </head>

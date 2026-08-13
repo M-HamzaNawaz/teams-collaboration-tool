@@ -9,6 +9,7 @@ import { LogOutIcon } from '@/lib/ui/icons'
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 import { NotifyMenuItem } from './notify-menu-item'
+import { ThemeMenuItem } from './theme-menu-item'
 
 /**
  * The left icon dock (JobPulse §3.1): 76px, solid white, grouped icon-only
@@ -235,6 +236,7 @@ export function Dock(props: {
           >
             {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
+          <ThemeMenuItem />
           <NotifyMenuItem />
           <button
             onClick={signOut}

@@ -4,7 +4,6 @@ import gsap from 'gsap'
 import { useEffect, useRef } from 'react'
 
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
-import { ThemeToggle } from '@/lib/ui/theme-toggle'
 
 /**
  * Shared auth-page chrome (JobPulse §4.6): a centered 400px column, a 56px
@@ -54,9 +53,6 @@ export function AuthShell(props: {
       ref={ref}
       className="flex min-h-screen items-center justify-center bg-background p-6"
     >
-      <div className="fixed right-4 top-4">
-        <ThemeToggle />
-      </div>
       <div
         className={`w-full ${props.maxWidth === 'lg' ? 'max-w-lg' : 'max-w-[400px]'}`}
       >

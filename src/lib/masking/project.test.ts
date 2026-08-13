@@ -21,6 +21,7 @@ function profile(role: MemberRole): ProfileRow {
     member_role: role,
     role_label: 'Developer',
     avatar_url: null,
+    theme: null,
     created_at: '2026-08-06T00:00:00Z',
   }
 }

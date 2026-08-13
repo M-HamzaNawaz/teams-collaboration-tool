@@ -103,6 +103,8 @@ export default async function AppLayout({
         // The raw stored value (may be empty) — Edit profile prefills from
         // this, so the member_role fallback never gets written back as data.
         rawRoleLabel: session.profile.role_label ?? '',
+        // null = never picked a theme → the shell shows the first-run picker.
+        theme: session.profile.theme,
       }}
       canModerate={canModerate}
       isAdmin={isAdmin}

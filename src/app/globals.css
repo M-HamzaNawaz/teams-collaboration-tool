@@ -1,67 +1,160 @@
 @import "tailwindcss";
 
 /**
- * Confide — JobPulse design system.
+ * Confide — JobPulse design system, now multi-theme (Slack-style).
  *
- * Strict 3-color, 60-30-10: white surfaces (~60%), near-black ink (~30%),
- * teal accent (~10%, meaning only — active/positive/attention, never
- * decoration). Inter for UI, JetBrains Mono for every CHANGING number
- * (counts, timestamps, ids). Solid white cards with hairline borders;
- * frosted glass ONLY on the top bar and overlays.
+ * Each theme is ONE fixed look (some light, some dark) selected by
+ * <html data-theme="<id>">, restored pre-paint by the boot script in
+ * layout.tsx and saved to the user's profile. The token NAMES never change
+ * — every component keeps reading --background, --teal (the accent), etc. —
+ * only the VALUES swap per theme. Theme ids live in src/lib/theme/themes.ts.
  *
- * The palette is defined once per token via light-dark(); the dark scheme
- * is a faithful translation (same teal, near-black surfaces) so the theme
- * toggle the user asked for keeps working:
- *   - default: `light dark` → follows the OS preference
- *   - <html data-theme="light"|"dark"> → the user's explicit choice,
- *     set by the ThemeToggle and restored pre-paint in layout.tsx.
+ * --teal / --teal-d / --teal-t are the accent family (light tint / solid /
+ * text) — the name is historical; in Ocean it's blue, in Aubergine purple.
+ *
+ * :root is the default (Classic Light). Every other theme overrides the
+ * tokens below; shared, theme-independent tokens (elevation, legacy
+ * aliases) are defined once here.
  */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* Surfaces */
-  --background: light-dark(#f5f7f7, #121415);
-  --surface: light-dark(#ffffff, #1a1d1e);
-  --surface-2: light-dark(#f1f3f4, #212526); /* sunken */
-  --hover: light-dark(#f4f6f6, #202425);
-  --rowhover: light-dark(#f7f9f9, #1e2223);
-
-  /* Ink */
-  --foreground: light-dark(#1a1a1a, #ecedee);
-  --ink-2: light-dark(#4b4b4b, #b9bebf);
-  --muted: light-dark(#767676, #8e9495);
-  --disabled: light-dark(#a6a6a6, #5e6566);
-
-  /* Borders */
-  --border: light-dark(#e5e7eb, #2a2f30);
-  --border-2: light-dark(#d5d8dd, #3a4142); /* strong */
-
-  /* Teal — the ONLY hue. Darken for clickable, deepen for text. */
+  --background: #f5f7f7;
+  --surface: #ffffff;
+  --surface-2: #f1f3f4;
+  --hover: #f4f6f6;
+  --rowhover: #f7f9f9;
+  --foreground: #1a1a1a;
+  --ink-2: #4b4b4b;
+  --muted: #767676;
+  --disabled: #a6a6a6;
+  --border: #e5e7eb;
+  --border-2: #d5d8dd;
   --teal: #a2cfc9;
   --teal-d: #5fa69e;
-  --teal-t: light-dark(#3f6f69, #a2cfc9);
-  --sel: light-dark(rgba(162, 207, 201, 0.28), rgba(162, 207, 201, 0.16));
+  --teal-t: #3f6f69;
+  --sel: rgba(162, 207, 201, 0.28);
   --ring: 0 0 0 3px rgba(162, 207, 201, 0.5);
-
-  /* Legacy token names kept so every class keeps resolving. */
-  --brand-a: var(--teal-t);
-  --brand-b: var(--teal-t);
-  --hold: var(--teal-t); /* "pending review" is teal in the mono palette */
-  --danger: light-dark(#b3352e, #e5766b); /* destructive/broken ONLY */
-
+  --danger: #b3352e;
   --bubble-own: var(--sel);
   --bubble-other: var(--surface);
 
-  /* Elevation */
+  /* Theme-independent */
+  --brand-a: var(--teal-t);
+  --brand-b: var(--teal-t);
+  --hold: var(--teal-t);
   --e1: 0 1px 2px rgba(26, 26, 26, 0.04), 0 6px 16px rgba(26, 26, 26, 0.06);
   --e2: 0 8px 30px rgba(26, 26, 26, 0.12);
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
-}
-:root[data-theme='dark'] {
+/* ── Classic Dark ─────────────────────────────────────────────────── */
+:root[data-theme='classic-dark'] {
   color-scheme: dark;
+  --background: #121415;
+  --surface: #1a1d1e;
+  --surface-2: #212526;
+  --hover: #202425;
+  --rowhover: #1e2223;
+  --foreground: #ecedee;
+  --ink-2: #b9bebf;
+  --muted: #8e9495;
+  --disabled: #5e6566;
+  --border: #2a2f30;
+  --border-2: #3a4142;
+  --teal: #a2cfc9;
+  --teal-d: #5fa69e;
+  --teal-t: #a2cfc9;
+  --sel: rgba(162, 207, 201, 0.16);
+  --ring: 0 0 0 3px rgba(162, 207, 201, 0.5);
+  --danger: #e5766b;
+}
+
+/* ── Ocean (light, blue accent) ───────────────────────────────────── */
+:root[data-theme='ocean'] {
+  color-scheme: light;
+  --background: #f3f6fb;
+  --surface: #ffffff;
+  --surface-2: #eef2f9;
+  --hover: #f1f5fb;
+  --rowhover: #f5f8fd;
+  --foreground: #172033;
+  --ink-2: #45526b;
+  --muted: #6b788f;
+  --disabled: #a6b0c2;
+  --border: #e2e8f2;
+  --border-2: #cfd8e6;
+  --teal: #bfd8fb;
+  --teal-d: #2563eb;
+  --teal-t: #1d4ed8;
+  --sel: rgba(37, 99, 235, 0.14);
+  --ring: 0 0 0 3px rgba(37, 99, 235, 0.4);
+  --danger: #c0392b;
+}
+
+/* ── Forest (light, green accent) ─────────────────────────────────── */
+:root[data-theme='forest'] {
+  color-scheme: light;
+  --background: #f3f8f4;
+  --surface: #ffffff;
+  --surface-2: #eef4ef;
+  --hover: #f1f6f2;
+  --rowhover: #f5f9f6;
+  --foreground: #16241b;
+  --ink-2: #45564b;
+  --muted: #6b7a70;
+  --disabled: #a6b2aa;
+  --border: #e2eae4;
+  --border-2: #cfdbd3;
+  --teal: #b6ddc4;
+  --teal-d: #2f8f5b;
+  --teal-t: #256b45;
+  --sel: rgba(47, 143, 91, 0.14);
+  --ring: 0 0 0 3px rgba(47, 143, 91, 0.4);
+  --danger: #b3352e;
+}
+
+/* ── Aubergine (dark, purple accent) ──────────────────────────────── */
+:root[data-theme='aubergine'] {
+  color-scheme: dark;
+  --background: #1b1424;
+  --surface: #251a31;
+  --surface-2: #2e2340;
+  --hover: #2c2140;
+  --rowhover: #281e38;
+  --foreground: #efe9f5;
+  --ink-2: #c3b6d2;
+  --muted: #9a8bab;
+  --disabled: #665a75;
+  --border: #382a4a;
+  --border-2: #4a3960;
+  --teal: #c4a5e0;
+  --teal-d: #9b6fc9;
+  --teal-t: #d4bce8;
+  --sel: rgba(155, 111, 201, 0.22);
+  --ring: 0 0 0 3px rgba(155, 111, 201, 0.5);
+  --danger: #e5766b;
+}
+
+/* ── Midnight (dark, indigo accent) ───────────────────────────────── */
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+  --background: #0f1420;
+  --surface: #171d2b;
+  --surface-2: #1e2637;
+  --hover: #1d2436;
+  --rowhover: #1a2130;
+  --foreground: #e7ecf5;
+  --ink-2: #b0bace;
+  --muted: #808da5;
+  --disabled: #545f75;
+  --border: #262f42;
+  --border-2: #374156;
+  --teal: #a9bef2;
+  --teal-d: #5b7fe0;
+  --teal-t: #a9bef2;
+  --sel: rgba(91, 127, 224, 0.2);
+  --ring: 0 0 0 3px rgba(91, 127, 224, 0.5);
+  --danger: #e5766b;
 }
 
 @theme inline {

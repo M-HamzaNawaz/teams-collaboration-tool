@@ -13,6 +13,8 @@ export type ProfileRow = {
   member_role: MemberRole
   role_label: string
   avatar_url: string | null
+  /** Chosen color theme id; null until the first-login picker runs. */
+  theme: string | null
   created_at: string
 }
 
