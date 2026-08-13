@@ -11,6 +11,7 @@ import {
 } from '@/lib/ui/icons'
 
 import { Dock, type DockItem } from './dock'
+import { NotificationCenter } from './notification-center'
 import { QuickSwitch } from './quick-switch'
 import { TopBar } from './top-bar'
 
@@ -51,7 +52,18 @@ export function AppShell(props: {
   }, [])
 
   const items: DockItem[] = [
-    { href: '/app', label: 'Dashboard', Icon: LayoutDashboardIcon, group: 'WORK' },
+    // The dashboard is the admin's control surface — members and clients
+    // land in the chat (the /app route redirects them there too).
+    ...(props.isAdmin
+      ? [
+          {
+            href: '/app',
+            label: 'Dashboard',
+            Icon: LayoutDashboardIcon,
+            group: 'WORK' as const,
+          },
+        ]
+      : []),
     { href: '/app/chat', label: 'Chat', Icon: MessageSquareIcon, group: 'WORK' },
     ...(props.canModerate
       ? [
@@ -130,6 +142,9 @@ export function AppShell(props: {
           onClose={() => setSearchOpen(false)}
         />
       )}
+
+      {/* Desktop notifications — behaviour only, listens across all groups */}
+      <NotificationCenter me={{ userId: props.me.userId }} groups={props.groups} />
     </div>
   )
 }

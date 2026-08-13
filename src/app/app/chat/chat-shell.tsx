@@ -67,7 +67,9 @@ export function ChatShell(props: {
 
   return (
     <div ref={shellRef} className="h-full w-full overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1160px] gap-4 p-3 md:p-4">
+      {/* Chat runs edge to edge — unlike the capped dashboard/audit pages,
+          a conversation wants the whole width, not a centered column. */}
+      <div className="flex h-full w-full gap-3 p-2 sm:p-3">
         {/* Sidebar card — hidden on mobile while a chat is open */}
         <aside
           data-anim="sidebar"
