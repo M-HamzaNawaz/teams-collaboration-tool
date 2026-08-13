@@ -86,6 +86,10 @@ export function ChatPane(props: {
   // Active members minus me — the denominator for "read by everyone" (a
   // group tick only goes blue once every other member's watermark passes).
   const [memberIds, setMemberIds] = useState<string[]>([])
+  // Live upload progress per optimistic file bubble (tempId → 0..100).
+  const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(
+    new Map(),
+  )
   // M7: message_id → attachment metadata (files RLS-scoped to the group).
   const [attachments, setAttachments] = useState<
     Map<string, { id: string; name: string; sizeBytes: number }>
@@ -531,7 +535,22 @@ export function ChatPane(props: {
     void deliver(tempId, body).finally(() => setSending(false))
   }
 
-  /** M7-02: upload a file — it becomes a message whose body is the filename. */
+  const clearProgress = useCallback((tempId: string) => {
+    setUploadProgress((current) => {
+      const next = new Map(current)
+      next.delete(tempId)
+      return next
+    })
+  }, [])
+
+  /**
+   * M7-02: upload a file — it becomes a message whose body is the filename.
+   *
+   * The bubble appears the instant you pick the file, with a live progress
+   * bar, then reconciles to the delivered/held file chip. fetch() can't
+   * report upload progress, so the POST goes over XMLHttpRequest — the one
+   * place in the app that needs the upload.onprogress event.
+   */
   async function uploadFile(file: File) {
     setNotice(null)
     stickToBottom.current = true
@@ -539,19 +558,62 @@ export function ChatPane(props: {
     form.set('file', file)
     form.set('groupId', props.group.id)
 
-    const response = await fetch('/api/files', { method: 'POST', body: form })
-    const data = (await response.json().catch(() => null)) as {
-      message?: {
-        id: string
-        status: string
-        createdAt: string
-        fileId: string
-        fileName: string
-      }
-      error?: string
-    } | null
+    const tempId = `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    upsert({
+      id: tempId,
+      workspace_id: props.group.workspace_id,
+      group_id: props.group.id,
+      sender_id: props.me.userId,
+      body: file.name,
+      status: 'sending',
+      created_at: new Date().toISOString(),
+      delivered_at: null,
+    })
+    setUploadProgress((current) => new Map(current).set(tempId, 0))
 
-    if (response.status === 201 && data?.message) {
+    let result: { status: number; text: string }
+    try {
+      result = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/api/files')
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return
+          const pct = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress((current) => new Map(current).set(tempId, pct))
+        }
+        xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText })
+        xhr.onerror = () => reject(new Error('network'))
+        xhr.send(form)
+      })
+    } catch {
+      setMessages((current) =>
+        (current ?? []).map((m) =>
+          m.id === tempId ? { ...m, status: 'failed' as const } : m,
+        ),
+      )
+      clearProgress(tempId)
+      setNotice('upload failed — check your connection')
+      return
+    }
+
+    const data = (() => {
+      try {
+        return JSON.parse(result.text) as {
+          message?: {
+            id: string
+            status: string
+            createdAt: string
+            fileId: string
+            fileName: string
+          }
+          error?: string
+        }
+      } catch {
+        return null
+      }
+    })()
+
+    if (result.status === 201 && data?.message) {
       const m = data.message
       setAttachments((current) =>
         new Map(current).set(m.id, {
@@ -560,7 +622,7 @@ export function ChatPane(props: {
           sizeBytes: file.size,
         }),
       )
-      upsert({
+      replaceMessage(tempId, {
         id: m.id,
         workspace_id: props.group.workspace_id,
         group_id: props.group.id,
@@ -570,10 +632,17 @@ export function ChatPane(props: {
         created_at: m.createdAt,
         delivered_at: null,
       })
+      clearProgress(tempId)
       if (m.status === 'pending') {
         setNotice('Your file is pending review by an admin before delivery.')
       }
     } else {
+      setMessages((current) =>
+        (current ?? []).map((mm) =>
+          mm.id === tempId ? { ...mm, status: 'failed' as const } : mm,
+        ),
+      )
+      clearProgress(tempId)
       setNotice(data?.error ?? 'upload failed')
     }
   }
@@ -770,7 +839,31 @@ export function ChatPane(props: {
                               : ''
                           } ${message.status === 'blocked' ? 'opacity-70' : ''}`}
                         >
-                          {attachments.has(message.id) ? (
+                          {uploadProgress.has(message.id) ? (
+                            // Live upload: filename + a teal progress bar.
+                            <div className="min-w-[180px]">
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-muted">
+                                  <PaperclipIcon />
+                                </span>
+                                <span className="min-w-0 flex-1 truncate font-medium">
+                                  {message.body}
+                                </span>
+                                <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">
+                                  {uploadProgress.get(message.id)}%
+                                </span>
+                              </div>
+                              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+                                <div
+                                  className="h-full rounded-full bg-teal-d transition-[width] duration-150"
+                                  style={{ width: `${uploadProgress.get(message.id)}%` }}
+                                />
+                              </div>
+                              <p className="mt-1 text-[10px] text-muted">
+                                Uploading…
+                              </p>
+                            </div>
+                          ) : attachments.has(message.id) ? (
                             // M7: attachment chip instead of raw body text.
                             <button
                               type="button"
@@ -824,9 +917,10 @@ export function ChatPane(props: {
                                   ✓ released after review
                                 </span>
                               )}
-                            {message.status === 'sending' && (
-                              <span className="font-medium">sending…</span>
-                            )}
+                            {message.status === 'sending' &&
+                              !uploadProgress.has(message.id) && (
+                                <span className="font-medium">sending…</span>
+                              )}
                             {message.status === 'failed' && (
                               // A real button: keyboards and screen readers
                               // must be able to retry, not just pointers.
