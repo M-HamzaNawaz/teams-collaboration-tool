@@ -23,7 +23,12 @@ import { browserClient } from '@/lib/supabase/browser-client'
 import type { GroupRow } from '@/lib/types'
 import { GroupMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
-import { LockIcon, PaperclipIcon, UsersIcon } from '@/lib/ui/icons'
+import {
+  CheckCheckIcon,
+  LockIcon,
+  PaperclipIcon,
+  UsersIcon,
+} from '@/lib/ui/icons'
 import { FormattedBody } from '@/lib/ui/message-format'
 
 import { RichComposer } from './rich-composer'
@@ -78,6 +83,9 @@ export function ChatPane(props: {
   // M5-06/07: presence + connection state.
   const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; at: number }>>(new Map())
   const [reads, setReads] = useState<Map<string, string>>(new Map())
+  // Active members minus me — the denominator for "read by everyone" (a
+  // group tick only goes blue once every other member's watermark passes).
+  const [memberIds, setMemberIds] = useState<string[]>([])
   // M7: message_id → attachment metadata (files RLS-scoped to the group).
   const [attachments, setAttachments] = useState<
     Map<string, { id: string; name: string; sizeBytes: number }>
@@ -272,6 +280,11 @@ export function ChatPane(props: {
             .filter((m) => m.last_read_at)
             .map((m) => [m.user_id as string, m.last_read_at as string]),
         ),
+      )
+      setMemberIds(
+        (members ?? [])
+          .map((m) => m.user_id as string)
+          .filter((id) => id !== props.me.userId),
       )
       await refetchAttachments()
     }
@@ -618,25 +631,28 @@ export function ChatPane(props: {
     [],
   )
 
-  // ── Read receipt (M5-06): under the caller's LATEST delivered message,
-  // the members whose watermark has passed it. Date.parse, not string
-  // compare — watermarks and rows carry different timezone suffixes.
-  const receipt = useMemo(() => {
-    const lastOwn = [...(messages ?? [])]
-      .reverse()
-      .find((m) => m.sender_id === props.me.userId && m.status === 'delivered')
-    if (!lastOwn) return null
-    const sentAt = Date.parse(lastOwn.created_at)
-    const seenBy = [...reads]
-      .filter(
-        ([userId, at]) =>
-          userId !== props.me.userId && Date.parse(at) >= sentAt,
-      )
-      .map(([userId]) => names.get(userId) ?? 'Member')
-    return seenBy.length
-      ? { id: lastOwn.id, label: `Seen by ${seenBy.join(', ')}` }
-      : null
-  }, [messages, reads, names, props.me.userId])
+  // ── Read receipts (M5-06 → WhatsApp ticks). For one of MY OWN delivered
+  // messages: 'read' once EVERY other active member's watermark has passed
+  // it (blue), 'delivered' while visible but not yet read by all (grey),
+  // null otherwise. Date.parse, not string compare — watermarks and rows
+  // carry different timezone suffixes. "Seen by whom" moves into the tick's
+  // tooltip so a big group stays uncluttered.
+  const readStateFor = useCallback(
+    (message: ClientMessage): { level: 'read' | 'delivered'; seenBy: string[] } | null => {
+      if (message.sender_id !== props.me.userId) return null
+      if (message.status !== 'delivered') return null
+      const sentAt = Date.parse(message.created_at)
+      const seenBy = memberIds
+        .filter((id) => {
+          const at = reads.get(id)
+          return at !== undefined && Date.parse(at) >= sentAt
+        })
+        .map((id) => names.get(id) ?? 'Member')
+      const allRead = memberIds.length > 0 && seenBy.length === memberIds.length
+      return { level: allRead ? 'read' : 'delivered', seenBy }
+    },
+    [memberIds, reads, names, props.me.userId],
+  )
 
   return (
     <div ref={paneRef} className="flex h-full min-w-0 flex-col">
@@ -828,13 +844,36 @@ export function ChatPane(props: {
                                   {timeFormat.format(new Date(message.created_at))}
                                 </span>
                               )}
+                            {/* Read-receipt tick, own delivered messages only:
+                                grey ✓✓ = delivered, teal ✓✓ = read by all. */}
+                            {own &&
+                              (() => {
+                                const rs = readStateFor(message)
+                                if (!rs) return null
+                                return (
+                                  <span
+                                    className={
+                                      rs.level === 'read'
+                                        ? 'text-teal-t'
+                                        : 'text-muted'
+                                    }
+                                    title={
+                                      rs.seenBy.length
+                                        ? `Read by ${rs.seenBy.join(', ')}`
+                                        : 'Delivered'
+                                    }
+                                    aria-label={
+                                      rs.level === 'read'
+                                        ? 'Read by everyone'
+                                        : 'Delivered'
+                                    }
+                                  >
+                                    <CheckCheckIcon />
+                                  </span>
+                                )
+                              })()}
                           </p>
                         </div>
-                        {receipt?.id === message.id && (
-                          <p className="mt-0.5 pr-1 text-right text-[10px] text-muted">
-                            {receipt.label}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </li>
