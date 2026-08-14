@@ -9,6 +9,7 @@ import { LogOutIcon } from '@/lib/ui/icons'
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 import { NotifyMenuItem } from './notify-menu-item'
+import { ThemeDialog } from './theme-dialog'
 import { ThemeMenuItem } from './theme-menu-item'
 
 /**
@@ -55,6 +56,7 @@ export function Dock(props: {
   const tooltipRef = useRef<HTMLSpanElement>(null)
   const [accountOpen, setAccountOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
+  const [theming, setTheming] = useState(false)
 
   // ── Tooltip (the zoom itself is pure CSS :hover on .dock-scale, so
   // only the hovered icon ever scales — neighbours stay still) ───────
@@ -236,7 +238,12 @@ export function Dock(props: {
           >
             {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
-          <ThemeMenuItem />
+          <ThemeMenuItem
+            onOpen={() => {
+              setAccountOpen(false)
+              setTheming(true)
+            }}
+          />
           <NotifyMenuItem />
           <button
             onClick={signOut}
@@ -261,6 +268,8 @@ export function Dock(props: {
             onClose={() => setRenaming(false)}
           />
         ))}
+
+      {theming && <ThemeDialog onClose={() => setTheming(false)} />}
     </div>
   )
 }

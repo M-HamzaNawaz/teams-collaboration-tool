@@ -15,6 +15,7 @@ import {
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
 import { NotifyMenuItem } from './notify-menu-item'
+import { ThemeDialog } from './theme-dialog'
 import { ThemeMenuItem } from './theme-menu-item'
 
 /**
@@ -40,6 +41,7 @@ export function TopBar(props: {
   const router = useRouter()
   const [menu, setMenu] = useState<'workspace' | 'user' | 'bell' | null>(null)
   const [renaming, setRenaming] = useState(false)
+  const [theming, setTheming] = useState(false)
   const barRef = useRef<HTMLElement>(null)
 
   // Click-away or Escape closes any open menu.
@@ -229,7 +231,12 @@ export function TopBar(props: {
           >
             {props.isAdmin ? 'Edit profile' : 'Request a name change'}
           </button>
-          <ThemeMenuItem />
+          <ThemeMenuItem
+            onOpen={() => {
+              setMenu(null)
+              setTheming(true)
+            }}
+          />
           <NotifyMenuItem />
           <button
             onClick={signOut}
@@ -254,6 +261,8 @@ export function TopBar(props: {
             onClose={() => setRenaming(false)}
           />
         ))}
+
+      {theming && <ThemeDialog onClose={() => setTheming(false)} />}
     </header>
   )
 }
