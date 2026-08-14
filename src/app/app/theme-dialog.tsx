@@ -56,13 +56,18 @@ export function ThemeDialog(props: { firstRun?: boolean; onClose: () => void }) 
                     : 'border-border hover:bg-hover'
                 }`}
               >
-                {/* Swatch preview: page base with a surface card + accent */}
+                {/* Swatch preview: the theme's rail on the left (its
+                    signature), page base + surface card + accent beside it */}
                 <span
                   className="relative h-14 w-full overflow-hidden rounded-lg border border-border-2"
                   style={{ background: theme.swatch.base }}
                 >
                   <span
-                    className="absolute bottom-1.5 left-1.5 h-5 w-2/3 rounded"
+                    className="absolute bottom-0 left-0 top-0 w-3.5"
+                    style={{ background: theme.swatch.rail }}
+                  />
+                  <span
+                    className="absolute bottom-1.5 left-6 h-5 w-3/5 rounded"
                     style={{ background: theme.swatch.surface }}
                   />
                   <span

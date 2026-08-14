@@ -39,6 +39,15 @@
   --bubble-own: var(--sel);
   --bubble-other: var(--surface);
 
+  /* The dock rail — the surface that WEARS the theme (Slack-style). Every
+     theme paints it boldly so themes are recognisable at a glance; content
+     stays quiet for readability. */
+  --rail: #ffffff;
+  --rail-border: #e5e7eb;
+  --rail-fg: #4b4b4b;
+  --rail-active-bg: rgba(162, 207, 201, 0.28);
+  --rail-active-fg: #3f6f69;
+
   /* Theme-independent */
   --brand-a: var(--teal-t);
   --brand-b: var(--teal-t);
@@ -67,6 +76,11 @@
   --sel: rgba(162, 207, 201, 0.16);
   --ring: 0 0 0 3px rgba(162, 207, 201, 0.5);
   --danger: #e5766b;
+  --rail: #101213;
+  --rail-border: #24292a;
+  --rail-fg: #b9bebf;
+  --rail-active-bg: rgba(162, 207, 201, 0.18);
+  --rail-active-fg: #a2cfc9;
 }
 
 /* ── Ocean (light, blue accent) ───────────────────────────────────── */
@@ -89,6 +103,11 @@
   --sel: rgba(37, 99, 235, 0.14);
   --ring: 0 0 0 3px rgba(37, 99, 235, 0.4);
   --danger: #c0392b;
+  --rail: #1e40af;
+  --rail-border: #17348c;
+  --rail-fg: #c3d3f8;
+  --rail-active-bg: rgba(255, 255, 255, 0.2);
+  --rail-active-fg: #ffffff;
 }
 
 /* ── Forest (light, green accent) ─────────────────────────────────── */
@@ -111,6 +130,11 @@
   --sel: rgba(47, 143, 91, 0.14);
   --ring: 0 0 0 3px rgba(47, 143, 91, 0.4);
   --danger: #b3352e;
+  --rail: #1c6a43;
+  --rail-border: #155635;
+  --rail-fg: #c2e6d0;
+  --rail-active-bg: rgba(255, 255, 255, 0.2);
+  --rail-active-fg: #ffffff;
 }
 
 /* ── Aubergine (dark, purple accent) ──────────────────────────────── */
@@ -133,6 +157,11 @@
   --sel: rgba(155, 111, 201, 0.22);
   --ring: 0 0 0 3px rgba(155, 111, 201, 0.5);
   --danger: #e5766b;
+  --rail: #3f1d4e;
+  --rail-border: #331540;
+  --rail-fg: #d9c5e8;
+  --rail-active-bg: rgba(255, 255, 255, 0.2);
+  --rail-active-fg: #ffffff;
 }
 
 /* ── Midnight (dark, indigo accent) ───────────────────────────────── */
@@ -155,6 +184,11 @@
   --sel: rgba(91, 127, 224, 0.2);
   --ring: 0 0 0 3px rgba(91, 127, 224, 0.5);
   --danger: #e5766b;
+  --rail: #0a0f1d;
+  --rail-border: #1b2337;
+  --rail-fg: #97a7ca;
+  --rail-active-bg: rgba(91, 127, 224, 0.3);
+  --rail-active-fg: #dbe4fb;
 }
 
 @theme inline {
@@ -163,6 +197,11 @@
   --color-surface-2: var(--surface-2);
   --color-hover: var(--hover);
   --color-rowhover: var(--rowhover);
+  --color-rail: var(--rail);
+  --color-rail-border: var(--rail-border);
+  --color-rail-fg: var(--rail-fg);
+  --color-rail-active: var(--rail-active-bg);
+  --color-rail-active-fg: var(--rail-active-fg);
   --color-foreground: var(--foreground);
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
@@ -384,7 +423,8 @@ body {
      red dot, and a teal dot on a teal-active item would say nothing. ── */
 .alert-dot {
   background: var(--danger);
-  box-shadow: 0 0 0 2px var(--surface);
+  /* The dot lives on the dock rail, which wears the theme color. */
+  box-shadow: 0 0 0 2px var(--rail);
 }
 .alert-dot::after {
   content: "";

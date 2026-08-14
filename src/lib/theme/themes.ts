@@ -12,7 +12,8 @@ export type ThemeDef = {
   id: string
   label: string
   dark: boolean
-  swatch: { base: string; surface: string; accent: string }
+  /** rail = the dock's bold theme color — the theme's signature. */
+  swatch: { base: string; surface: string; accent: string; rail: string }
 }
 
 export const THEMES: ThemeDef[] = [
@@ -20,37 +21,37 @@ export const THEMES: ThemeDef[] = [
     id: 'classic-light',
     label: 'Classic Light',
     dark: false,
-    swatch: { base: '#f5f7f7', surface: '#ffffff', accent: '#5fa69e' },
+    swatch: { base: '#f5f7f7', surface: '#ffffff', accent: '#5fa69e', rail: '#ffffff' },
   },
   {
     id: 'classic-dark',
     label: 'Classic Dark',
     dark: true,
-    swatch: { base: '#121415', surface: '#1a1d1e', accent: '#a2cfc9' },
+    swatch: { base: '#121415', surface: '#1a1d1e', accent: '#a2cfc9', rail: '#101213' },
   },
   {
     id: 'ocean',
     label: 'Ocean',
     dark: false,
-    swatch: { base: '#f3f6fb', surface: '#ffffff', accent: '#2563eb' },
+    swatch: { base: '#f3f6fb', surface: '#ffffff', accent: '#2563eb', rail: '#1e40af' },
   },
   {
     id: 'forest',
     label: 'Forest',
     dark: false,
-    swatch: { base: '#f3f8f4', surface: '#ffffff', accent: '#2f8f5b' },
+    swatch: { base: '#f3f8f4', surface: '#ffffff', accent: '#2f8f5b', rail: '#1c6a43' },
   },
   {
     id: 'aubergine',
     label: 'Aubergine',
     dark: true,
-    swatch: { base: '#1b1424', surface: '#251a31', accent: '#c4a5e0' },
+    swatch: { base: '#1b1424', surface: '#251a31', accent: '#c4a5e0', rail: '#3f1d4e' },
   },
   {
     id: 'midnight',
     label: 'Midnight',
     dark: true,
-    swatch: { base: '#0f1420', surface: '#171d2b', accent: '#8fa8f0' },
+    swatch: { base: '#0f1420', surface: '#171d2b', accent: '#8fa8f0', rail: '#0a0f1d' },
   },
 ]
 

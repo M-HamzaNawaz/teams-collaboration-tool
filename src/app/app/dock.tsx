@@ -141,14 +141,14 @@ export function Dock(props: {
   return (
     <div
       ref={rootRef}
-      className="relative flex h-full w-[76px] shrink-0 flex-col items-center border-r border-border bg-surface py-3"
+      className="relative flex h-full w-[76px] shrink-0 flex-col items-center border-r border-rail-border bg-rail py-3"
     >
       {/* Logo */}
       <a
         href="/app"
         aria-label="Confide — dashboard"
         onClick={props.onNavigate}
-        className="mb-2 flex h-10 w-10 items-center justify-center rounded-[10px] bg-foreground text-base font-bold text-background"
+        className="mb-2 flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail"
       >
         C
       </a>
@@ -163,7 +163,7 @@ export function Dock(props: {
           if (members.length === 0) return null
           return (
             <div key={group} className="flex flex-col items-center">
-              <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted">
+              <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-rail-fg/70">
                 {group}
               </p>
               {members.map((item) => {
@@ -180,7 +180,9 @@ export function Dock(props: {
                     aria-current={active ? 'page' : undefined}
                     onClick={props.onNavigate}
                     className={`dock-item relative flex h-12 w-12 items-center justify-center rounded-[10px] transition-colors ${
-                      active ? 'bg-sel text-teal-t' : 'text-ink-2 hover:bg-hover'
+                      active
+                        ? 'bg-rail-active text-rail-active-fg'
+                        : 'text-rail-fg hover:bg-rail-active/60'
                     }`}
                   >
                     {/* Only this inner span magnifies — the hit-box above
