@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { PresenceProvider } from '@/lib/presence/presence'
-import { useApplyServerTheme } from '@/lib/theme/apply'
+import { localTheme, useApplyServerTheme } from '@/lib/theme/apply'
 import { isValidTheme } from '@/lib/theme/themes'
 import {
   LayoutDashboardIcon,
@@ -43,11 +43,19 @@ export function AppShell(props: {
 }) {
   const [dockOpen, setDockOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  // First-login theme picker: shown until the user has ever chosen a theme.
-  const [pickingTheme, setPickingTheme] = useState(!isValidTheme(props.me.theme))
+  // First-login theme picker: only when there is no choice ANYWHERE — the DB
+  // hasn't got one AND this device has none saved. Checking localStorage too
+  // keeps the picker from reappearing when a save raced the page load.
+  const [pickingTheme, setPickingTheme] = useState(false)
 
-  // The DB theme wins over whatever the pre-paint boot script applied.
+  // New device: adopt the DB theme. Same device: keep the local choice.
   useApplyServerTheme(props.me.theme)
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setPickingTheme(!isValidTheme(props.me.theme) && !localTheme())
+    })
+  }, [props.me.theme])
 
   // ⌘K / Ctrl+K opens the quick switch anywhere in the app.
   useEffect(() => {

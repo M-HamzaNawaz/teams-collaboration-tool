@@ -26,6 +26,24 @@ export function currentTheme(): string {
   return isValidTheme(pinned) ? pinned : DEFAULT_THEME
 }
 
+/**
+ * The theme saved on THIS device, or null if none.
+ *
+ * localStorage is the freshest local truth: it's written on every change
+ * and painted pre-hydration by the boot script. The DB value can lag it,
+ * because a save is fire-and-forget and the server prop isn't refreshed —
+ * so a fresh local choice must never be overruled by the DB.
+ */
+export function localTheme(): string | null {
+  if (typeof localStorage === 'undefined') return null
+  try {
+    const t = localStorage.getItem(KEY)
+    return isValidTheme(t) ? t : null
+  } catch {
+    return null
+  }
+}
+
 function applyThemeLocal(id: string): void {
   document.documentElement.setAttribute('data-theme', id)
   try {
@@ -47,12 +65,18 @@ export function setTheme(id: string): void {
   })
 }
 
-/** Reconcile the DB theme over the pre-paint local mirror, once on load. */
+/**
+ * Pull the DB theme only onto a NEW device — one with no local choice yet.
+ * If this device already has a theme in localStorage, that is the freshest
+ * truth (the boot script already painted it), so leave it alone; overriding
+ * it with a possibly-stale server prop is what clobbered a just-made change.
+ */
 export function useApplyServerTheme(serverTheme: string | null): void {
   useEffect(() => {
-    if (isValidTheme(serverTheme)) {
-      queueMicrotask(() => applyThemeLocal(serverTheme))
-    }
+    queueMicrotask(() => {
+      if (localTheme()) return
+      if (isValidTheme(serverTheme)) applyThemeLocal(serverTheme)
+    })
   }, [serverTheme])
 }
 
