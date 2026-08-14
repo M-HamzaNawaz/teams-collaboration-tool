@@ -23,7 +23,7 @@ import { serviceClient } from '@/lib/supabase/service-client'
  * Nothing about the path is guessable or publicly addressable.
  */
 
-const DEFAULT_MAX_BYTES = 100 * 1024 * 1024 // 100 MB, workspace-configurable
+const DEFAULT_MAX_BYTES = 50 * 1024 * 1024 // 50 MB, workspace-configurable
 
 const groupIdSchema = z.uuid()
 

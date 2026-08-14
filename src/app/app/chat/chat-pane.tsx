@@ -59,6 +59,14 @@ const FIRST_PAGE = 50
 const OLDER_PAGE = 100
 
 /**
+ * Client-side mirror of the server's default upload cap (files route,
+ * workspace-configurable). Checked BEFORE any bytes leave the machine, so
+ * an oversized file is refused instantly instead of after a long doomed
+ * upload. The server remains the authority.
+ */
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+
+/**
  * Client-side message shape (M5-05): server rows plus two local-only states —
  * 'sending' (optimistic, awaiting the verdict) and 'failed' (send didn't
  * reach the server; retryable). The acceptance rule: the sender sees their
@@ -553,6 +561,17 @@ export function ChatPane(props: {
    */
   async function uploadFile(file: File) {
     setNotice(null)
+
+    // Refuse oversized files BEFORE uploading — nothing is sent, no bubble
+    // appears, the user hears why immediately.
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setNotice(
+        `"${file.name}" is ${formatBytes(file.size)} — more than the 50 MB limit. ` +
+          'Share big files via a link instead.',
+      )
+      return
+    }
+
     stickToBottom.current = true
     const form = new FormData()
     form.set('file', file)
