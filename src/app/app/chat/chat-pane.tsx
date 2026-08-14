@@ -25,6 +25,7 @@ import { GroupMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
 import {
   CheckCheckIcon,
+  DownloadIcon,
   LockIcon,
   PaperclipIcon,
   UsersIcon,
@@ -897,17 +898,26 @@ export function ChatPane(props: {
                               <span className="text-muted">
                                 <PaperclipIcon />
                               </span>
-                              <span className="min-w-0">
+                              <span className="min-w-0 flex-1">
                                 <span className="block truncate font-medium">
                                   {attachments.get(message.id)!.name}
                                 </span>
                                 <span className="block text-[10px] text-muted">
                                   {formatBytes(
                                     attachments.get(message.id)!.sizeBytes,
-                                  )}{' '}
-                                  · tap to download
+                                  )}
                                 </span>
                               </span>
+                              {/* The affordance people actually look for */}
+                              {(message.status === 'delivered' ||
+                                message.sender_id === props.me.userId) && (
+                                <span
+                                  className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-d/15 text-teal-t"
+                                  aria-hidden="true"
+                                >
+                                  <DownloadIcon />
+                                </span>
+                              )}
                             </button>
                           ) : (
                             <div className="text-sm">
