@@ -67,6 +67,11 @@ const OLDER_PAGE = 100
  */
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
+/** Client-local id for an optimistic upload bubble (event-time only). */
+function makeUploadId(): string {
+  return `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
 /**
  * Client-side message shape (M5-05): server rows plus two local-only states —
  * 'sending' (optimistic, awaiting the verdict) and 'failed' (send didn't
@@ -99,6 +104,10 @@ export function ChatPane(props: {
   const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(
     new Map(),
   )
+  // The picked File behind each upload bubble, kept so a FAILED upload can
+  // retry as an UPLOAD. Retrying through the text path would post the
+  // filename as a message body — a real bug a user hit.
+  const uploadFiles = useRef<Map<string, File>>(new Map())
   // M7: message_id → attachment metadata (files RLS-scoped to the group).
   const [attachments, setAttachments] = useState<
     Map<string, { id: string; name: string; sizeBytes: number }>
@@ -578,7 +587,8 @@ export function ChatPane(props: {
     form.set('file', file)
     form.set('groupId', props.group.id)
 
-    const tempId = `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const tempId = makeUploadId()
+    uploadFiles.current.set(tempId, file)
     upsert({
       id: tempId,
       workspace_id: props.group.workspace_id,
@@ -635,6 +645,7 @@ export function ChatPane(props: {
 
     if (result.status === 201 && data?.message) {
       const m = data.message
+      uploadFiles.current.delete(tempId) // delivered — no retry needed
       setAttachments((current) =>
         new Map(current).set(m.id, {
           id: m.fileId,
@@ -684,6 +695,25 @@ export function ChatPane(props: {
   function retry(message: ClientMessage) {
     if (message.status !== 'failed') return
     setNotice(null)
+
+    // A failed UPLOAD retries as an upload. Routing it through deliver()
+    // would post the FILENAME as a text message (a user hit exactly this).
+    if (message.id.startsWith('upload-')) {
+      const file = uploadFiles.current.get(message.id)
+      uploadFiles.current.delete(message.id)
+      setMessages((current) =>
+        (current ?? []).filter((m) => m.id !== message.id),
+      )
+      if (file) {
+        void uploadFile(file)
+      } else {
+        // File object lost (page was reloaded mid-failure) — nothing left
+        // to resend; ask for a fresh pick instead of faking it.
+        setNotice('the upload was interrupted — please attach the file again')
+      }
+      return
+    }
+
     setMessages((current) =>
       (current ?? []).map((m) =>
         m.id === message.id ? { ...m, status: 'sending' as const } : m,
@@ -698,13 +728,18 @@ export function ChatPane(props: {
   // plus one deliver() per queued id, is the no-duplicates guarantee.
   useEffect(() => {
     if (!online) return
+    // Text messages only: a failed UPLOAD must never flush through
+    // deliver(), which would post its filename as a message body. Failed
+    // uploads wait for an explicit tap-to-retry (which re-uploads).
     const queued = (messagesRef.current ?? []).filter(
-      (m) => m.status === 'failed',
+      (m) => m.status === 'failed' && !m.id.startsWith('upload-'),
     )
     if (!queued.length) return
     setMessages((current) =>
       (current ?? []).map((m) =>
-        m.status === 'failed' ? { ...m, status: 'sending' as const } : m,
+        m.status === 'failed' && !m.id.startsWith('upload-')
+          ? { ...m, status: 'sending' as const }
+          : m,
       ),
     )
     void (async () => {
@@ -955,7 +990,12 @@ export function ChatPane(props: {
                               // must be able to retry, not just pointers.
                               <button
                                 type="button"
-                                onClick={() => retry(message)}
+                                onClick={(e) => {
+                                  // The bubble has its own retry onClick —
+                                  // don't fire it twice for one tap.
+                                  e.stopPropagation()
+                                  retry(message)
+                                }}
                                 className="font-semibold text-danger underline underline-offset-2"
                               >
                                 ⚠ failed — tap to retry
