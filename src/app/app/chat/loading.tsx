@@ -12,7 +12,7 @@ export default function ChatLoading() {
           <div className="flex flex-col gap-2 p-3">
             {Array.from({ length: 7 }, (_, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="skeleton h-[34px] w-[34px] rounded-lg" />
+                <div className="skeleton h-8.5 w-8.5 rounded-lg" />
                 <div className="min-w-0 flex-1">
                   <div className="skeleton h-3.5 w-3/4" />
                   <div className="skeleton mt-1.5 h-2.5 w-1/3" />

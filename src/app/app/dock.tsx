@@ -187,12 +187,12 @@ export function Dock(props: {
       onMouseEnter={onRailEnter}
       onMouseLeave={onRailLeave}
       className={`relative h-full shrink-0 transition-[width] duration-200 ${
-        props.drawer || pinned ? 'w-[232px]' : 'w-[76px]'
+        props.drawer || pinned ? 'w-58' : 'w-19'
       }`}
     >
     <div
       className={`absolute inset-y-0 left-0 z-50 flex h-full flex-col border-r border-rail-border bg-rail py-3 transition-[width] duration-200 ${
-        expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
+        expanded ? 'w-58 px-3' : 'w-19 items-center'
       }`}
     >
       {/* Header. Expanded: logo + name with the pin toggle at the right.
@@ -333,7 +333,7 @@ export function Dock(props: {
       <span
         ref={tooltipRef}
         aria-hidden="true"
-        className="dock-label fixed z-[500] whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background"
+        className="dock-label fixed z-500 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background"
       />
 
       {/* Account */}

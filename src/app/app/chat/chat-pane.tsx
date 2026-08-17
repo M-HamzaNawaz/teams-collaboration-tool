@@ -907,7 +907,7 @@ export function ChatPane(props: {
                         >
                           {uploadProgress.has(message.id) ? (
                             // Live upload: filename + a teal progress bar.
-                            <div className="min-w-[180px]">
+                            <div className="min-w-45">
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="text-muted">
                                   <PaperclipIcon />

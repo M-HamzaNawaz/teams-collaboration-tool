@@ -140,7 +140,7 @@ export function TopBar(props: {
       <div className="flex min-w-0 flex-1 justify-center px-2">
         <button
           onClick={props.onOpenSearch}
-          className="flex h-9 w-full max-w-[520px] items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-muted hover:bg-hover"
+          className="flex h-9 w-full max-w-130 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-muted hover:bg-hover"
         >
           <SearchIcon />
           <span className="min-w-0 flex-1 truncate text-left">Search</span>

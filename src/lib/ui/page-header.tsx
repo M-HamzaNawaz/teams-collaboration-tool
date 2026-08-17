@@ -17,7 +17,7 @@ export function PageHeader(props: {
         <p className="text-xs font-medium uppercase tracking-wide text-muted">
           {props.breadcrumb}
         </p>
-        <h1 className="mt-0.5 text-[28px] font-bold leading-[34px] tracking-tight">
+        <h1 className="mt-0.5 text-[28px] font-bold leading-8.5 tracking-tight">
           {props.title}
         </h1>
         {props.description && (

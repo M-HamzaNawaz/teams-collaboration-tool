@@ -127,7 +127,7 @@ export function AppShell(props: {
       {/* Dock — off-canvas drawer below lg */}
       {dockOpen && (
         <div
-          className="overlay-in fixed inset-0 z-[300] flex bg-black/30 backdrop-blur-[2px] lg:hidden"
+          className="overlay-in fixed inset-0 z-300 flex bg-black/30 backdrop-blur-[2px] lg:hidden"
           onClick={() => setDockOpen(false)}
         >
           <div
