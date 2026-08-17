@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { PersonMark } from '@/lib/ui/avatar'
-import { LogOutIcon } from '@/lib/ui/icons'
+import { LogOutIcon, PanelLeftIcon } from '@/lib/ui/icons'
 
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
@@ -14,20 +14,22 @@ import { ThemeDialog } from './theme-dialog'
 import { ThemeMenuItem } from './theme-menu-item'
 
 /**
- * The left icon dock (JobPulse §3.1): 76px, solid white, grouped icon-only
- * items with hover labels and a hover zoom.
+ * The dock (JobPulse §3.1, now collapsible like ChatGPT's sidebar).
  *
- * The zoom is pure CSS: `.dock-item:hover .dock-scale { scale(1.32) }` on
- * the icon INSIDE the fixed 48px hit-box. Only the hovered icon moves —
- * the original cursor-distance falloff also scaled the neighbours, which
- * read as the hover landing on other buttons. prefers-reduced-motion turns
- * the zoom off in CSS; the labels still work — motion is the flourish, the
- * label is information (shown when the cursor is within 34px of an item's
- * center).
+ * Two states, toggled by the panel button under the logo and REMEMBERED
+ * per device:
+ *   - collapsed: the 76px icon rail — hover zoom on the icon, one fixed
+ *     tooltip for labels (it lives OUTSIDE the scroll/transform ancestry
+ *     so nothing can clip it)
+ *   - expanded: ~224px with icon + label rows; no tooltip, no zoom —
+ *     the labels are simply there
  *
- * The label is ONE fixed-position tooltip living OUTSIDE the item list,
- * so no clip/containing block can ever hide it.
+ * The mobile drawer always renders expanded: a phone drawer has the room,
+ * and phone users benefit most from labels. The rail still wears the
+ * THEME's color (--rail tokens) in both states.
  */
+
+const DOCK_KEY = 'confide-dock'
 
 export type DockItem = {
   href: string
@@ -47,7 +49,8 @@ export function Dock(props: {
     rawRoleLabel: string
   }
   isAdmin: boolean
-  /** Drawer mode (mobile): item clicks close the drawer. */
+  /** Drawer mode (mobile): always expanded; item clicks close the drawer. */
+  drawer?: boolean
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
@@ -57,15 +60,40 @@ export function Dock(props: {
   const tooltipRef = useRef<HTMLSpanElement>(null)
   const [accountOpen, setAccountOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
-  const [theming, setTheming] = useState(false)
+  const [pickingTheme, setPickingTheme] = useState(false)
+  const [expandedPref, setExpandedPref] = useState(false)
 
-  // ── Tooltip (the zoom itself is pure CSS :hover on .dock-scale, so
-  // only the hovered icon ever scales — neighbours stay still) ───────
+  // The saved preference is a browser fact — read after mount.
   useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        setExpandedPref(localStorage.getItem(DOCK_KEY) === 'expanded')
+      } catch {
+        // Private mode — default stays collapsed.
+      }
+    })
+  }, [])
+
+  const expanded = props.drawer ? true : expandedPref
+
+  function toggleExpanded() {
+    setExpandedPref((current) => {
+      const next = !current
+      try {
+        localStorage.setItem(DOCK_KEY, next ? 'expanded' : 'collapsed')
+      } catch {
+        // Best effort.
+      }
+      return next
+    })
+  }
+
+  // ── Tooltip (collapsed only; the zoom itself is pure CSS :hover) ────
+  useEffect(() => {
+    if (expanded) return
     const list = listRef.current
     const tooltip = tooltipRef.current
     if (!list || !tooltip) return
-    // Re-bind post-guard so the non-null type survives into the closures.
     const rail = list
 
     const items = () =>
@@ -104,7 +132,7 @@ export function Dock(props: {
       list.removeEventListener('mousemove', onMove)
       list.removeEventListener('mouseleave', onLeave)
     }
-  }, [])
+  }, [expanded])
 
   // ── Account menu dismissal: click-away, Escape, navigation ───────
   useEffect(() => {
@@ -142,29 +170,61 @@ export function Dock(props: {
   return (
     <div
       ref={rootRef}
-      className="relative flex h-full w-[76px] shrink-0 flex-col items-center border-r border-rail-border bg-rail py-3"
+      className={`relative flex h-full shrink-0 flex-col border-r border-rail-border bg-rail py-3 transition-[width] duration-200 ${
+        expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
+      }`}
     >
-      {/* Logo */}
-      <Link
-        href="/app"
-        aria-label="Confide — dashboard"
-        onClick={props.onNavigate}
-        className="mb-2 flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail"
+      {/* Logo row + the ChatGPT-style panel toggle */}
+      <div
+        className={`flex items-center ${
+          expanded ? 'justify-between' : 'flex-col gap-1'
+        }`}
       >
-        C
-      </Link>
+        <Link
+          href="/app"
+          aria-label="Confide — dashboard"
+          onClick={props.onNavigate}
+          className="flex items-center gap-2.5"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail">
+            C
+          </span>
+          {expanded && (
+            <span className="text-sm font-semibold text-rail-active-fg">
+              Confide
+            </span>
+          )}
+        </Link>
+        {!props.drawer && (
+          <button
+            onClick={toggleExpanded}
+            aria-label={expanded ? 'Collapse navigation' : 'Expand navigation'}
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] text-rail-fg hover:bg-rail-active/60"
+          >
+            <PanelLeftIcon />
+          </button>
+        )}
+      </div>
 
-      {/* No overflow here, ever: the magnification scales items past the
-          box, and an auto scrollbar would pop in on hover — shifting the
-          icons under the cursor and flickering. Five items always fit;
-          a spacer below pins the avatar to the bottom instead. */}
-      <div ref={listRef} className="flex flex-col items-center px-2">
+      <div
+        ref={listRef}
+        className={`flex flex-col ${expanded ? 'items-stretch' : 'items-center'}`}
+      >
         {groups.map((group) => {
           const members = props.items.filter((item) => item.group === group)
           if (members.length === 0) return null
           return (
-            <div key={group} className="flex flex-col items-center">
-              <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-rail-fg/70">
+            <div
+              key={group}
+              className={`flex flex-col ${
+                expanded ? 'items-stretch' : 'items-center'
+              }`}
+            >
+              <p
+                className={`mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-rail-fg/70 ${
+                  expanded ? 'px-3' : ''
+                }`}
+              >
                 {group}
               </p>
               {members.map((item) => {
@@ -182,23 +242,41 @@ export function Dock(props: {
                     aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
                     onClick={props.onNavigate}
-                    className={`dock-item relative flex h-12 w-12 items-center justify-center rounded-[10px] transition-colors ${
+                    className={`dock-item relative flex items-center rounded-[10px] transition-colors ${
+                      expanded
+                        ? 'h-11 w-full gap-3 px-3'
+                        : 'h-12 w-12 justify-center'
+                    } ${
                       active
                         ? 'bg-rail-active text-rail-active-fg'
                         : 'text-rail-fg hover:bg-rail-active/60'
                     }`}
                   >
-                    {/* Only this inner span magnifies — the hit-box above
-                        stays put, so hover/click always hit THIS button. */}
-                    <span className="dock-scale flex items-center justify-center">
+                    {/* Only this inner span magnifies (collapsed rail) — the
+                        hit-box stays put, so hover/click always hit THIS
+                        button. Expanded rows don't zoom. */}
+                    <span
+                      className={`${expanded ? '' : 'dock-scale'} flex shrink-0 items-center justify-center`}
+                    >
                       <item.Icon />
                     </span>
-                    {item.alert && (
-                      <span
-                        className="alert-dot absolute right-2 top-2 h-2 w-2 rounded-full"
-                        aria-label="needs attention"
-                      />
+                    {expanded && (
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                        {item.label}
+                      </span>
                     )}
+                    {item.alert &&
+                      (expanded ? (
+                        <span
+                          className="alert-dot h-2 w-2 shrink-0 rounded-full"
+                          aria-label="needs attention"
+                        />
+                      ) : (
+                        <span
+                          className="alert-dot absolute right-2 top-2 h-2 w-2 rounded-full"
+                          aria-label="needs attention"
+                        />
+                      ))}
                   </Link>
                 )
               })}
@@ -207,7 +285,7 @@ export function Dock(props: {
         })}
       </div>
 
-      {/* Spacer: pins the avatar to the rail's bottom */}
+      {/* Spacer: pins the account section to the rail's bottom */}
       <div className="flex-1" />
 
       {/* The one hover label — fixed, so no scroll container can clip it */}
@@ -223,9 +301,23 @@ export function Dock(props: {
         aria-label="Account"
         aria-haspopup="menu"
         aria-expanded={accountOpen}
-        className="mt-2 rounded-full transition-transform hover:scale-105"
+        className={
+          expanded
+            ? 'flex w-full items-center gap-2.5 rounded-[10px] px-2 py-2 text-left hover:bg-rail-active/60'
+            : 'mt-2 rounded-full transition-transform hover:scale-105'
+        }
       >
-        <PersonMark name={props.me.displayName} size={40} />
+        <PersonMark name={props.me.displayName} size={expanded ? 32 : 40} />
+        {expanded && (
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium text-rail-active-fg">
+              {props.me.displayName}
+            </span>
+            <span className="block truncate text-xs text-rail-fg">
+              {props.me.roleLabel}
+            </span>
+          </span>
+        )}
       </button>
 
       {accountOpen && (
@@ -246,7 +338,7 @@ export function Dock(props: {
           <ThemeMenuItem
             onOpen={() => {
               setAccountOpen(false)
-              setTheming(true)
+              setPickingTheme(true)
             }}
           />
           <NotifyMenuItem />
@@ -273,8 +365,7 @@ export function Dock(props: {
             onClose={() => setRenaming(false)}
           />
         ))}
-
-      {theming && <ThemeDialog onClose={() => setTheming(false)} />}
+      {pickingTheme && <ThemeDialog onClose={() => setPickingTheme(false)} />}
     </div>
   )
 }

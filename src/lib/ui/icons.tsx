@@ -286,6 +286,14 @@ export const DownloadIcon = () => (
   </Icon>
 )
 
+/** Sidebar expand/collapse toggle (panel-left, like ChatGPT's). */
+export const PanelLeftIcon = () => (
+  <Icon>
+    <rect width="18" height="18" x="3" y="3" rx="2" />
+    <path d="M9 3v18" />
+  </Icon>
+)
+
 export const ArrowLeftIcon = () => (
   <Icon>
     <path d="m12 19-7-7 7-7" />

@@ -138,6 +138,7 @@ export function AppShell(props: {
               items={items}
               me={props.me}
               isAdmin={props.isAdmin}
+              drawer
               onNavigate={() => setDockOpen(false)}
             />
           </div>
