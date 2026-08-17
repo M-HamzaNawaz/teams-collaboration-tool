@@ -24,6 +24,7 @@ import type { GroupRow } from '@/lib/types'
 import { GroupMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
 import {
+  ArrowLeftIcon,
   CheckCheckIcon,
   DownloadIcon,
   LockIcon,
@@ -789,10 +790,10 @@ export function ChatPane(props: {
       <header className="flex items-center gap-3 border-b border-border bg-surface p-3">
         <button
           onClick={props.onBack}
-          className="rounded-lg p-2 hover:bg-surface-2 md:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-hover md:hidden"
           aria-label="Back to groups"
         >
-          ←
+          <ArrowLeftIcon />
         </button>
         <GroupMark name={props.group.name} size={36} />
         <div className="min-w-0 flex-1">
