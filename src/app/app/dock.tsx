@@ -14,19 +14,19 @@ import { ThemeDialog } from './theme-dialog'
 import { ThemeMenuItem } from './theme-menu-item'
 
 /**
- * The dock (JobPulse §3.1, now collapsible like ChatGPT's sidebar).
+ * The dock (JobPulse §3.1) — works like ChatGPT's sidebar:
  *
- * Two states, toggled by the panel button under the logo and REMEMBERED
- * per device:
- *   - collapsed: the 76px icon rail — hover zoom on the icon, one fixed
- *     tooltip for labels (it lives OUTSIDE the scroll/transform ancestry
- *     so nothing can clip it)
- *   - expanded: ~224px with icon + label rows; no tooltip, no zoom —
- *     the labels are simply there
+ *   - collapsed rail (76px): hovering it slides the labeled sidebar out
+ *     AS AN OVERLAY — the page content does not move — and it tucks back
+ *     when the mouse leaves
+ *   - the panel button PINS it open: the layout widens and it stays,
+ *     remembered per device
+ *   - pinned → click again to collapse back to the rail
  *
- * The mobile drawer always renders expanded: a phone drawer has the room,
- * and phone users benefit most from labels. The rail still wears the
- * THEME's color (--rail tokens) in both states.
+ * The rail keeps its hover zoom + fixed tooltip ONLY when truly collapsed
+ * (during hover-expand and pinned states the labels are simply there).
+ * The mobile drawer always renders expanded. The rail wears the THEME's
+ * color (--rail tokens) in every state.
  */
 
 const DOCK_KEY = 'confide-dock'
@@ -61,23 +61,28 @@ export function Dock(props: {
   const [accountOpen, setAccountOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [pickingTheme, setPickingTheme] = useState(false)
-  const [expandedPref, setExpandedPref] = useState(false)
+  const [pinned, setPinned] = useState(false)
+  // Transient ChatGPT-style hover expansion (overlay; layout untouched).
+  const [hoverExpand, setHoverExpand] = useState(false)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // The saved preference is a browser fact — read after mount.
   useEffect(() => {
     queueMicrotask(() => {
       try {
-        setExpandedPref(localStorage.getItem(DOCK_KEY) === 'expanded')
+        setPinned(localStorage.getItem(DOCK_KEY) === 'expanded')
       } catch {
         // Private mode — default stays collapsed.
       }
     })
   }, [])
 
-  const expanded = props.drawer ? true : expandedPref
+  const expanded = props.drawer ? true : pinned || hoverExpand
+  const overlay = !props.drawer && !pinned && hoverExpand
 
-  function toggleExpanded() {
-    setExpandedPref((current) => {
+  function togglePinned() {
+    setHoverExpand(false)
+    setPinned((current) => {
       const next = !current
       try {
         localStorage.setItem(DOCK_KEY, next ? 'expanded' : 'collapsed')
@@ -86,6 +91,17 @@ export function Dock(props: {
       }
       return next
     })
+  }
+
+  // Small delays so grazing the rail doesn't flap the sidebar open/shut.
+  function onRailEnter() {
+    if (props.drawer || pinned) return
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(() => setHoverExpand(true), 140)
+  }
+  function onRailLeave() {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(() => setHoverExpand(false), 220)
   }
 
   // ── Tooltip (collapsed only; the zoom itself is pure CSS :hover) ────
@@ -168,11 +184,23 @@ export function Dock(props: {
   const groups: Array<DockItem['group']> = ['WORK', 'TRACK']
 
   return (
+    // Outer shell reserves LAYOUT width (76px unless pinned) — the sidebar
+    // itself is absolutely positioned, so hover-expansion overlays the page
+    // instead of pushing it (the ChatGPT behaviour).
     <div
       ref={rootRef}
-      className={`relative flex h-full shrink-0 flex-col border-r border-rail-border bg-rail py-3 transition-[width] duration-200 ${
-        expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
+      onMouseEnter={onRailEnter}
+      onMouseLeave={onRailLeave}
+      className={`relative h-full shrink-0 transition-[width] duration-200 ${
+        props.drawer || pinned ? 'w-[232px]' : 'w-[76px]'
       }`}
+    >
+    <div
+      // z-50: the hover overlay must paint OVER the top bar (z-40), which
+      // otherwise swallowed clicks on the sidebar's upper strip.
+      className={`absolute inset-y-0 left-0 z-50 flex h-full flex-col border-r border-rail-border bg-rail py-3 transition-[width] duration-200 ${
+        expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
+      } ${overlay ? 'shadow-e2' : ''}`}
     >
       {/* Logo row + the ChatGPT-style panel toggle */}
       <div
@@ -197,8 +225,8 @@ export function Dock(props: {
         </Link>
         {!props.drawer && (
           <button
-            onClick={toggleExpanded}
-            aria-label={expanded ? 'Collapse navigation' : 'Expand navigation'}
+            onClick={togglePinned}
+            aria-label={pinned ? 'Collapse navigation' : 'Pin navigation open'}
             className="flex h-9 w-9 items-center justify-center rounded-[10px] text-rail-fg hover:bg-rail-active/60"
           >
             <PanelLeftIcon />
@@ -366,6 +394,7 @@ export function Dock(props: {
           />
         ))}
       {pickingTheme && <ThemeDialog onClose={() => setPickingTheme(false)} />}
+    </div>
     </div>
   )
 }
