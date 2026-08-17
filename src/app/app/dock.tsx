@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { PersonMark } from '@/lib/ui/avatar'
-import { LogOutIcon, PanelLeftIcon } from '@/lib/ui/icons'
+import { LogOutIcon, PanelLeftIcon, XIcon } from '@/lib/ui/icons'
 
 import { EditProfileDialog } from './edit-profile-dialog'
 import { NameChangeDialog } from './name-change-dialog'
@@ -213,7 +213,17 @@ export function Dock(props: {
               Confide
             </span>
           </Link>
-          {!props.drawer && (
+          {props.drawer ? (
+            // Mobile drawer: an explicit close — tapping the scrim works
+            // too, but a visible X shouldn't have to be discovered.
+            <button
+              onClick={props.onNavigate}
+              aria-label="Close navigation"
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-rail-fg hover:bg-rail-active/60"
+            >
+              <XIcon />
+            </button>
+          ) : (
             <button
               onClick={togglePinned}
               aria-label={pinned ? 'Collapse navigation' : 'Pin navigation open'}
