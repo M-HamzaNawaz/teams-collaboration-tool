@@ -1,6 +1,7 @@
 'use client'
 
 import gsap from 'gsap'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Finding } from '@/lib/detection'
@@ -32,6 +33,7 @@ type RequestItem = {
 }
 
 export function NameReviewQueue() {
+  const router = useRouter()
   const [queue, setQueue] = useState<RequestItem[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -110,6 +112,8 @@ export function NameReviewQueue() {
           ? `Name updated to “${item.requestedName}”`
           : 'Request rejected — the name is unchanged',
       )
+      // Recompute the layout's alert dots (see moderation queue).
+      router.refresh()
       setTimeout(() => setToast(null), 5000)
     } else {
       const data = (await response.json().catch(() => null)) as {

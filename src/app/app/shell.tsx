@@ -1,8 +1,10 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { PresenceProvider } from '@/lib/presence/presence'
+import { browserClient } from '@/lib/supabase/browser-client'
 import { localTheme, useApplyServerTheme } from '@/lib/theme/apply'
 import { isValidTheme } from '@/lib/theme/themes'
 import {
@@ -56,6 +58,25 @@ export function AppShell(props: {
       setPickingTheme(!isValidTheme(props.me.theme) && !localTheme())
     })
   }, [props.me.theme])
+
+  const router = useRouter()
+
+  // Live alert dots: the moderation API broadcasts message_held/escalated
+  // on a workspace channel. Since client-side navigation no longer
+  // re-renders the layout, refresh it on those events so the dock/bell
+  // dots light up (and the queues' own refresh clears them) in real time.
+  useEffect(() => {
+    if (!props.canModerate) return
+    const supabase = browserClient()
+    const channel = supabase
+      .channel(`workspace:${props.activeWorkspace.id}:moderation`)
+      .on('broadcast', { event: 'message_held' }, () => router.refresh())
+      .on('broadcast', { event: 'message_escalated' }, () => router.refresh())
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [props.canModerate, props.activeWorkspace.id, router])
 
   // ⌘K / Ctrl+K opens the quick switch anywhere in the app.
   useEffect(() => {

@@ -1,6 +1,7 @@
 'use client'
 
 import gsap from 'gsap'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { Finding } from '@/lib/detection'
@@ -38,6 +39,7 @@ export function ModerationQueue(props: {
   workspaceId: string
   me: { userId: string; displayName: string; isAdmin: boolean }
 }) {
+  const router = useRouter()
   const [queue, setQueue] = useState<QueueItem[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -142,6 +144,9 @@ export function ModerationQueue(props: {
           ? 'Approved — delivered to the group'
           : 'Blocked — the sender sees the policy notice',
       )
+      // Re-render the server layout so the dock/bell alert dots recompute —
+      // with client-side navigation they no longer refresh on their own.
+      router.refresh()
     } else {
       const data = (await response.json().catch(() => null)) as {
         error?: string

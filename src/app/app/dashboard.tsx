@@ -91,7 +91,7 @@ export function Dashboard(props: { data: DashboardData }) {
 
   return (
     <div ref={ref} className="h-full overflow-y-auto">
-      <div className="mx-auto w-full max-w-[1160px] p-4 md:px-10 md:py-8">
+      <div className="mx-auto w-full max-w-290 p-4 md:px-10 md:py-8">
         <PageHeader
           breadcrumb="Dashboard"
           title={`Hello, ${greeting}`}
