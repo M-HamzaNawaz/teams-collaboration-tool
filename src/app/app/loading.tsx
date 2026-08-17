@@ -10,7 +10,7 @@
 export default function AppLoading() {
   return (
     <div className="h-full overflow-hidden">
-      <div className="mx-auto w-full max-w-[1160px] p-4 md:px-10 md:py-8">
+      <div className="mx-auto w-full max-w-290 p-4 md:px-10 md:py-8">
         <div className="mb-6">
           <div className="skeleton h-3 w-24" />
           <div className="skeleton mt-2 h-8 w-64" />

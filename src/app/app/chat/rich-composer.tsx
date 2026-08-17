@@ -233,7 +233,9 @@ export function RichComposer(props: {
     >
       <div className="rounded-[10px] border border-border bg-surface focus-within:border-teal-d">
         {showToolbar && (
-          <div className="flex items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
+          // flex-wrap: at phone width the row folds to two lines instead of
+          // cutting icons off at the screen edge.
+          <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
             <ToolbarButton label="Bold (Ctrl+B)" active={active.bold} onClick={() => exec('bold')}>
               <BoldIcon />
             </ToolbarButton>
@@ -306,7 +308,7 @@ export function RichComposer(props: {
           className="composer-editor max-h-40 min-h-10.5 w-full overflow-y-auto px-3.5 py-2.5 text-sm outline-none"
         />
 
-        <div className="flex items-center gap-0.5 px-2 pb-1.5 text-muted">
+        <div className="flex flex-wrap items-center gap-0.5 px-2 pb-1.5 text-muted">
           <input
             ref={fileInputRef}
             type="file"

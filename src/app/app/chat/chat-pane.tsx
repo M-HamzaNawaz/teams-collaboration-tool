@@ -797,11 +797,16 @@ export function ChatPane(props: {
         <GroupMark name={props.group.name} size={36} />
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-semibold">{props.group.name}</h2>
-          <p className="flex items-center gap-1 text-xs text-muted">
-            <LockIcon />
-            {archived
-              ? 'Archived — read-only'
-              : 'Messages are screened for contact info'}
+          <p className="flex min-w-0 items-center gap-1 text-xs text-muted">
+            <span className="shrink-0">
+              <LockIcon />
+            </span>
+            {/* One ellipsized line — on a phone this wrapped to three. */}
+            <span className="truncate">
+              {archived
+                ? 'Archived — read-only'
+                : 'Messages are screened for contact info'}
+            </span>
           </p>
         </div>
         <button
@@ -876,7 +881,7 @@ export function ChatPane(props: {
                       className={`flex ${own ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[85%] md:max-w-[70%] ${
+                        className={`min-w-0 max-w-[85%] md:max-w-[70%] ${
                           firstOfRun && !separator ? 'mt-3' : ''
                         }`}
                       >
@@ -933,9 +938,9 @@ export function ChatPane(props: {
                                   ? download(attachments.get(message.id)!.id)
                                   : undefined
                               }
-                              className="flex items-center gap-2 rounded-lg bg-surface-2/70 px-2.5 py-2 text-left text-sm hover:bg-surface-2"
+                              className="flex w-full min-w-0 items-center gap-2 rounded-lg bg-surface-2/70 px-2.5 py-2 text-left text-sm hover:bg-surface-2"
                             >
-                              <span className="text-muted">
+                              <span className="shrink-0 text-muted">
                                 <PaperclipIcon />
                               </span>
                               <span className="min-w-0 flex-1">

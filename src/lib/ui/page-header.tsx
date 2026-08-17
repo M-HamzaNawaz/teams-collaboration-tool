@@ -10,8 +10,10 @@ export function PageHeader(props: {
   actions?: React.ReactNode
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end gap-3">
-      <div className="min-w-0 flex-1">
+    // Mobile: the title block owns the full width and actions drop BELOW —
+    // sharing a row squeezed "Hello, Usman" into a one-word-per-line column.
+    <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="min-w-0 sm:flex-1">
         <p className="text-xs font-medium uppercase tracking-wide text-muted">
           {props.breadcrumb}
         </p>
