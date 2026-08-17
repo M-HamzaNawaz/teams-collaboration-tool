@@ -484,6 +484,14 @@ body {
 }
 
 /* ── WYSIWYG composer ─────────────────────────────────────────────── */
+/* The composer CONTAINER shows focus (focus-within border) — the inner
+   editable must not stack the global focus ring on top of it, which drew
+   a second box around just the text strip. */
+.composer-editor:focus-visible,
+.composer-editor:focus {
+  outline: none;
+  box-shadow: none;
+}
 .composer-editor:empty::before,
 .composer-editor:has(> br:only-child)::before {
   content: attr(data-placeholder);
