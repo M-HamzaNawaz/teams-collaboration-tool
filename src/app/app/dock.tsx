@@ -62,12 +62,10 @@ export function Dock(props: {
   const [renaming, setRenaming] = useState(false)
   const [pickingTheme, setPickingTheme] = useState(false)
   const [pinned, setPinned] = useState(false)
-  // Transient ChatGPT-style hover expansion (overlay; layout untouched).
-  const [hoverExpand, setHoverExpand] = useState(false)
-  // Instant cursor-presence flag: while the pointer is on the rail, the C
-  // logo swaps to the expand icon (no delay — the swap must feel alive).
+  // Cursor-presence flag: while the pointer is on the rail, the C logo
+  // swaps to the expand icon. Hover changes NOTHING else — expanding is
+  // an explicit click, so the sidebar never opens by accident.
   const [railHovered, setRailHovered] = useState(false)
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // The saved preference is a browser fact — read after mount.
   useEffect(() => {
@@ -80,11 +78,9 @@ export function Dock(props: {
     })
   }, [])
 
-  const expanded = props.drawer ? true : pinned || hoverExpand
-  const overlay = !props.drawer && !pinned && hoverExpand
+  const expanded = props.drawer ? true : pinned
 
   function togglePinned() {
-    setHoverExpand(false)
     setPinned((current) => {
       const next = !current
       try {
@@ -96,17 +92,11 @@ export function Dock(props: {
     })
   }
 
-  // Small delays so grazing the rail doesn't flap the sidebar open/shut.
   function onRailEnter() {
     setRailHovered(true)
-    if (props.drawer || pinned) return
-    if (hoverTimer.current) clearTimeout(hoverTimer.current)
-    hoverTimer.current = setTimeout(() => setHoverExpand(true), 140)
   }
   function onRailLeave() {
     setRailHovered(false)
-    if (hoverTimer.current) clearTimeout(hoverTimer.current)
-    hoverTimer.current = setTimeout(() => setHoverExpand(false), 220)
   }
 
   // ── Tooltip (collapsed only; the zoom itself is pure CSS :hover) ────
@@ -201,11 +191,9 @@ export function Dock(props: {
       }`}
     >
     <div
-      // z-50: the hover overlay must paint OVER the top bar (z-40), which
-      // otherwise swallowed clicks on the sidebar's upper strip.
       className={`absolute inset-y-0 left-0 z-50 flex h-full flex-col border-r border-rail-border bg-rail py-3 transition-[width] duration-200 ${
         expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
-      } ${overlay ? 'shadow-e2' : ''}`}
+      }`}
     >
       {/* Header. Expanded: logo + name with the pin toggle at the right.
           Collapsed: ONE slot — the C at rest, and the moment the cursor is
