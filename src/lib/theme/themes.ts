@@ -33,13 +33,13 @@ export const THEMES: ThemeDef[] = [
     id: 'ocean',
     label: 'Ocean',
     dark: false,
-    swatch: { base: '#f3f6fb', surface: '#ffffff', accent: '#2563eb', rail: '#1e40af' },
+    swatch: { base: '#e7eefa', surface: '#ffffff', accent: '#2563eb', rail: '#1e40af' },
   },
   {
     id: 'forest',
     label: 'Forest',
     dark: false,
-    swatch: { base: '#f3f8f4', surface: '#ffffff', accent: '#2f8f5b', rail: '#1c6a43' },
+    swatch: { base: '#e5f2e9', surface: '#ffffff', accent: '#2f8f5b', rail: '#1c6a43' },
   },
   {
     id: 'aubergine',

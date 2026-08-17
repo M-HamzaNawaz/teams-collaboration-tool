@@ -83,20 +83,22 @@
   --rail-active-fg: #a2cfc9;
 }
 
-/* ── Ocean (light, blue accent) ───────────────────────────────────── */
+/* ── Ocean (light, blue accent) — the page WORLD is clearly blue; the
+      white cards float on it. Content surfaces stay near-white on
+      purpose: colored reading areas tire eyes and cost contrast. ── */
 :root[data-theme='ocean'] {
   color-scheme: light;
-  --background: #f3f6fb;
+  --background: #e7eefa;
   --surface: #ffffff;
-  --surface-2: #eef2f9;
-  --hover: #f1f5fb;
-  --rowhover: #f5f8fd;
+  --surface-2: #e9eff9;
+  --hover: #edf3fb;
+  --rowhover: #f2f6fc;
   --foreground: #172033;
   --ink-2: #45526b;
-  --muted: #6b788f;
+  --muted: #64738e;
   --disabled: #a6b0c2;
-  --border: #e2e8f2;
-  --border-2: #cfd8e6;
+  --border: #d5e0f0;
+  --border-2: #becfe6;
   --teal: #bfd8fb;
   --teal-d: #2563eb;
   --teal-t: #1d4ed8;
@@ -110,20 +112,21 @@
   --rail-active-fg: #ffffff;
 }
 
-/* ── Forest (light, green accent) ─────────────────────────────────── */
+/* ── Forest (light, green accent) — same rule as Ocean: a clearly green
+      world, white cards floating on it. ── */
 :root[data-theme='forest'] {
   color-scheme: light;
-  --background: #f3f8f4;
+  --background: #e5f2e9;
   --surface: #ffffff;
-  --surface-2: #eef4ef;
-  --hover: #f1f6f2;
-  --rowhover: #f5f9f6;
+  --surface-2: #e8f2ec;
+  --hover: #edf5f0;
+  --rowhover: #f1f7f3;
   --foreground: #16241b;
   --ink-2: #45564b;
-  --muted: #6b7a70;
+  --muted: #64766b;
   --disabled: #a6b2aa;
-  --border: #e2eae4;
-  --border-2: #cfdbd3;
+  --border: #d3e5d9;
+  --border-2: #bcd7c6;
   --teal: #b6ddc4;
   --teal-d: #2f8f5b;
   --teal-t: #256b45;
