@@ -30,11 +30,14 @@ export default function ChatLoading() {
               <div className="skeleton mt-1.5 h-3 w-64" />
             </div>
           </div>
-          <div className="flex flex-1 flex-col justify-end gap-3 bg-background p-4">
+          {/* Bubbles start at the TOP — exactly where the real message list
+              renders — so content lands without a vertical jump. */}
+          <div className="flex flex-1 flex-col gap-3 overflow-hidden bg-background p-4 pt-6">
             <div className="skeleton h-12 w-2/5" />
             <div className="skeleton ml-auto h-12 w-1/3" />
             <div className="skeleton h-12 w-1/2" />
             <div className="skeleton ml-auto h-12 w-2/5" />
+            <div className="skeleton h-12 w-1/3" />
           </div>
           <div className="border-t border-border p-3">
             <div className="skeleton h-20 w-full rounded-[10px]" />
