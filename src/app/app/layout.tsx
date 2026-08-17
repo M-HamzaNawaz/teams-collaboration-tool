@@ -23,71 +23,84 @@ export default async function AppLayout({
   if (!session) redirect('/login')
 
   const service = serviceClient()
-
-  // Workspaces this person belongs to — the switcher's options. Multi-
-  // workspace is a real scenario (one person, two agencies, a different
-  // masked identity in each).
-  const { data: workspaces } = await service
-    .from('workspaces')
-    .select('id, name')
-    .in(
-      'id',
-      session.profiles.map((p) => p.workspace_id),
-    )
-
-  const active = (workspaces ?? []).find(
-    (w) => w.id === session.profile.workspace_id,
-  ) as Pick<WorkspaceRow, 'id' | 'name'> | undefined
-
   const isAdmin = session.profile.member_role === 'admin'
 
-  // Managers get the moderation entry; the queue itself is scoped server
-  // side, and clients can never manage (db trigger + authorize).
-  const { data: managed } =
+  // Every independent lookup goes out AT ONCE — this layout runs on each
+  // server-rendered navigation, and serial awaits were paying one database
+  // round trip after another for no reason (felt as slow page changes).
+  const supabase = await userClient()
+  const [
+    { data: workspaces },
+    { data: managed },
+    { count: pendingNames },
+    { data: myGroups },
+    adminPendingCount,
+  ] = await Promise.all([
+    // Workspaces this person belongs to — the switcher's options. Multi-
+    // workspace is a real scenario (one person, two agencies, a different
+    // masked identity in each).
+    service
+      .from('workspaces')
+      .select('id, name')
+      .in(
+        'id',
+        session.profiles.map((p) => p.workspace_id),
+      ),
+    // Managers get the moderation entry; the queue itself is scoped server
+    // side, and clients can never manage (db trigger + authorize).
     session.profile.member_role === 'client'
-      ? { data: [] }
-      : await service
+      ? Promise.resolve({ data: [] as Array<{ group_id: string }> })
+      : service
           .from('group_members')
           .select('group_id')
           .eq('workspace_id', session.profile.workspace_id)
           .eq('user_id', session.userId)
           .eq('group_role', 'manager')
-          .is('removed_at', null)
+          .is('removed_at', null),
+    // What's waiting, per role — a quiet dot, never a number.
+    isAdmin
+      ? service
+          .from('name_change_requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('workspace_id', session.profile.workspace_id)
+          .eq('status', 'pending')
+      : Promise.resolve({ count: 0 }),
+    // The caller's own groups (RLS-scoped) feed the ⌘K quick switch.
+    supabase
+      .from('groups')
+      .select('id, name')
+      .eq('workspace_id', session.profile.workspace_id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false }),
+    // Admins' held-message count has no dependencies — fetch it in the
+    // same round trip. Managers need their group ids first (below).
+    isAdmin
+      ? service
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('workspace_id', session.profile.workspace_id)
+          .eq('status', 'pending')
+          .then(({ count }) => count ?? 0)
+      : Promise.resolve(null),
+  ])
 
-  const canModerate = isAdmin || (managed ?? []).length > 0
-
-  // What's waiting, per role. Surfaced as a quiet dot rather than a count:
-  // the point is "something needs you", and the queue itself does the
-  // counting once you're there.
-  const { count: pendingNames } = isAdmin
-    ? await service
-        .from('name_change_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', session.profile.workspace_id)
-        .eq('status', 'pending')
-    : { count: 0 }
+  const active = (workspaces ?? []).find(
+    (w) => w.id === session.profile.workspace_id,
+  ) as Pick<WorkspaceRow, 'id' | 'name'> | undefined
 
   const managedGroupIds = (managed ?? []).map((m) => m.group_id as string)
-  let pendingModeration = 0
-  if (canModerate) {
-    let query = service
+  const canModerate = isAdmin || managedGroupIds.length > 0
+
+  let pendingModeration = adminPendingCount ?? 0
+  if (!isAdmin && managedGroupIds.length > 0) {
+    const { count } = await service
       .from('messages')
       .select('id', { count: 'exact', head: true })
       .eq('workspace_id', session.profile.workspace_id)
       .eq('status', 'pending')
-    if (!isAdmin) query = query.in('group_id', managedGroupIds)
-    const { count } = await query
+      .in('group_id', managedGroupIds)
     pendingModeration = count ?? 0
   }
-
-  // The caller's own groups (RLS-scoped) feed the ⌘K quick switch.
-  const supabase = await userClient()
-  const { data: myGroups } = await supabase
-    .from('groups')
-    .select('id, name')
-    .eq('workspace_id', session.profile.workspace_id)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
 
   return (
     <AppShell

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -144,14 +145,14 @@ export function Dock(props: {
       className="relative flex h-full w-[76px] shrink-0 flex-col items-center border-r border-rail-border bg-rail py-3"
     >
       {/* Logo */}
-      <a
+      <Link
         href="/app"
         aria-label="Confide — dashboard"
         onClick={props.onNavigate}
         className="mb-2 flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail"
       >
         C
-      </a>
+      </Link>
 
       {/* No overflow here, ever: the magnification scales items past the
           box, and an auto scrollbar would pop in on hover — shifting the
@@ -172,7 +173,9 @@ export function Dock(props: {
                     ? pathname === '/app'
                     : pathname.startsWith(item.href)
                 return (
-                  <a
+                  // next/link: client-side navigation + prefetch — a dock
+                  // click swaps the page, never reloads the whole app.
+                  <Link
                     key={item.href}
                     href={item.href}
                     data-label={item.label}
@@ -196,7 +199,7 @@ export function Dock(props: {
                         aria-label="needs attention"
                       />
                     )}
-                  </a>
+                  </Link>
                 )
               })}
             </div>

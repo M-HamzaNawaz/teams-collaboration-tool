@@ -64,29 +64,32 @@ export default async function DashboardPage() {
     myMemberships.map((m) => [m.group_id, m.last_read_at]),
   )
 
+  // Per-group unread counts and the caller's own pending count all fire in
+  // ONE parallel wave — they were serial awaits, each paying a DB round trip.
   const unreadByGroup: Record<string, number> = {}
-  await Promise.all(
-    groupRows.map(async (group) => {
-      let query = supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('group_id', group.id)
-        .eq('status', 'delivered')
-        .neq('sender_id', session.userId)
-      const lastRead = lastReadByGroup.get(group.id)
-      if (lastRead) query = query.gt('delivered_at', lastRead)
-      const { count } = await query
-      if (count) unreadByGroup[group.id] = count
-    }),
-  )
-
-  // ── Everyone: my own messages awaiting review (never silently gone) ────
-  const { count: myPending } = await supabase
-    .from('messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('workspace_id', workspaceId)
-    .eq('sender_id', session.userId)
-    .eq('status', 'pending')
+  const [, { count: myPending }] = await Promise.all([
+    Promise.all(
+      groupRows.map(async (group) => {
+        let query = supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', group.id)
+          .eq('status', 'delivered')
+          .neq('sender_id', session.userId)
+        const lastRead = lastReadByGroup.get(group.id)
+        if (lastRead) query = query.gt('delivered_at', lastRead)
+        const { count } = await query
+        if (count) unreadByGroup[group.id] = count
+      }),
+    ),
+    // ── Everyone: my own messages awaiting review (never silently gone) ──
+    supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', workspaceId)
+      .eq('sender_id', session.userId)
+      .eq('status', 'pending'),
+  ])
 
   const data: DashboardData = {
     role,
@@ -117,7 +120,9 @@ export default async function DashboardPage() {
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
     if (!isAdmin) pendingQuery = pendingQuery.in('group_id', managedGroupIds)
-    const { count: pendingCount } = await pendingQuery
+    // .then() forces the lazy builder to EXECUTE now, so this request flies
+    // concurrently with the admin batch below instead of after it.
+    const pendingPromise = pendingQuery.then((result) => result)
 
     // Admin-only: workspace-wide numbers and the evidence surface.
     let flagged7d = 0
@@ -131,6 +136,7 @@ export default async function DashboardPage() {
     if (isAdmin) {
       const weekAgo = statsWindowStart()
       const [flags, members, archived, chainCheck, audit] = await Promise.all([
+        // (pendingPromise resolves alongside this same wave)
         service
           .from('message_flags')
           .select('action, resolution')
@@ -185,6 +191,8 @@ export default async function DashboardPage() {
         }),
       )
     }
+
+    const { count: pendingCount } = await pendingPromise
 
     data.oversight = {
       pendingCount: pendingCount ?? 0,

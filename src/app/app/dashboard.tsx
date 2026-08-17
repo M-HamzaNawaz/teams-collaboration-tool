@@ -1,6 +1,7 @@
 'use client'
 
 import gsap from 'gsap'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -196,9 +197,9 @@ export function Dashboard(props: { data: DashboardData }) {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold">Your groups</h2>
-              <a href="/app/chat" className="text-sm font-medium text-teal-t hover:underline">
+              <Link href="/app/chat" className="text-sm font-medium text-teal-t hover:underline">
                 Open chat →
-              </a>
+              </Link>
             </div>
             {data.groups.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted">
@@ -208,7 +209,7 @@ export function Dashboard(props: { data: DashboardData }) {
               <ul className="flex flex-col gap-0.5">
                 {data.groups.slice(0, 8).map((group) => (
                   <li key={group.id}>
-                    <a
+                    <Link
                       href={`/app/chat?g=${group.id}`}
                       className="flex items-center gap-3 rounded-[10px] px-2 py-2 hover:bg-rowhover"
                     >
@@ -226,7 +227,7 @@ export function Dashboard(props: { data: DashboardData }) {
                           {group.unread}
                         </span>
                       )}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -266,12 +267,12 @@ export function Dashboard(props: { data: DashboardData }) {
                     Chain broken — open the audit log now.
                   </p>
                 )}
-                <a
+                <Link
                   href="/app/audit"
                   className="mt-2 inline-block text-sm font-medium text-teal-t hover:underline"
                 >
                   Open audit log →
-                </a>
+                </Link>
               </section>
             )}
 
@@ -352,9 +353,9 @@ function StatCard(props: {
   }`
 
   return props.href ? (
-    <a data-av href={props.href} className={className}>
+    <Link data-av href={props.href} className={className}>
       {body}
-    </a>
+    </Link>
   ) : (
     <div data-av className={className}>
       {body}

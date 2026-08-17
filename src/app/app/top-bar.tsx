@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -169,7 +170,7 @@ export function TopBar(props: {
             Waiting on you
           </p>
           {props.alerts.moderation && (
-            <a
+            <Link
               href="/app/moderation"
               onClick={() => setMenu(null)}
               className="block px-3 py-2.5 text-sm hover:bg-hover"
@@ -178,10 +179,10 @@ export function TopBar(props: {
               <span className="block text-xs text-muted">
                 Open the moderation queue →
               </span>
-            </a>
+            </Link>
           )}
           {props.alerts.names && (
-            <a
+            <Link
               href="/app/names"
               onClick={() => setMenu(null)}
               className="block px-3 py-2.5 text-sm hover:bg-hover"
@@ -190,7 +191,7 @@ export function TopBar(props: {
               <span className="block text-xs text-muted">
                 Review the requests →
               </span>
-            </a>
+            </Link>
           )}
           {!hasAlert && (
             <p className="px-3 py-4 text-center text-sm text-muted">
