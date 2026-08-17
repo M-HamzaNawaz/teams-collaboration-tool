@@ -19,12 +19,29 @@ const OUTSIDER = { email: 'bilal@seed-b.confide.test', password: 'seed-password-
 const SARAH_ID = '00000000-0000-4000-8000-0000000000a3'
 const ARCHIVED_GROUP = '00000000-0000-4000-8000-000000000102'
 
+/**
+ * A user's FIRST login opens the theme picker (product onboarding). On a
+ * fresh CI database every account is a first login, so the overlay would
+ * intercept every click of the journey — dismiss it the way a user would.
+ */
+async function dismissThemePicker(page: Page) {
+  const continueButton = page
+    .locator('[aria-labelledby="theme-dialog-title"]')
+    .getByRole('button', { name: 'Continue' })
+  try {
+    await continueButton.click({ timeout: 5_000 })
+  } catch {
+    // Picker not shown — this account has picked a theme before.
+  }
+}
+
 async function login(page: Page, who: { email: string; password: string }) {
   await page.goto('/login')
   await page.fill('input[type=email]', who.email)
   await page.fill('input[type=password]', who.password)
   await page.click('button[type=submit]')
   await page.waitForURL('**/app', { timeout: 45_000 })
+  await dismissThemePicker(page)
   // /app is the dashboard since the top-bar restructure; the journey below
   // exercises the chat, so land there explicitly.
   await page.goto('/app/chat')
@@ -76,6 +93,7 @@ test('the full control loop: invite → consent → hold → approve → deliver
   await invitee.check('input[type=checkbox]')
   await invitee.click('button[type=submit]')
   await invitee.waitForURL('**/app', { timeout: 45_000 })
+  await dismissThemePicker(invitee) // brand-new account = first login
   await invitee.goto('/app/chat')
   await expect(invitee.getByText(groupName).first()).toBeVisible()
 
