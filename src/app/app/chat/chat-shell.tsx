@@ -3,6 +3,7 @@
 import gsap from 'gsap'
 import { useEffect, useRef, useState } from 'react'
 
+import type { RealtimeMessage } from '@/lib/realtime/messages'
 import type { GroupRow } from '@/lib/types'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
 import { MessageSquareIcon } from '@/lib/ui/icons'
@@ -27,6 +28,9 @@ export function ChatShell(props: {
   groups: GroupRow[]
   /** Deep link (?g=) from the dashboard or the ⌘K quick switch. */
   initialGroupId?: string | null
+  /** Server-fetched first page for the group that opens first — the pane
+      paints real messages immediately instead of a second skeleton. */
+  initialMessages?: RealtimeMessage[] | null
   workspaceName: string
   me: Me
   unreadByGroup?: Record<string, number>
@@ -99,6 +103,15 @@ export function ChatShell(props: {
               key={selected.id}
               group={selected}
               me={props.me}
+              initialMessages={
+                // Only valid for the group the server fetched it for —
+                // switching groups falls back to the pane's own loader.
+                selected.id ===
+                (props.groups.find((g) => g.id === props.initialGroupId) ??
+                  props.groups[0])?.id
+                  ? props.initialMessages
+                  : undefined
+              }
               onBack={() => setMobileView('list')}
               onGroupChanged={() => setSelected(null)}
             />

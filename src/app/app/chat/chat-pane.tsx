@@ -85,10 +85,15 @@ type ClientMessage = Omit<RealtimeMessage, 'status'> & {
 export function ChatPane(props: {
   group: GroupRow
   me: Me
+  /** Server-fetched first page — instant paint, no second skeleton. The
+      subscribe-then-fetch cycle still runs and reconciles over this. */
+  initialMessages?: RealtimeMessage[] | null
   onBack: () => void
   onGroupChanged: () => void
 }) {
-  const [messages, setMessages] = useState<ClientMessage[] | null>(null)
+  const [messages, setMessages] = useState<ClientMessage[] | null>(
+    props.initialMessages ?? null,
+  )
   const [names, setNames] = useState<Map<string, string>>(new Map())
   const [hasMore, setHasMore] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)

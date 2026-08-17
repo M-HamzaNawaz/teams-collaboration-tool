@@ -85,6 +85,22 @@ export default async function AppPage(props: {
     }),
   )
 
+  // First page of messages for the group that will open — fetched HERE so
+  // the pane paints with real messages instead of a second skeleton (the
+  // route-level loading.tsx already covered this server time). The pane
+  // still re-fetches after subscribing (M5-02's ordering rule), which
+  // silently reconciles anything that landed in between.
+  const initialGroup =
+    groupRows.find((g) => g.id === requestedGroupId) ?? groupRows[0] ?? null
+  const { data: initialRows } = initialGroup
+    ? await supabase
+        .from('messages')
+        .select('*')
+        .eq('group_id', initialGroup.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+    : { data: null }
+  const initialMessages = initialRows ? [...initialRows].reverse() : null
 
   return (
     <ChatShell
@@ -93,6 +109,7 @@ export default async function AppPage(props: {
       key={requestedGroupId ?? 'none'}
       groups={groupRows}
       initialGroupId={requestedGroupId ?? null}
+      initialMessages={initialMessages}
       workspaceName={(workspace as WorkspaceRow | null)?.name ?? 'Workspace'}
       me={{
         userId: session.userId,
