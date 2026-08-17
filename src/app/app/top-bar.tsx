@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { GroupMark, PersonMark } from '@/lib/ui/avatar'
 import {
+  ArrowRightIcon,
   BellIcon,
   CheckIcon,
   ChevronDownIcon,
@@ -176,8 +177,8 @@ export function TopBar(props: {
               className="block px-3 py-2.5 text-sm hover:bg-hover"
             >
               <span className="block font-medium">Messages held for review</span>
-              <span className="block text-xs text-muted">
-                Open the moderation queue →
+              <span className="flex items-center gap-1 text-xs text-muted">
+                Open the moderation queue <ArrowRightIcon />
               </span>
             </Link>
           )}
@@ -188,8 +189,8 @@ export function TopBar(props: {
               className="block px-3 py-2.5 text-sm hover:bg-hover"
             >
               <span className="block font-medium">Name changes requested</span>
-              <span className="block text-xs text-muted">
-                Review the requests →
+              <span className="flex items-center gap-1 text-xs text-muted">
+                Review the requests <ArrowRightIcon />
               </span>
             </Link>
           )}

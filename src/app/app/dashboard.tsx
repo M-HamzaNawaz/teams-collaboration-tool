@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { MemberRole } from '@/lib/types'
 import { GroupMark, PersonMark } from '@/lib/ui/avatar'
-import { LockIcon } from '@/lib/ui/icons'
+import { ArrowRightIcon, LockIcon } from '@/lib/ui/icons'
 import { PageHeader } from '@/lib/ui/page-header'
 
 import { CreateGroupDialog } from './create-group-dialog'
@@ -197,8 +197,11 @@ export function Dashboard(props: { data: DashboardData }) {
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold">Your groups</h2>
-              <Link href="/app/chat" className="text-sm font-medium text-teal-t hover:underline">
-                Open chat →
+              <Link
+                href="/app/chat"
+                className="flex items-center gap-1 text-sm font-medium text-teal-t hover:underline"
+              >
+                Open chat <ArrowRightIcon />
               </Link>
             </div>
             {data.groups.length === 0 ? (
@@ -269,9 +272,9 @@ export function Dashboard(props: { data: DashboardData }) {
                 )}
                 <Link
                   href="/app/audit"
-                  className="mt-2 inline-block text-sm font-medium text-teal-t hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-teal-t hover:underline"
                 >
-                  Open audit log →
+                  Open audit log <ArrowRightIcon />
                 </Link>
               </section>
             )}

@@ -301,6 +301,14 @@ export const ArrowLeftIcon = () => (
   </Icon>
 )
 
+/** Small inline arrow for "go there" links — sized to sit beside text-sm. */
+export const ArrowRightIcon = () => (
+  <Icon size={14}>
+    <path d="M5 12h14" />
+    <path d="m12 5 7 7-7 7" />
+  </Icon>
+)
+
 export const MenuIcon = () => (
   <Icon>
     <line x1="4" x2="20" y1="6" y2="6" />
