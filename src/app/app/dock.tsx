@@ -64,6 +64,9 @@ export function Dock(props: {
   const [pinned, setPinned] = useState(false)
   // Transient ChatGPT-style hover expansion (overlay; layout untouched).
   const [hoverExpand, setHoverExpand] = useState(false)
+  // Instant cursor-presence flag: while the pointer is on the rail, the C
+  // logo swaps to the expand icon (no delay — the swap must feel alive).
+  const [railHovered, setRailHovered] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // The saved preference is a browser fact — read after mount.
@@ -95,11 +98,13 @@ export function Dock(props: {
 
   // Small delays so grazing the rail doesn't flap the sidebar open/shut.
   function onRailEnter() {
+    setRailHovered(true)
     if (props.drawer || pinned) return
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
     hoverTimer.current = setTimeout(() => setHoverExpand(true), 140)
   }
   function onRailLeave() {
+    setRailHovered(false)
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
     hoverTimer.current = setTimeout(() => setHoverExpand(false), 220)
   }
@@ -202,37 +207,47 @@ export function Dock(props: {
         expanded ? 'w-[232px] px-3' : 'w-[76px] items-center'
       } ${overlay ? 'shadow-e2' : ''}`}
     >
-      {/* Logo row + the ChatGPT-style panel toggle */}
-      <div
-        className={`flex items-center ${
-          expanded ? 'justify-between' : 'flex-col gap-1'
-        }`}
-      >
-        <Link
-          href="/app"
-          aria-label="Confide — dashboard"
-          onClick={props.onNavigate}
-          className="flex items-center gap-2.5"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail">
-            C
-          </span>
-          {expanded && (
+      {/* Header. Expanded: logo + name with the pin toggle at the right.
+          Collapsed: ONE slot — the C at rest, and the moment the cursor is
+          on the rail it becomes the expand button (ChatGPT's logo swap). */}
+      {expanded ? (
+        <div className="flex items-center justify-between">
+          <Link
+            href="/app"
+            aria-label="Confide — dashboard"
+            onClick={props.onNavigate}
+            className="flex items-center gap-2.5"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-rail-active-fg text-base font-bold text-rail">
+              C
+            </span>
             <span className="text-sm font-semibold text-rail-active-fg">
               Confide
             </span>
+          </Link>
+          {!props.drawer && (
+            <button
+              onClick={togglePinned}
+              aria-label={pinned ? 'Collapse navigation' : 'Pin navigation open'}
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-rail-fg hover:bg-rail-active/60"
+            >
+              <PanelLeftIcon />
+            </button>
           )}
-        </Link>
-        {!props.drawer && (
-          <button
-            onClick={togglePinned}
-            aria-label={pinned ? 'Collapse navigation' : 'Pin navigation open'}
-            className="flex h-9 w-9 items-center justify-center rounded-[10px] text-rail-fg hover:bg-rail-active/60"
-          >
-            <PanelLeftIcon />
-          </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button
+          onClick={togglePinned}
+          aria-label="Expand navigation"
+          className={`flex h-10 w-10 items-center justify-center rounded-[10px] transition-colors ${
+            railHovered
+              ? 'text-rail-fg hover:bg-rail-active/60'
+              : 'bg-rail-active-fg text-base font-bold text-rail'
+          }`}
+        >
+          {railHovered ? <PanelLeftIcon /> : 'C'}
+        </button>
+      )}
 
       <div
         ref={listRef}
