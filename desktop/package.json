@@ -1,0 +1,14 @@
+{
+  "name": "confide-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Confide desktop shell (Tauri)",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
