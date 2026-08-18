@@ -1,12 +1,11 @@
 # Desktop release: push a tag like `desktop-v0.1.1` and this builds the
 # Confide shell for Windows, macOS, and Linux, signs the update artifacts,
-# and publishes everything (installers + latest.json) as a release on the
-# PUBLIC M-HamzaNawaz/confide-releases repo — the code repo stays private.
+# and publishes everything (installers + latest.json) as a release on
+# this repo (public), using the built-in GITHUB_TOKEN — no PAT needed.
 # Installed apps poll that release feed 15s after launch and offer the
 # update. Web-content changes never need this; Vercel handles those.
 #
 # Required repo secrets:
-#   RELEASES_TOKEN                      fine-grained PAT, Contents RW on confide-releases
 #   TAURI_SIGNING_PRIVATE_KEY           updater signing key (~/.tauri/confide-updater.key)
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password
 
@@ -58,13 +57,11 @@ jobs:
 
       - uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: desktop
-          owner: M-HamzaNawaz
-          repoName: confide-releases
           tagName: ${{ github.ref_name }}
           releaseName: 'Confide Desktop ${{ github.ref_name }}'
           releaseBody: 'Download the installer for your system below. Installed apps offer this update automatically.'
