@@ -150,7 +150,7 @@ export function AuditViewer(props: {
   })
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-[940px] flex-col overflow-y-auto p-4 md:px-10 md:py-8">
+    <main className="mx-auto flex h-full w-full max-w-235 flex-col overflow-y-auto p-4 md:px-10 md:py-8">
       <PageHeader
         breadcrumb="Track"
         title="Audit log"

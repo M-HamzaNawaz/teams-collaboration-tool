@@ -123,7 +123,7 @@ export function MembersPanel(props: {
   return (
     <div
       ref={overlayRef}
-      className="overlay-in fixed inset-0 z-[300] flex justify-end bg-black/30 backdrop-blur-[2px]"
+      className="overlay-in fixed inset-0 z-300 flex justify-end bg-black/30 backdrop-blur-[2px]"
       onClick={close}
     >
       <aside

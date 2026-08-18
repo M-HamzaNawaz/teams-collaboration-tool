@@ -63,7 +63,7 @@ export function NameChangeDialog(props: {
 
   return createPortal(
     <div
-      className="overlay-in fixed inset-0 z-[400] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
+      className="overlay-in fixed inset-0 z-400 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onClick={props.onClose}
     >
       <div

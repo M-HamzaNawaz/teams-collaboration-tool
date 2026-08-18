@@ -13,7 +13,7 @@ import { prefersReducedMotion } from '@/lib/ui/dismiss'
  */
 
 export const inputClass =
-  'h-[42px] rounded-lg border border-border bg-surface px-3.5 text-sm outline-none transition-colors focus:border-teal-d'
+  'h-10.5 rounded-lg border border-border bg-surface px-3.5 text-sm outline-none transition-colors focus:border-teal-d'
 
 export const primaryButtonClass = 'btn btn-primary py-2.5'
 
@@ -54,7 +54,7 @@ export function AuthShell(props: {
       className="flex min-h-screen items-center justify-center bg-background p-6"
     >
       <div
-        className={`w-full ${props.maxWidth === 'lg' ? 'max-w-lg' : 'max-w-[400px]'}`}
+        className={`w-full ${props.maxWidth === 'lg' ? 'max-w-lg' : 'max-w-100'}`}
       >
         <div className="mb-6 flex flex-col items-center text-center">
           <div
@@ -63,7 +63,7 @@ export function AuthShell(props: {
           >
             C
           </div>
-          <h1 className="text-[28px] font-bold leading-[34px] tracking-tight">
+          <h1 className="text-[28px] font-bold leading-8.5 tracking-tight">
             {props.title}
           </h1>
           {props.subtitle && (
@@ -98,7 +98,7 @@ export function SuccessToast(props: { message: string }) {
     <div
       ref={ref}
       role="status"
-      className="fixed bottom-6 left-1/2 z-[500] -translate-x-1/2 rounded-[10px] border border-teal-d bg-sel px-4 py-2.5 text-sm font-medium text-teal-t shadow-e2"
+      className="fixed bottom-6 left-1/2 z-500 -translate-x-1/2 rounded-[10px] border border-teal-d bg-sel px-4 py-2.5 text-sm font-medium text-teal-t shadow-e2"
     >
       {props.message}
     </div>

@@ -157,7 +157,7 @@ export function ModerationQueue(props: {
   }
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-[760px] flex-col overflow-y-auto p-4 md:px-10 md:py-8">
+    <main className="mx-auto flex h-full w-full max-w-190 flex-col overflow-y-auto p-4 md:px-10 md:py-8">
       <PageHeader
         breadcrumb="Track"
         title="Moderation queue"
@@ -284,7 +284,7 @@ export function ModerationQueue(props: {
       {toast && (
         <div
           role="status"
-          className="fixed bottom-6 left-1/2 z-[500] -translate-x-1/2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm shadow-e2"
+          className="fixed bottom-6 left-1/2 z-500 -translate-x-1/2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm shadow-e2"
         >
           {toast}
         </div>
