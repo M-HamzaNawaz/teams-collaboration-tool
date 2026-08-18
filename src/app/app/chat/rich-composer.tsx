@@ -232,9 +232,17 @@ export function RichComposer(props: {
       className="pb-safe border-t border-border bg-surface p-3"
     >
       <div className="rounded-[10px] border border-border bg-surface focus-within:border-teal-d">
-        {showToolbar && (
-          // flex-wrap: at phone width the row folds to two lines instead of
-          // cutting icons off at the screen edge.
+        {/* The row slides open/closed (0fr→1fr) instead of popping — the
+            thread above shares this column, so an instant mount made the
+            whole conversation jump. inert keeps hidden buttons untabbable. */}
+        <div
+          inert={!showToolbar}
+          className="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
+          style={{ gridTemplateRows: showToolbar ? '1fr' : '0fr' }}
+        >
+          <div className="min-h-0 overflow-hidden">
+          {/* flex-wrap: at phone width the row folds to two lines instead of
+              cutting icons off at the screen edge. */}
           <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
             <ToolbarButton label="Bold (Ctrl+B)" active={active.bold} onClick={() => exec('bold')}>
               <BoldIcon />
@@ -270,7 +278,8 @@ export function RichComposer(props: {
               <CodeBlockIcon />
             </ToolbarButton>
           </div>
-        )}
+          </div>
+        </div>
 
         <div
           ref={editorRef}
