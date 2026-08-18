@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Confide — Project Documentation</title>
+<style>
+  :root {
+    --ink: #17211c;
+    --muted: #5b6b62;
+    --accent: #0f7a5c;
+    --accent-dark: #1f3d2e;
+    --line: #d9e2dc;
+    --tint: #eef5f1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.5;
+  }
+  .block, .callout, table, .steps li { break-inside: avoid; }
+  tr { break-inside: avoid; }
+  h3 { break-after: avoid; }
+  .page { page-break-after: always; padding: 0; }
+  .page:last-child { page-break-after: auto; }
+
+  /* Cover */
+  .cover {
+    height: 96vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 8mm;
+  }
+  .cover .mark {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--accent-dark); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 700; margin-bottom: 28px;
+  }
+  .cover h1 { font-size: 40pt; letter-spacing: -1px; color: var(--accent-dark); }
+  .cover .sub { font-size: 15pt; color: var(--muted); margin-top: 8px; }
+  .cover .meta {
+    margin-top: 48px; padding-top: 20px; border-top: 2px solid var(--line);
+    color: var(--muted); font-size: 10.5pt; line-height: 2;
+  }
+  .cover .meta strong { color: var(--ink); }
+
+  h2 {
+    font-size: 19pt; color: var(--accent-dark); letter-spacing: -0.3px;
+    margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 2.5px solid var(--accent);
+  }
+  h3 { font-size: 12pt; margin: 4.5mm 0 2mm; color: var(--accent-dark); }
+  p { margin-bottom: 3mm; }
+  ul, ol { margin: 0 0 3mm 6mm; }
+  li { margin-bottom: 1mm; }
+  .lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
+
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 10.5pt; }
+  th {
+    text-align: left; background: var(--tint); color: var(--accent-dark);
+    padding: 1.8mm 3mm; border-bottom: 2px solid var(--accent);
+    font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  td { padding: 1.8mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  .callout {
+    background: var(--tint); border-left: 4px solid var(--accent);
+    padding: 3mm 4mm; border-radius: 6px; margin: 4mm 0;
+  }
+  .callout b { color: var(--accent-dark); }
+
+  .steps { counter-reset: step; list-style: none; margin-left: 0; }
+  .steps li {
+    counter-increment: step; position: relative;
+    padding: 0 0 2.8mm 12mm; margin: 0;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 0;
+    width: 8mm; height: 8mm; border-radius: 50%;
+    background: var(--accent-dark); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10pt; font-weight: 700;
+  }
+  .steps li b { display: block; color: var(--accent-dark); }
+
+  code, .mono {
+    font-family: 'Consolas', 'Menlo', monospace; font-size: 9.5pt;
+    background: var(--tint); padding: 0.4mm 1.5mm; border-radius: 3px;
+  }
+  .foot { color: var(--muted); font-size: 9pt; margin-top: 6mm; }
+</style>
+</head>
+<body>
+
+<!-- ─────────────────────────── COVER ─────────────────────────── -->
+<section class="page cover">
+  <div class="mark">C</div>
+  <h1>Confide</h1>
+  <p class="sub">Team collaboration platform with built-in client-contact protection</p>
+  <div class="meta">
+    <strong>Company:</strong> Algotix AI<br>
+    <strong>Live application:</strong> https://teams-collaboration-tool-bwfb.vercel.app<br>
+    <strong>Document:</strong> Project documentation, v1.0<br>
+    <strong>Date:</strong> 18 August 2026
+  </div>
+</section>
+
+<!-- ─────────────────────────── OVERVIEW ─────────────────────────── -->
+<section class="page">
+  <h2>1. What is Confide?</h2>
+  <p class="lead">Confide is a chat workspace where an agency's team and its clients talk in one place — and where the platform itself makes sure nobody can quietly exchange personal contact details.</p>
+
+  <p>Agencies have a common problem: a team member and a client meet inside a project, swap phone numbers or emails, and take the work outside the agency. Normal chat tools (WhatsApp, Slack) cannot stop this, because they never look at what is being sent.</p>
+
+  <p>Confide is built around one idea: <b>the conversation is open, but contact details are not.</b> Every message is checked on the server before anyone sees it. If it contains a phone number, an email address, a social-media link, a payment handle, or a crypto address — even written in a disguised way — the message is held back and sent to an admin for review instead of being delivered.</p>
+
+  <div class="callout">
+    <b>In one sentence:</b> Confide gives teams and clients a modern group chat while protecting the agency's client relationships automatically, and keeps tamper-proof evidence of everything that happens.
+  </div>
+
+  <div class="block"><h3>The four pillars</h3>
+  <table>
+    <tr><th style="width:30%">Pillar</th><th>What it means</th></tr>
+    <tr><td><b>Screened messages</b></td><td>Every message is scanned server-side before delivery. Contact details are caught and held for admin review — the sender sees a policy notice, the group never sees the message unless it is approved.</td></tr>
+    <tr><td><b>Masked identities</b></td><td>The admin decides everyone's display name (for example "Ahmed K."). Members cannot rename themselves into a contact card — name changes go through an admin-reviewed request, and even names are screened for contact details.</td></tr>
+    <tr><td><b>Admin control</b></td><td>Admins invite people, set names and roles, create and archive groups, review held messages, and see workspace-wide statistics on a dashboard only they can open.</td></tr>
+    <tr><td><b>Tamper-proof audit</b></td><td>Every action — login, message, file, approval, name change — is written to an append-only log where each entry is cryptographically linked to the previous one. If anyone edits history, verification reports the exact entry where the chain breaks.</td></tr>
+  </table>
+
+  </div>
+<div class="block"><h3>Who uses it</h3>
+  <table>
+    <tr><th style="width:18%">Role</th><th>What they can do</th></tr>
+    <tr><td><b>Admin</b></td><td>Everything: dashboard, all groups, moderation queue, name-change reviews, audit log, invitations, group lifecycle, own profile edits (still screened).</td></tr>
+    <tr><td><b>Team member</b></td><td>Chat and share files in their groups, request a name change, pick a theme. Lands directly in Chat after login.</td></tr>
+    <tr><td><b>Client</b></td><td>Same chat experience as members, inside the groups they are invited to. Sees only masked names of the team.</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ─────────────────────────── FEATURES ─────────────────────────── -->
+<section class="page">
+  <h2>2. Main features</h2>
+
+  <div class="block"><h3>Group chat</h3>
+  <ul>
+    <li><b>Real-time messaging</b> — messages appear for everyone instantly, with no page reload.</li>
+    <li><b>Read receipts, WhatsApp style</b> — one grey tick when delivered, double teal tick only when <i>everyone</i> in the group has read the message.</li>
+    <li><b>Online / offline dots</b> — a Slack-style presence dot on every avatar.</li>
+    <li><b>File sharing</b> — up to 50 MB per file, with a live upload percentage. Oversized files are refused <i>before</i> uploading starts, with a clear message. Failed uploads can be retried with one click.</li>
+    <li><b>Desktop notifications</b> — Slack-style system notifications when a message arrives while the app tab is in the background. Held messages notify nobody until they are approved.</li>
+    <li><b>Rich composer</b> — bold, italic, lists, quotes, code, @mentions.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Message screening &amp; moderation</h3>
+  <ul>
+    <li>Five detector families run on the server: <b>phone numbers, email addresses, social-media links, payment handles, and crypto addresses</b>.</li>
+    <li>Detection normalizes the text first, so spacing and punctuation tricks (like "0 3 2 1 – 1 2 3…") are still caught.</li>
+    <li>Caught messages go to the <b>moderation queue</b>. Admins see the message exactly as typed with the caught parts highlighted, who sent it, in which group, and how long it has been waiting.</li>
+    <li><b>Approve</b> delivers the message to the group. <b>Block</b> replaces it with a policy notice for the sender.</li>
+    <li>If a held message waits too long (30 minutes by default, adjustable per workspace and per group), it is <b>escalated</b> — a background job sweeps every minute and alerts managers.</li>
+    <li>Admins see a <b>live red dot</b> on the sidebar and bell the moment something needs review — no reload needed. It clears itself when the queue is empty.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Identity &amp; names</h3>
+  <ul>
+    <li>The admin types each person's display name at invitation time; invitees never get a field to change it.</li>
+    <li>Members request name changes; admins approve or reject them on a dedicated review page.</li>
+    <li>Names and job titles are screened by the same detectors as messages — a name cannot become a phone number.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Audit log</h3>
+  <ul>
+    <li>Every event is recorded: logins, messages, files, approvals, blocks, invites, name changes, group changes.</li>
+    <li>Entries form a <b>hash chain</b> — each one is cryptographically linked to the one before it. A scheduled job and a "Verify now" button both check the chain and report the first broken entry if anything was altered.</li>
+    <li>Filters by group, member, and event type answer questions like "what did this person do in this group?" without touching the database. Full <b>CSV export</b> for reports.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Workspace &amp; comfort</h3>
+  <ul>
+    <li><b>Email invitations</b> — sent from <span class="mono">noreply@algotix.ai</span>, valid for 7 days, with a copyable backup link for the admin.</li>
+    <li><b>Admin dashboard</b> — messages held/delivered, people counts, recent activity, chain status. Members and clients land straight in Chat.</li>
+    <li><b>Six color themes</b> — chosen at first login, changeable any time, saved to the account so they follow the user to any device.</li>
+    <li><b>⌘K quick switch</b> — jump to any page or group from the keyboard.</li>
+    <li><b>Responsive</b> — full mobile layout with a slide-out sidebar; the desktop sidebar collapses ChatGPT-style.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ─────────────────────────── SCREENING FLOW ─────────────────────────── -->
+<section class="page">
+  <h2>3. How message screening works</h2>
+  <p class="lead">The journey of one message, from the sender's keyboard to the group.</p>
+
+  <ol class="steps">
+    <li><b>The sender presses Send.</b> The message goes to the server — never directly to other people.</li>
+    <li><b>The server scans it.</b> The text is normalized (spacing, punctuation and disguise tricks removed) and run through all five detector families.</li>
+    <li><b>Clean message → delivered.</b> It appears in the group for everyone within about a second, and the audit log records it.</li>
+    <li><b>Contact details found → held.</b> The group never sees it. The sender sees it marked as held with a policy notice. Nobody is notified about its content.</li>
+    <li><b>Admins are alerted live.</b> A red dot appears on the sidebar and bell within ~2 seconds, plus a toast on the moderation page itself.</li>
+    <li><b>An admin reviews it.</b> The queue shows the message as typed, with every caught span highlighted and labeled by rule (for example <span class="mono">phone</span>, <span class="mono">email</span>).</li>
+    <li><b>Approve or block.</b> Approve delivers it to the group (and only then do notifications fire). Block turns the sender's bubble into a policy notice. Both decisions are audited with the reviewer's identity.</li>
+    <li><b>Nothing waits forever.</b> A background job checks every minute; anything held longer than the configured limit (default 30 minutes) is escalated to the group's manager.</li>
+  </ol>
+
+  <div class="callout">
+    <b>Why server-side matters:</b> the check happens where users cannot switch it off. There is no client-side toggle, no browser trick, and no app version that skips the scan — the message simply does not exist for other people until the server decides it is safe.
+  </div>
+
+  <div class="block"><h3>What the detectors catch</h3>
+  <table>
+    <tr><th style="width:28%">Detector</th><th>Examples of what is caught</th></tr>
+    <tr><td>Phone numbers</td><td>Local and international formats, spaced or punctuated digits, spelled-out digit tricks.</td></tr>
+    <tr><td>Email addresses</td><td>Plain addresses and disguised forms ("name at gmail dot com").</td></tr>
+    <tr><td>Social links</td><td>WhatsApp, Telegram, Instagram, LinkedIn, and similar profile or invite links.</td></tr>
+    <tr><td>Payment handles</td><td>PayPal.me, Wise, and similar pay-me handles.</td></tr>
+    <tr><td>Crypto addresses</td><td>Bitcoin / Ethereum-style wallet addresses.</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ─────────────────────────── SECURITY ─────────────────────────── -->
+<section class="page">
+  <h2>4. Security</h2>
+
+  <div class="block"><h3>Access control</h3>
+  <ul>
+    <li><b>Row-Level Security (RLS)</b> is enforced by the database itself: every query runs as the logged-in user, and the database refuses rows the user should not see. Even a bug in the app cannot leak another group's messages.</li>
+    <li>Held messages are visible <i>only</i> to reviewers — the RLS policy literally filters them out of everyone else's message list.</li>
+    <li>The admin dashboard, moderation queue, and audit log are server-checked on every request, not just hidden in the menu.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Files</h3>
+  <ul>
+    <li>Files live in a <b>private storage bucket</b> — there are no public links. Downloads go through the app, which checks group membership first.</li>
+    <li>Uploads are capped at 50 MB and refused before transfer if too large.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Evidence</h3>
+  <ul>
+    <li>The audit log is <b>append-only</b>: no update or delete, enforced by the database.</li>
+    <li>Each entry carries a hash of the previous entry. Editing any historical row breaks every hash after it, and verification points to the exact first broken entry.</li>
+    <li>Verification runs on a schedule and on demand; the result (intact / broken at entry #N) is shown on the audit page.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Accounts</h3>
+  <ul>
+    <li>Authentication is handled by Supabase Auth (email + password, secure session cookies).</li>
+    <li>Invitations expire after 7 days and are single-use.</li>
+    <li>Every login is itself an audited event.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ─────────────────────────── TECHNOLOGY ─────────────────────────── -->
+<section class="page">
+  <h2>5. Technology &amp; architecture</h2>
+
+  <table>
+    <tr><th style="width:26%">Layer</th><th style="width:34%">Technology</th><th>Notes</th></tr>
+    <tr><td>Web application</td><td>Next.js 16 (React 19)</td><td>Server-rendered pages with client-side navigation; instant skeletons per page.</td></tr>
+    <tr><td>Database</td><td>Supabase — PostgreSQL 17</td><td>28 versioned migrations; RLS on every table.</td></tr>
+    <tr><td>Real-time</td><td>Supabase Realtime</td><td>Live messages, presence dots, moderation alerts.</td></tr>
+    <tr><td>File storage</td><td>Supabase Storage</td><td>Private bucket, membership-checked downloads.</td></tr>
+    <tr><td>Background jobs</td><td>pg_cron</td><td><span class="mono">confide-escalations</span> (every minute) and <span class="mono">confide-chain-verify</span> (audit chain check).</td></tr>
+    <tr><td>Email</td><td>Resend</td><td>Invitations from <span class="mono">noreply@algotix.ai</span> (verified domain).</td></tr>
+    <tr><td>Hosting</td><td>Vercel</td><td>App served from Tokyo (hnd1), same region as the database for fast queries.</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS v4</td><td>Token-based theme system — 6 themes from one set of CSS variables.</td></tr>
+    <tr><td>Animations</td><td>GSAP + CSS</td><td>All animations respect the user's reduced-motion setting.</td></tr>
+  </table>
+
+  <div class="block"><h3>How the pieces talk</h3>
+  <ol class="steps">
+    <li><b>Browser → Vercel.</b> The Next.js app serves pages and hosts all API routes (messages, moderation, audit, invitations, files, and so on).</li>
+    <li><b>Vercel → Supabase.</b> API routes talk to PostgreSQL as the logged-in user, so RLS applies everywhere. Message screening runs here, on the server.</li>
+    <li><b>Supabase → Browser.</b> Realtime channels push new messages, presence, and moderation alerts straight to open tabs.</li>
+    <li><b>Inside the database.</b> pg_cron runs the escalation sweep and chain verification without any external scheduler.</li>
+    <li><b>Resend.</b> Called by the invitation route to deliver branded invite emails.</li>
+  </ol>
+
+  </div>
+<div class="block"><h3>Quality process</h3>
+  <ul>
+    <li><b>81 unit tests</b> cover the detection engine (including a disguise-tricks corpus), scoring, and normalization.</li>
+    <li><b>End-to-end tests</b> (Playwright) walk real browser flows: login, invite, chat, hold, approve, audit.</li>
+    <li><b>CI on GitHub Actions</b> runs lint, types, unit and e2e tests on every push against a fresh database.</li>
+    <li>UI changes are verified with real mouse-event browser testing before commit; production checks clean up their own test data.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ─────────────────────────── DEPLOYMENT ─────────────────────────── -->
+<section class="page">
+  <h2>6. Deployment &amp; operations</h2>
+
+  <table>
+    <tr><th style="width:30%">Item</th><th>Value</th></tr>
+    <tr><td>Live URL</td><td>https://teams-collaboration-tool-bwfb.vercel.app</td></tr>
+    <tr><td>App hosting</td><td>Vercel, region Tokyo (<span class="mono">hnd1</span>)</td></tr>
+    <tr><td>Database</td><td>Supabase hosted project, Tokyo (<span class="mono">ap-northeast-1</span>)</td></tr>
+    <tr><td>Email sender</td><td><span class="mono">noreply@algotix.ai</span> via Resend (domain verified)</td></tr>
+    <tr><td>Cost</td><td>All free tiers: Vercel Hobby, Supabase Free, Resend Free</td></tr>
+  </table>
+
+  <div class="block"><h3>Routine operations</h3>
+  <table>
+    <tr><th style="width:30%">Task</th><th>How</th></tr>
+    <tr><td>Deploy an update</td><td>Push to the GitHub main branch — Vercel builds and deploys automatically.</td></tr>
+    <tr><td>Change a setting / key</td><td>Edit Environment Variables in the Vercel dashboard, then redeploy.</td></tr>
+    <tr><td>Database changes</td><td>Written as migration files and applied with the Supabase CLI (<span class="mono">supabase db push</span>).</td></tr>
+    <tr><td>Backups</td><td>Weekly <span class="mono">supabase db dump</span> is recommended (free plan has no automatic point-in-time recovery).</td></tr>
+    <tr><td>Keep-alive</td><td>Supabase free projects pause after ~7 days without traffic — a free daily ping (cron-job.org) keeps it awake.</td></tr>
+  </table>
+
+  </div>
+<div class="block"><h3>Free-tier limits to know</h3>
+  <ul>
+    <li><b>Supabase Free:</b> 500 MB database, 1 GB file storage, 5 GB bandwidth/month, pauses when idle for a week.</li>
+    <li><b>Vercel Hobby:</b> non-commercial license, 100 GB bandwidth/month. A paid plan is the correct step once the company uses it commercially at scale.</li>
+    <li><b>Resend Free:</b> 100 emails/day, 3,000/month — far above invitation volume.</li>
+  </ul>
+
+  </div>
+<div class="block"><h3>Planned / not yet built</h3>
+  <ul>
+    <li>Push notifications when the browser is fully closed (current notifications need an open tab).</li>
+    <li>Message content search.</li>
+    <li>Virus scanning of uploaded files.</li>
+    <li>Message edit and delete.</li>
+  </ul>
+
+  <div class="callout">
+    <b>Project size:</b> 28 database migrations · 89 commits · 81 unit tests + full e2e suite · 6 themes · 5 detector families — running in production since August 2026.
+  </div>
+
+  <p class="foot">Confide — Algotix AI · Project documentation v1.0 · 18 August 2026</p>
+</div>
+</section>
+
+</body>
+</html>
