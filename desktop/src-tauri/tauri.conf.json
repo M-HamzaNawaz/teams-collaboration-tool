@@ -34,7 +34,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1MjM5QTg3NzY0NzBDNUYKUldSZkRFZDJoNW9qbFNGMUExcDBCTHVudVNlZUxJMFRKRlg1NndvQU5MNzFueHd4ck51bnpkR3EK",
       "endpoints": [
-        "https://github.com/m1abdullahh/confide-releases/releases/latest/download/latest.json"
+        "https://github.com/M-HamzaNawaz/confide-releases/releases/latest/download/latest.json"
       ]
     }
   }
