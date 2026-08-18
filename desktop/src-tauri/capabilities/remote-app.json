@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "remote-app",
+  "description": "The deployed Confide app may fire native notifications and set the window badge — nothing else.",
+  "windows": ["main"],
+  "remote": {
+    "urls": [
+      "https://teams-collaboration-tool-bwfb.vercel.app",
+      "https://teams-collaboration-tool-bwfb-*.vercel.app"
+    ]
+  },
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "core:window:allow-set-badge-count"
+  ]
+}

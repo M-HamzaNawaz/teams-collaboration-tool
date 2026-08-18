@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { shellSetBadge } from '@/lib/desktop-shell'
 import { PresenceProvider } from '@/lib/presence/presence'
 import { browserClient } from '@/lib/supabase/browser-client'
 import { localTheme, useApplyServerTheme } from '@/lib/theme/apply'
@@ -39,7 +40,7 @@ export function AppShell(props: {
   }
   canModerate: boolean
   isAdmin: boolean
-  alerts: { moderation: boolean; names: boolean }
+  alerts: { moderation: number; names: number }
   groups: Array<{ id: string; name: string }>
   children: React.ReactNode
 }) {
@@ -52,6 +53,15 @@ export function AppShell(props: {
 
   // New device: adopt the DB theme. Same device: keep the local choice.
   useApplyServerTheme(props.me.theme)
+
+  // Desktop shell only: things-needing-attention count on the app icon —
+  // exactly what the dock dots show this person. No-op on the plain web.
+  const badgeTotal =
+    (props.canModerate ? props.alerts.moderation : 0) +
+    (props.isAdmin ? props.alerts.names : 0)
+  useEffect(() => {
+    void shellSetBadge(badgeTotal)
+  }, [badgeTotal])
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -111,7 +121,7 @@ export function AppShell(props: {
             label: 'Moderation',
             Icon: ShieldIcon,
             group: 'TRACK' as const,
-            alert: props.alerts.moderation,
+            alert: props.alerts.moderation > 0,
           },
         ]
       : []),
@@ -122,7 +132,7 @@ export function AppShell(props: {
             label: 'Names',
             Icon: UserPenIcon,
             group: 'TRACK' as const,
-            alert: props.alerts.names,
+            alert: props.alerts.names > 0,
           },
           {
             href: '/app/audit',

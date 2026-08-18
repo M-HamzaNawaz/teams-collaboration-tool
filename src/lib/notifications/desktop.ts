@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import {
+  isDesktopShell,
+  shellRequestNotifyPermission,
+} from '@/lib/desktop-shell'
+
 /**
  * Desktop-notification preference — permission (a browser fact) plus an
  * explicit on/off the user controls from the account menu. Kept in
@@ -25,6 +30,13 @@ export function useDesktopNotifications() {
   useEffect(() => {
     // Deferred — React 19 lint: no synchronous setState in an effect body.
     queueMicrotask(() => {
+      // Desktop shell: notifications go through the native plugin, not the
+      // webview's Notification API (which WebView2/WKWebView don't honor).
+      if (isDesktopShell()) {
+        setPermission('granted')
+        setEnabled(localStorage.getItem(KEY) === 'on')
+        return
+      }
       if (typeof Notification === 'undefined') {
         setPermission('unsupported')
         return
@@ -42,6 +54,15 @@ export function useDesktopNotifications() {
   }, [])
 
   const toggle = useCallback(async () => {
+    if (isDesktopShell()) {
+      // macOS asks the user once at the OS level; Linux just says yes.
+      await shellRequestNotifyPermission()
+      const next = localStorage.getItem(KEY) === 'on' ? 'off' : 'on'
+      localStorage.setItem(KEY, next)
+      setEnabled(next === 'on')
+      window.dispatchEvent(new Event(EVENT))
+      return
+    }
     if (typeof Notification === 'undefined') return
     // First enable asks the browser; a hard "denied" can only be undone in
     // the browser's own site settings, so we surface it rather than loop.

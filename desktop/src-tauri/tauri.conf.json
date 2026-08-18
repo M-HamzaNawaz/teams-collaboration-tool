@@ -7,23 +7,17 @@
     "frontendDist": "https://teams-collaboration-tool-bwfb.vercel.app"
   },
   "app": {
-    "windows": [
-      {
-        "title": "Confide",
-        "width": 1280,
-        "height": 840,
-        "minWidth": 900,
-        "minHeight": 600,
-        "center": true
-      }
-    ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "appimage"],
+    "targets": [
+      "deb",
+      "appimage"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -32,7 +26,7 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "Confide — team collaboration",
+    "shortDescription": "Confide \u2014 team collaboration",
     "longDescription": "Team and client chat with built-in contact-info protection, moderation, and a tamper-proof audit log."
   }
 }

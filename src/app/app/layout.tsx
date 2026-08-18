@@ -122,8 +122,8 @@ export default async function AppLayout({
       canModerate={canModerate}
       isAdmin={isAdmin}
       alerts={{
-        moderation: pendingModeration > 0,
-        names: (pendingNames ?? 0) > 0,
+        moderation: pendingModeration,
+        names: pendingNames ?? 0,
       }}
       groups={(myGroups ?? []) as Array<{ id: string; name: string }>}
     >

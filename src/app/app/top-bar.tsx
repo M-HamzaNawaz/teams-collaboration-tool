@@ -36,7 +36,7 @@ export function TopBar(props: {
     rawRoleLabel: string
   }
   isAdmin: boolean
-  alerts: { moderation: boolean; names: boolean }
+  alerts: { moderation: number; names: number }
   onOpenDock: () => void
   onOpenSearch: () => void
 }) {
@@ -80,7 +80,7 @@ export function TopBar(props: {
     router.refresh()
   }
 
-  const hasAlert = props.alerts.moderation || props.alerts.names
+  const hasAlert = props.alerts.moderation > 0 || props.alerts.names > 0
 
   return (
     <header
@@ -170,7 +170,7 @@ export function TopBar(props: {
           <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted">
             Waiting on you
           </p>
-          {props.alerts.moderation && (
+          {props.alerts.moderation > 0 && (
             <Link
               href="/app/moderation"
               onClick={() => setMenu(null)}
@@ -182,7 +182,7 @@ export function TopBar(props: {
               </span>
             </Link>
           )}
-          {props.alerts.names && (
+          {props.alerts.names > 0 && (
             <Link
               href="/app/names"
               onClick={() => setMenu(null)}

@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react'
 
+import { openDownload } from '@/lib/desktop-shell'
 import {
   subscribeToGroupMessages,
   type RealtimeMessage,
@@ -705,7 +706,7 @@ export function ChatPane(props: {
       error?: string
     } | null
     if (response.ok && data?.url) {
-      window.open(data.url, '_blank', 'noopener')
+      openDownload(data.url)
     } else {
       setNotice(data?.error ?? 'download failed')
     }

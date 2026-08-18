@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Runtime files the local Supabase stack drops while running (git-ignored).
     "supabase/.temp/**",
+    // Tauri desktop shell — Rust project with generated JS in target/.
+    "desktop/**",
   ]),
 ]);
 

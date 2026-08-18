@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
+import { isDesktopShell, shellNotify } from '@/lib/desktop-shell'
 import { useDesktopNotifications } from '@/lib/notifications/desktop'
 import {
   subscribeToGroupMessages,
@@ -71,6 +72,15 @@ export function NotificationCenter(props: {
 
       const who = senderName.get(message.sender_id)
       const where = groupName.get(message.group_id) ?? 'Confide'
+      // Desktop shell: native notification via the plugin — the webview's
+      // Notification API is a no-op there. (Click-to-open is web-only.)
+      if (isDesktopShell()) {
+        void shellNotify(
+          who ? `${who} · ${where}` : `New message · ${where}`,
+          message.body.slice(0, 140),
+        )
+        return
+      }
       try {
         const note = new Notification(who ? `${who} · ${where}` : `New message · ${where}`, {
           body: message.body.slice(0, 140),

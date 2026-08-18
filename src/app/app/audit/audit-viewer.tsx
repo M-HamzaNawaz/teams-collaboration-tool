@@ -3,6 +3,7 @@
 import gsap from 'gsap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { openDownload } from '@/lib/desktop-shell'
 import type { GroupRow } from '@/lib/types'
 import { PersonMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
@@ -161,7 +162,7 @@ export function AuditViewer(props: {
     if (groupId) params.set('groupId', groupId)
     if (actorName) params.set('actorName', actorName)
     if (eventType) params.set('eventType', eventType)
-    window.open(`/api/audit/export?${params}`, '_blank', 'noopener')
+    openDownload(`/api/audit/export?${params}`)
   }
 
   const timeFormat = new Intl.DateTimeFormat(undefined, {
