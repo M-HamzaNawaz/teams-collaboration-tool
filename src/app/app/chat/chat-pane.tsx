@@ -437,6 +437,19 @@ export function ChatPane(props: {
     if (el.scrollTop < 120) void loadOlder()
   }
 
+  // The composer grows upward as the user types, shrinking this pane. A
+  // reader at the bottom must stay glued to the newest message through
+  // that resize — otherwise the expanding box covers the latest bubbles.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const observer = new ResizeObserver(() => {
+      if (stickToBottom.current) el.scrollTop = el.scrollHeight
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   // ── Scroll anchoring (M5-04 acceptance): a prepend must not move the
   // viewport; an append scrolls only if the reader was already at bottom.
   useLayoutEffect(() => {
