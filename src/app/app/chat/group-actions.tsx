@@ -186,6 +186,8 @@ export function GroupActions(props: {
               ) : (
                 <HoldButton
                   onComplete={archive}
+                  fillClassName="bg-teal-d"
+                  holdingLabel="Keep holding…"
                   className="btn btn-primary flex-1"
                 >
                   Hold to archive
@@ -243,7 +245,8 @@ export function GroupActions(props: {
                 <HoldButton
                   onComplete={destroy}
                   disabled={typed !== props.group.name}
-                  fillClassName="bg-black/20"
+                  fillClassName="bg-black/25"
+                  holdingLabel="Keep holding…"
                   className="btn btn-danger flex-1"
                 >
                   Hold to delete

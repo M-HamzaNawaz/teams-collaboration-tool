@@ -21,6 +21,8 @@ export function HoldButton(props: {
   className?: string
   /** Fill overlay classes — pick a tint that reads on the button color. */
   fillClassName?: string
+  /** Shown in place of children while the press is in progress. */
+  holdingLabel?: React.ReactNode
   children: React.ReactNode
 }) {
   const [holding, setHolding] = useState(false)
@@ -74,6 +76,11 @@ export function HoldButton(props: {
       }}
       onContextMenu={(e) => e.preventDefault()}
       className={`relative touch-none select-none overflow-hidden ${props.className ?? ''}`}
+      style={{
+        // Presses in: the button itself reacts the instant the hold starts.
+        transform: holding ? 'scale(0.96)' : 'scale(1)',
+        transition: 'transform 160ms ease',
+      }}
     >
       <span
         aria-hidden="true"
@@ -86,7 +93,9 @@ export function HoldButton(props: {
         }}
       />
       <span className="relative z-10 inline-flex items-center gap-1.5">
-        {props.children}
+        {holding && props.holdingLabel !== undefined
+          ? props.holdingLabel
+          : props.children}
       </span>
     </button>
   )
