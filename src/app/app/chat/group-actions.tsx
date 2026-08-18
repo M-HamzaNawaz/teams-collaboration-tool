@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { GroupRow } from '@/lib/types'
 import { useEscape } from '@/lib/ui/dismiss'
+import { HoldButton } from '@/lib/ui/hold-button'
 import { ArchiveIcon, LoaderIcon } from '@/lib/ui/icons'
 
 /** Turning arc shown inside a busy confirm button. */
@@ -178,19 +179,18 @@ export function GroupActions(props: {
               >
                 Cancel
               </button>
-              <button
-                onClick={archive}
-                disabled={busy}
-                className="btn btn-primary flex-1"
-              >
-                {busy ? (
-                  <>
-                    <Spinner /> Archiving…
-                  </>
-                ) : (
-                  'Yes, archive it'
-                )}
-              </button>
+              {busy ? (
+                <button disabled className="btn btn-primary flex-1">
+                  <Spinner /> Archiving…
+                </button>
+              ) : (
+                <HoldButton
+                  onComplete={archive}
+                  className="btn btn-primary flex-1"
+                >
+                  Hold to archive
+                </HoldButton>
+              )}
             </div>
           </div>
         </div>
@@ -235,19 +235,20 @@ export function GroupActions(props: {
               >
                 Cancel
               </button>
-              <button
-                onClick={destroy}
-                disabled={busy || typed !== props.group.name}
-                className="btn btn-danger flex-1"
-              >
-                {busy ? (
-                  <>
-                    <Spinner /> Deleting…
-                  </>
-                ) : (
-                  'Delete permanently'
-                )}
-              </button>
+              {busy ? (
+                <button disabled className="btn btn-danger flex-1">
+                  <Spinner /> Deleting…
+                </button>
+              ) : (
+                <HoldButton
+                  onComplete={destroy}
+                  disabled={typed !== props.group.name}
+                  fillClassName="bg-black/20"
+                  className="btn btn-danger flex-1"
+                >
+                  Hold to delete
+                </HoldButton>
+              )}
             </div>
           </div>
         </div>
