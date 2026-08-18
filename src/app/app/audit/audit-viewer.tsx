@@ -8,6 +8,7 @@ import { PersonMark } from '@/lib/ui/avatar'
 import { prefersReducedMotion } from '@/lib/ui/dismiss'
 import { DownloadIcon, LockIcon } from '@/lib/ui/icons'
 import { PageHeader } from '@/lib/ui/page-header'
+import { SelectMenu } from '@/lib/ui/select-menu'
 
 /**
  * Audit viewer (M9-02): filters compose, payloads expand, CSV exports.
@@ -206,20 +207,18 @@ export function AuditViewer(props: {
 
       {/* Filters (compose) — 1 / 1.4 / 1 */}
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1.4fr_1fr]">
-        <select
+        <SelectMenu
           value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          aria-label="Filter by group"
-          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-        >
-          <option value="">All groups</option>
-          {props.groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-              {g.status !== 'active' ? ` (${g.status})` : ''}
-            </option>
-          ))}
-        </select>
+          onChange={setGroupId}
+          ariaLabel="Filter by group"
+          options={[
+            { value: '', label: 'All groups' },
+            ...props.groups.map((g) => ({
+              value: g.id,
+              label: g.name + (g.status !== 'active' ? ` (${g.status})` : ''),
+            })),
+          ]}
+        />
         <input
           value={actorName}
           onChange={(e) => setActorName(e.target.value)}
@@ -227,19 +226,15 @@ export function AuditViewer(props: {
           placeholder="Filter by member name…"
           className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-teal-d"
         />
-        <select
+        <SelectMenu
           value={eventType}
-          onChange={(e) => setEventType(e.target.value)}
-          aria-label="Filter by event type"
-          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-        >
-          <option value="">All events</option>
-          {EVENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}.*
-            </option>
-          ))}
-        </select>
+          onChange={setEventType}
+          ariaLabel="Filter by event type"
+          options={[
+            { value: '', label: 'All events' },
+            ...EVENT_TYPES.map((t) => ({ value: t, label: `${t}.*` })),
+          ]}
+        />
       </div>
 
       {loadError && (
@@ -312,18 +307,22 @@ export function AuditViewer(props: {
 
       {/* Pager */}
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-sm">
-        <label className="flex items-center gap-2 text-muted">
+        <span className="flex items-center gap-2 text-muted">
           Rows
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            className="rounded-lg border border-border bg-surface px-2 py-1 font-mono text-sm tabular-nums text-foreground"
-          >
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-        </label>
+          <SelectMenu
+            value={String(pageSize)}
+            onChange={(v) => setPageSize(Number(v))}
+            ariaLabel="Rows per page"
+            compact
+            direction="up"
+            className="w-20 text-foreground"
+            options={[
+              { value: '25', label: '25' },
+              { value: '50', label: '50' },
+              { value: '100', label: '100' },
+            ]}
+          />
+        </span>
         <span className="font-mono text-xs tabular-nums text-muted">
           Page {pageIndex + 1}
           {entries?.length ? ` · ${entries.length} entries` : ''}
