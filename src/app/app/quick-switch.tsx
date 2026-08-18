@@ -108,7 +108,7 @@ export function QuickSwitch(props: {
               if (e.key === 'Enter') go(targets[index])
             }}
             placeholder="Jump to a page or group…"
-            className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted"
+            className="palette-input w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted"
           />
           <span className="rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted">
             esc

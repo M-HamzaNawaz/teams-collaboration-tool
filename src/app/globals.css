@@ -492,6 +492,15 @@ body {
   outline: none;
   box-shadow: none;
 }
+
+/* The ⌘K palette input fills the card header and opens pre-focused — the
+   global ring drew a floating box mid-card. The caret and header row carry
+   the focus affordance; results keep the ring for Tab users. */
+.palette-input:focus-visible,
+.palette-input:focus {
+  outline: none;
+  box-shadow: none;
+}
 .composer-editor:empty::before,
 .composer-editor:has(> br:only-child)::before {
   content: attr(data-placeholder);
