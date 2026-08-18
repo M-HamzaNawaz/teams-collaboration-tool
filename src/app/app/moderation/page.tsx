@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth/session'
+import { buildModerationQueue } from '@/lib/moderation/queue'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 import { ModerationQueue } from './moderation-queue'
@@ -39,6 +40,11 @@ export default async function ModerationPage() {
     )
   }
 
+  // Build the first queue snapshot HERE so the client paints cards on
+  // arrival — the route skeleton is the only loading state (no second
+  // client-side shimmer; same double-skeleton fix as the chat page).
+  const initial = await buildModerationQueue(session)
+
   return (
     <ModerationQueue
       workspaceId={session.profile.workspace_id}
@@ -47,6 +53,7 @@ export default async function ModerationPage() {
         displayName: session.profile.display_name,
         isAdmin,
       }}
+      initialQueue={initial.ok ? initial.queue : undefined}
     />
   )
 }

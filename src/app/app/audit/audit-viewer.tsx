@@ -36,9 +36,17 @@ const EVENT_TYPES = [
 
 export function AuditViewer(props: {
   groups: Pick<GroupRow, 'id' | 'name' | 'status'>[]
+  /** Server-fetched first page — paints instantly, no second skeleton. */
+  initialEntries?: Entry[]
+  initialNextBefore?: number | null
+  initialCheck?: ChainCheck | null
 }) {
-  const [entries, setEntries] = useState<Entry[] | null>(null)
-  const [nextBefore, setNextBefore] = useState<number | null>(null)
+  const [entries, setEntries] = useState<Entry[] | null>(
+    props.initialEntries ?? null,
+  )
+  const [nextBefore, setNextBefore] = useState<number | null>(
+    props.initialNextBefore ?? null,
+  )
   // Keyset pagination: cursors[i] is the `before` value that produced page
   // i, so Previous is a pop rather than an offset (stable while the
   // append-only log keeps growing underneath).
@@ -46,7 +54,9 @@ export function AuditViewer(props: {
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(50)
   const [expanded, setExpanded] = useState<number | null>(null)
-  const [check, setCheck] = useState<ChainCheck | null>(null)
+  const [check, setCheck] = useState<ChainCheck | null>(
+    props.initialCheck ?? null,
+  )
   const [loadError, setLoadError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
   const [groupId, setGroupId] = useState('')
@@ -81,8 +91,15 @@ export function AuditViewer(props: {
     [groupId, actorName, eventType, pageSize],
   )
 
-  // Changing a filter or the page size starts a fresh first page.
+  // Changing a filter or the page size starts a fresh first page. The
+  // FIRST run is skipped when the server already provided that page —
+  // re-fetching it would flash the skeleton over real rows.
+  const skipInitialLoad = useRef(props.initialEntries !== undefined)
   useEffect(() => {
+    if (skipInitialLoad.current) {
+      skipInitialLoad.current = false
+      return
+    }
     const clear = setTimeout(() => {
       setEntries(null)
       setCursors([null])
@@ -112,12 +129,13 @@ export function AuditViewer(props: {
   }
 
   useEffect(() => {
+    if (props.initialCheck !== undefined) return // server already provided it
     queueMicrotask(() => {
       void fetch('/api/audit/verify')
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => d && setCheck((d as { check: ChainCheck | null }).check))
     })
-  }, [])
+  }, [props.initialCheck])
 
   useEffect(() => {
     if (!entries?.length || !listRef.current || prefersReducedMotion()) return

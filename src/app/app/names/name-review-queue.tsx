@@ -32,9 +32,14 @@ type RequestItem = {
   createdAt: string
 }
 
-export function NameReviewQueue() {
+export function NameReviewQueue(props: {
+  /** Server-built first snapshot — paints instantly, no second skeleton. */
+  initialQueue?: RequestItem[]
+}) {
   const router = useRouter()
-  const [queue, setQueue] = useState<RequestItem[] | null>(null)
+  const [queue, setQueue] = useState<RequestItem[] | null>(
+    props.initialQueue ?? null,
+  )
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)

@@ -38,9 +38,13 @@ type QueueItem = {
 export function ModerationQueue(props: {
   workspaceId: string
   me: { userId: string; displayName: string; isAdmin: boolean }
+  /** Server-built first snapshot — paints instantly, no second skeleton. */
+  initialQueue?: QueueItem[]
 }) {
   const router = useRouter()
-  const [queue, setQueue] = useState<QueueItem[] | null>(null)
+  const [queue, setQueue] = useState<QueueItem[] | null>(
+    props.initialQueue ?? null,
+  )
   const [loadError, setLoadError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)

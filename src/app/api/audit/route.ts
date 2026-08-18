@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { getSession } from '@/lib/auth/session'
 import { authorize } from '@/lib/authz/authorize'
+import { queryAuditPage } from '@/lib/audit/query'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -52,33 +53,9 @@ export async function GET(request: Request) {
     return Response.json({ error: authz.reason }, { status: authz.status })
   }
 
-  let query = service
-    .from('audit_log')
-    .select(
-      'id, actor_id, actor_display_name, group_id, group_name, event_type, payload_jsonb, created_at',
-    )
-    .eq('workspace_id', workspaceId)
-    .order('id', { ascending: false })
-    .limit(q.limit)
-
-  if (q.groupId) query = query.eq('group_id', q.groupId)
-  if (q.actorName) query = query.ilike('actor_display_name', `%${q.actorName}%`)
-  if (q.eventType) query = query.ilike('event_type', `${q.eventType}%`)
-  if (q.from) query = query.gte('created_at', q.from)
-  if (q.to) query = query.lte('created_at', q.to)
-  if (q.before) query = query.lt('id', q.before)
-
-  const { data, error } = await query
-  if (error) {
+  const result = await queryAuditPage(service, workspaceId, q)
+  if (!result) {
     return Response.json({ error: 'audit query failed' }, { status: 500 })
   }
-
-  const entries = data ?? []
-  return Response.json({
-    entries,
-    nextBefore:
-      entries.length === q.limit
-        ? (entries[entries.length - 1].id as number)
-        : null,
-  })
+  return Response.json(result)
 }

@@ -4,6 +4,7 @@ import { audit } from '@/lib/audit/audit'
 import { getSession } from '@/lib/auth/session'
 import { authorize } from '@/lib/authz/authorize'
 import { detect, type DetectionConfig } from '@/lib/detection'
+import { buildNameQueue } from '@/lib/names/queue'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -127,42 +128,9 @@ export async function GET() {
     return Response.json({ error: authz.reason }, { status: authz.status })
   }
 
-  // Queue with the requester's current identity joined in — the admin
-  // decides between old and new, so show both. Findings ship as stored.
-  const { data, error } = await service
-    .from('name_change_requests')
-    .select('id, user_id, requested_name, findings_jsonb, status, created_at')
-    .eq('workspace_id', workspaceId)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true })
-
-  if (error) {
+  const requests = await buildNameQueue(workspaceId)
+  if (requests === null) {
     return Response.json({ error: 'failed to list requests' }, { status: 500 })
   }
-
-  const requests = data ?? []
-  const userIds = [...new Set(requests.map((r) => r.user_id as string))]
-  const { data: profiles } = userIds.length
-    ? await service
-        .from('profiles')
-        .select('user_id, display_name')
-        .eq('workspace_id', workspaceId)
-        .in('user_id', userIds)
-    : { data: [] }
-
-  const nameByUser = new Map(
-    (profiles ?? []).map((p) => [p.user_id as string, p.display_name as string]),
-  )
-
-  return Response.json({
-    requests: requests.map((r) => ({
-      id: r.id,
-      userId: r.user_id,
-      currentName: nameByUser.get(r.user_id as string) ?? '',
-      requestedName: r.requested_name,
-      findings: r.findings_jsonb,
-      flagged: Array.isArray(r.findings_jsonb) && r.findings_jsonb.length > 0,
-      createdAt: r.created_at,
-    })),
-  })
+  return Response.json({ requests })
 }

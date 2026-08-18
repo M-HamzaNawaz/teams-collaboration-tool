@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth/session'
+import { buildNameQueue } from '@/lib/names/queue'
 
 import { NameReviewQueue } from './name-review-queue'
 
@@ -23,5 +24,9 @@ export default async function NamesPage() {
     )
   }
 
-  return <NameReviewQueue />
+  // Seed the client with the pending queue so cards paint on arrival —
+  // no second client-side skeleton (the chat page's double-skeleton fix).
+  const initial = await buildNameQueue(session.profile.workspace_id)
+
+  return <NameReviewQueue initialQueue={initial ?? undefined} />
 }
