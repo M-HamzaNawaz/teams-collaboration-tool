@@ -324,6 +324,21 @@ export const XIcon = () => (
   </Icon>
 )
 
+/** Spinner arc — wrap in a span with `animate-spin` to make it turn. */
+export const LoaderIcon = () => (
+  <Icon size={16}>
+    <path d="M21 12a9 9 0 1 1-6.2-8.56" />
+  </Icon>
+)
+
+export const ArchiveIcon = () => (
+  <Icon size={16}>
+    <rect x="2" y="3" width="20" height="5" rx="1" />
+    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+    <path d="M10 12h4" />
+  </Icon>
+)
+
 export const AlertTriangleIcon = () => (
   <Icon size={16}>
     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
