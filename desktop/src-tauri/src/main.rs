@@ -9,8 +9,10 @@
 
 use tauri::webview::DownloadEvent;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_updater::UpdaterExt;
 
 const APP_URL: &str = "https://teams-collaboration-tool-bwfb.vercel.app";
 
@@ -39,6 +41,39 @@ const INIT_JS: &str = r#"
 })();
 "#;
 
+/// 15 seconds after launch, ask the releases feed whether a newer shell
+/// exists. If so: one native dialog; "Install now" downloads, verifies the
+/// signature against the baked-in public key, installs, and restarts.
+/// "Later" stays quiet until the next launch. Any network or feed error is
+/// silently ignored — an update check must never bother a working app.
+async fn check_for_updates(app: tauri::AppHandle) {
+    let Ok(updater) = app.updater() else { return };
+    let Ok(Some(update)) = updater.check().await else {
+        return;
+    };
+    let version = update.version.clone();
+    let app_for_restart = app.clone();
+    app.dialog()
+        .message(format!(
+            "Confide {version} is ready to install.\nThe app restarts when it finishes."
+        ))
+        .title("Update available")
+        .buttons(MessageDialogButtons::OkCancelCustom(
+            "Install now".to_string(),
+            "Later".to_string(),
+        ))
+        .show(move |install| {
+            if !install {
+                return;
+            }
+            tauri::async_runtime::spawn(async move {
+                if update.download_and_install(|_, _| {}, || {}).await.is_ok() {
+                    app_for_restart.restart();
+                }
+            });
+        });
+}
+
 fn main() {
     tauri::Builder::default()
         // Must be first: a second launch hands its argv to the running
@@ -53,7 +88,15 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            let update_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(15));
+                tauri::async_runtime::block_on(check_for_updates(update_handle));
+            });
+
             let nav_handle = app.handle().clone();
             let dl_handle = app.handle().clone();
 

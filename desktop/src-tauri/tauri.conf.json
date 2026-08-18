@@ -27,6 +27,15 @@
     ],
     "category": "Productivity",
     "shortDescription": "Confide \u2014 team collaboration",
-    "longDescription": "Team and client chat with built-in contact-info protection, moderation, and a tamper-proof audit log."
+    "longDescription": "Team and client chat with built-in contact-info protection, moderation, and a tamper-proof audit log.",
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1MjM5QTg3NzY0NzBDNUYKUldSZkRFZDJoNW9qbFNGMUExcDBCTHVudVNlZUxJMFRKRlg1NndvQU5MNzFueHd4ck51bnpkR3EK",
+      "endpoints": [
+        "https://github.com/m1abdullahh/confide-releases/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
