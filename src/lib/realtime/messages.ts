@@ -37,6 +37,8 @@ export type RealtimeMessage = {
   status: MessageStatus
   created_at: string
   delivered_at: string | null
+  /** WhatsApp-style reply target (delivered message in the same group). */
+  reply_to_id?: string | null
 }
 
 /**

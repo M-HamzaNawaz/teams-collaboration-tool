@@ -324,6 +324,13 @@ export const XIcon = () => (
   </Icon>
 )
 
+export const ReplyIcon = () => (
+  <Icon size={14}>
+    <polyline points="9 17 4 12 9 7" />
+    <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+  </Icon>
+)
+
 /** Spinner arc — wrap in a span with `animate-spin` to make it turn. */
 export const LoaderIcon = () => (
   <Icon size={16}>

@@ -32,9 +32,11 @@ import {
   DownloadIcon,
   LockIcon,
   PaperclipIcon,
+  ReplyIcon,
   UsersIcon,
+  XIcon,
 } from '@/lib/ui/icons'
-import { FormattedBody } from '@/lib/ui/message-format'
+import { FormattedBody, stripFormatting } from '@/lib/ui/message-format'
 
 import { RichComposer } from './rich-composer'
 
@@ -125,9 +127,16 @@ export function ChatPane(props: {
   const [connected, setConnected] = useState(true)
   const [online, setOnline] = useState(true)
   const [showMembers, setShowMembers] = useState(false)
+  // WhatsApp-style reply: the delivered message the next send answers.
+  const [replyTo, setReplyTo] = useState<ClientMessage | null>(null)
   // I3: an archived group is read-only for everyone, admins included. The
   // API enforces it; the composer must not pretend otherwise.
   const archived = props.group.status !== 'active'
+
+  // A reply drafted in one group must not attach to a send in another.
+  useEffect(() => {
+    queueMicrotask(() => setReplyTo(null))
+  }, [props.group.id])
 
   // Message-pop sound rides the notifications toggle — one switch governs
   // every sound the app makes. Ref-mirrored for the realtime callback.
@@ -521,13 +530,17 @@ export function ChatPane(props: {
    * into the void.
    */
   const deliver = useCallback(
-    async (tempId: string, body: string) => {
+    async (tempId: string, body: string, replyToId?: string) => {
       let response: Response
       try {
         response = await fetch('/api/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ groupId: props.group.id, body }),
+          body: JSON.stringify({
+            groupId: props.group.id,
+            body,
+            ...(replyToId ? { replyToId } : {}),
+          }),
         })
       } catch {
         // Network down — keep the bubble, mark it retryable.
@@ -552,6 +565,7 @@ export function ChatPane(props: {
           status: message.status as ClientMessage['status'],
           created_at: message.createdAt,
           delivered_at: null,
+          reply_to_id: replyToId ?? null,
         })
         if (message.status === 'pending') {
           setNotice(
@@ -579,6 +593,9 @@ export function ChatPane(props: {
     setNotice(null)
     stickToBottom.current = true
 
+    const replyToId = replyTo?.id
+    setReplyTo(null)
+
     const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`
     upsert({
       id: tempId,
@@ -589,9 +606,10 @@ export function ChatPane(props: {
       status: 'sending',
       created_at: new Date().toISOString(),
       delivered_at: null,
+      reply_to_id: replyToId ?? null,
     })
 
-    void deliver(tempId, body).finally(() => setSending(false))
+    void deliver(tempId, body, replyToId).finally(() => setSending(false))
   }
 
   const clearProgress = useCallback((tempId: string) => {
@@ -733,6 +751,26 @@ export function ChatPane(props: {
     }
   }
 
+  /** Scroll to a quoted message, loading older pages if it's not in yet. */
+  async function jumpToMessage(id: string) {
+    for (let i = 0; i < 12; i++) {
+      const target = scrollRef.current?.querySelector(`[data-mid="${id}"]`)
+      if (target) {
+        target.scrollIntoView({
+          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+          block: 'center',
+        })
+        target.classList.remove('quote-flash')
+        void (target as HTMLElement).offsetWidth // restart the animation
+        target.classList.add('quote-flash')
+        setTimeout(() => target.classList.remove('quote-flash'), 1600)
+        return
+      }
+      if (!hasMoreRef.current) return
+      await loadOlder()
+    }
+  }
+
   function retry(message: ClientMessage) {
     if (message.status !== 'failed') return
     setNotice(null)
@@ -760,7 +798,7 @@ export function ChatPane(props: {
         m.id === message.id ? { ...m, status: 'sending' as const } : m,
       ),
     )
-    void deliver(message.id, message.body)
+    void deliver(message.id, message.body, message.reply_to_id ?? undefined)
   }
 
   // ── Offline queue flush (M5-07): when connectivity returns, resend every
@@ -785,7 +823,7 @@ export function ChatPane(props: {
     )
     void (async () => {
       for (const message of queued) {
-        await deliver(message.id, message.body)
+        await deliver(message.id, message.body, message.reply_to_id ?? undefined)
       }
     })()
   }, [online, deliver])
@@ -900,6 +938,9 @@ export function ChatPane(props: {
                 const separator = dayLabel(message.created_at, prev?.created_at)
                 const firstOfRun =
                   !prev || prev.sender_id !== message.sender_id || !!separator
+                const quoted = message.reply_to_id
+                  ? (messages.find((m) => m.id === message.reply_to_id) ?? null)
+                  : null
                 return (
                   <li key={message.id}>
                     {separator && (
@@ -914,8 +955,18 @@ export function ChatPane(props: {
                     <div
                       data-anim="bubble"
                       data-mid={message.id}
-                      className={`flex ${own ? 'justify-end' : 'justify-start'}`}
+                      className={`group flex items-center gap-1 rounded-xl ${own ? 'justify-end' : 'justify-start'}`}
                     >
+                      {own && message.status === 'delivered' && (
+                        <button
+                          type="button"
+                          aria-label="Reply"
+                          onClick={() => setReplyTo(message)}
+                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-60 transition-opacity hover:bg-surface-2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                        >
+                          <ReplyIcon />
+                        </button>
+                      )}
                       <div
                         className={`min-w-0 max-w-[85%] md:max-w-[70%] ${
                           firstOfRun && !separator ? 'mt-3' : ''
@@ -940,6 +991,29 @@ export function ChatPane(props: {
                               : ''
                           } ${message.status === 'blocked' ? 'opacity-70' : ''}`}
                         >
+                          {message.reply_to_id && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                void jumpToMessage(message.reply_to_id!)
+                              }}
+                              className="mb-1.5 block w-full rounded-lg border-l-2 border-teal-d bg-surface-2/70 px-2.5 py-1.5 text-left hover:bg-surface-2"
+                            >
+                              <span className="block text-[11px] font-semibold text-teal-t">
+                                {quoted
+                                  ? quoted.sender_id === props.me.userId
+                                    ? 'You'
+                                    : (names.get(quoted.sender_id) ?? 'Member')
+                                  : 'Earlier message'}
+                              </span>
+                              {quoted && (
+                                <span className="block truncate text-xs text-muted">
+                                  {stripFormatting(quoted.body).slice(0, 120)}
+                                </span>
+                              )}
+                            </button>
+                          )}
                           {uploadProgress.has(message.id) ? (
                             // Live upload: filename + a teal progress bar.
                             <div className="min-w-45">
@@ -1084,6 +1158,16 @@ export function ChatPane(props: {
                           </p>
                         </div>
                       </div>
+                      {!own && message.status === 'delivered' && (
+                        <button
+                          type="button"
+                          aria-label="Reply"
+                          onClick={() => setReplyTo(message)}
+                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-60 transition-opacity hover:bg-surface-2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                        >
+                          <ReplyIcon />
+                        </button>
+                      )}
                     </div>
                   </li>
                 )
@@ -1123,6 +1207,32 @@ export function ChatPane(props: {
           post here — not even an admin.
         </div>
       ) : (
+        <>
+          {replyTo && (
+            <div className="border-t border-border bg-surface px-4 pt-2.5">
+              <div className="flex items-center gap-2 rounded-lg border-l-2 border-teal-d bg-surface-2/70 px-3 py-1.5">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[11px] font-semibold text-teal-t">
+                    Replying to{' '}
+                    {replyTo.sender_id === props.me.userId
+                      ? 'yourself'
+                      : (names.get(replyTo.sender_id) ?? 'Member')}
+                  </span>
+                  <span className="block truncate text-xs text-muted">
+                    {stripFormatting(replyTo.body).slice(0, 140)}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  aria-label="Cancel reply"
+                  onClick={() => setReplyTo(null)}
+                  className="shrink-0 rounded-lg p-1 text-muted hover:bg-surface-2"
+                >
+                  <XIcon />
+                </button>
+              </div>
+            </div>
+          )}
         <RichComposer
           placeholder={`Message ${props.group.name}…`}
           sending={sending}
@@ -1142,6 +1252,7 @@ export function ChatPane(props: {
           }}
           onAttach={(file) => void uploadFile(file)}
         />
+        </>
       )}
     </div>
   )

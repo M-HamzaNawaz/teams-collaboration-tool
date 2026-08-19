@@ -483,6 +483,16 @@ body {
   transform: translateY(-50%) translateX(0);
 }
 
+/* Jump-to-quoted-message: the target bubble pulses once so the eye
+   lands on it after the scroll. */
+.quote-flash {
+  animation: quote-flash 1.4s ease-out;
+}
+@keyframes quote-flash {
+  0%, 60% { background-color: var(--sel); }
+  100% { background-color: transparent; }
+}
+
 /* ── WYSIWYG composer ─────────────────────────────────────────────── */
 /* The composer CONTAINER shows focus (focus-within border) — the inner
    editable must not stack the global focus ring on top of it, which drew

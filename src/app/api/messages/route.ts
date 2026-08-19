@@ -29,6 +29,8 @@ import { serviceClient } from '@/lib/supabase/service-client'
 const bodySchema = z.object({
   groupId: z.uuid(),
   body: z.string().min(1).max(10_000),
+  /** WhatsApp-style reply: the delivered message this one answers. */
+  replyToId: z.uuid().optional(),
 })
 
 /** 30 messages per minute per sender — chat-speed, flood-hostile. */
@@ -52,7 +54,7 @@ export async function POST(request: Request) {
       { status: 400 },
     )
   }
-  const { groupId, body } = parsed.data
+  const { groupId, body, replyToId } = parsed.data
 
   const service = serviceClient()
   const authz = await authorize(service, session.userId, {
@@ -62,6 +64,23 @@ export async function POST(request: Request) {
   })
   if (!authz.ok) {
     return Response.json({ error: authz.reason }, { status: authz.status })
+  }
+
+  // A reply may only point at a DELIVERED message in the SAME group —
+  // quoting is rendered from the original row client-side, so this is the
+  // wall that keeps held content unquotable.
+  if (replyToId) {
+    const { data: target } = await service
+      .from('messages')
+      .select('id, group_id, status')
+      .eq('id', replyToId)
+      .maybeSingle()
+    if (!target || target.group_id !== groupId || target.status !== 'delivered') {
+      return Response.json(
+        { error: 'cannot reply to that message' },
+        { status: 400 },
+      )
+    }
   }
 
   // The line the product stands on — run twice when formatting marks are
@@ -108,6 +127,7 @@ export async function POST(request: Request) {
     p_body: body,
     p_action: verdict.action,
     p_findings: verdict.findings,
+    p_reply_to: replyToId ?? null,
   })
 
   if (error) {
