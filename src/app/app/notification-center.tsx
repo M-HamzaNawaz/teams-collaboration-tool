@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 
 import { isDesktopShell, shellNotify } from '@/lib/desktop-shell'
 import { useDesktopNotifications } from '@/lib/notifications/desktop'
+import { playNotificationSound } from '@/lib/notifications/sound'
 import {
   subscribeToGroupMessages,
   type RealtimeMessage,
@@ -72,6 +73,7 @@ export function NotificationCenter(props: {
 
       const who = senderName.get(message.sender_id)
       const where = groupName.get(message.group_id) ?? 'Confide'
+      playNotificationSound() // ding rides the same gates as the toast
       // Desktop shell: native notification via the plugin — the webview's
       // Notification API is a no-op there. (Click-to-open is web-only.)
       if (isDesktopShell()) {

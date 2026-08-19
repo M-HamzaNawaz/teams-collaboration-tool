@@ -50,14 +50,25 @@ export type SubscriptionStatus =
   | 'CLOSED'
   | 'CHANNEL_ERROR'
 
+/**
+ * Unique per-call suffix: supabase-js hands back the SAME channel object
+ * for a repeated topic, and adding postgres_changes listeners to an
+ * already-subscribed channel throws. The chat pane and the notification
+ * center both subscribe to the caller's groups, so topics must never
+ * collide — the suffix is client-side naming only, the db filter decides
+ * what arrives.
+ */
+let subscriberSeq = 0
+
 export function subscribeToGroupMessages(
   client: SupabaseClient,
   groupId: string,
   onMessage: (message: RealtimeMessage) => void,
   onStatus?: (status: SubscriptionStatus) => void,
 ): RealtimeChannel {
+  subscriberSeq += 1
   return client
-    .channel(`messages:${groupId}`)
+    .channel(`messages:${groupId}:${subscriberSeq}`)
     .on(
       'postgres_changes',
       {

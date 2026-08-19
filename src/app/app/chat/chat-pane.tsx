@@ -11,6 +11,8 @@ import {
 } from 'react'
 
 import { openDownload } from '@/lib/desktop-shell'
+import { useDesktopNotifications } from '@/lib/notifications/desktop'
+import { playMessageSound } from '@/lib/notifications/sound'
 import {
   subscribeToGroupMessages,
   type RealtimeMessage,
@@ -127,6 +129,14 @@ export function ChatPane(props: {
   // API enforces it; the composer must not pretend otherwise.
   const archived = props.group.status !== 'active'
 
+  // Message-pop sound rides the notifications toggle — one switch governs
+  // every sound the app makes. Ref-mirrored for the realtime callback.
+  const { ready: soundReady } = useDesktopNotifications()
+  const soundReadyRef = useRef(soundReady)
+  useEffect(() => {
+    soundReadyRef.current = soundReady
+  })
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const paneRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
@@ -218,6 +228,17 @@ export function ChatPane(props: {
     // A message arriving over the wire may carry an attachment we don't
     // know yet — debounce a files refetch behind every realtime event.
     const onWireMessage = (message: RealtimeMessage) => {
+      // Soft pop for the case notifications skip on purpose: someone
+      // else's message landing while you're LOOKING at this chat.
+      if (
+        soundReadyRef.current &&
+        message.status === 'delivered' &&
+        message.sender_id !== props.me.userId &&
+        document.visibilityState === 'visible' &&
+        document.hasFocus()
+      ) {
+        playMessageSound()
+      }
       upsert(message)
       if (attachmentsTimer.current) clearTimeout(attachmentsTimer.current)
       attachmentsTimer.current = setTimeout(() => void refetchAttachments(), 400)
