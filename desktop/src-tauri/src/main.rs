@@ -7,6 +7,9 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
+
 use tauri::webview::DownloadEvent;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
@@ -41,18 +44,33 @@ const INIT_JS: &str = r#"
 })();
 "#;
 
-/// 15 seconds after launch, ask the releases feed whether a newer shell
-/// exists. If so: one native dialog; "Install now" downloads, verifies the
-/// signature against the baked-in public key, installs, and restarts.
-/// "Later" stays quiet until the next launch. Any network or feed error is
-/// silently ignored — an update check must never bother a working app.
+/// Update checks: 15 seconds after launch, then every 5 minutes while the app
+/// stays open — a release published mid-day reaches running apps too. If a
+/// newer shell exists: one native dialog; "Install now" downloads, verifies
+/// the signature against the baked-in public key, installs, and restarts.
+/// "Later" mutes THAT version until the next launch (a newer one still
+/// prompts). Any network or feed error is silently ignored — an update
+/// check must never bother a working app.
+static PROMPT_OPEN: AtomicBool = AtomicBool::new(false);
+static DECLINED_VERSION: Mutex<Option<String>> = Mutex::new(None);
+
 async fn check_for_updates(app: tauri::AppHandle) {
+    if PROMPT_OPEN.load(Ordering::SeqCst) {
+        return; // a dialog is already on screen — never stack another
+    }
     let Ok(updater) = app.updater() else { return };
     let Ok(Some(update)) = updater.check().await else {
         return;
     };
     let version = update.version.clone();
+    if let Ok(declined) = DECLINED_VERSION.lock() {
+        if declined.as_deref() == Some(version.as_str()) {
+            return; // the user said "Later" to exactly this version
+        }
+    }
+    PROMPT_OPEN.store(true, Ordering::SeqCst);
     let app_for_restart = app.clone();
+    let declined_version = version.clone();
     app.dialog()
         .message(format!(
             "Confide {version} is ready to install.\nThe app restarts when it finishes."
@@ -63,7 +81,11 @@ async fn check_for_updates(app: tauri::AppHandle) {
             "Later".to_string(),
         ))
         .show(move |install| {
+            PROMPT_OPEN.store(false, Ordering::SeqCst);
             if !install {
+                if let Ok(mut declined) = DECLINED_VERSION.lock() {
+                    *declined = Some(declined_version);
+                }
                 return;
             }
             tauri::async_runtime::spawn(async move {
@@ -93,8 +115,16 @@ fn main() {
         .setup(|app| {
             let update_handle = app.handle().clone();
             std::thread::spawn(move || {
+                // First check shortly after launch, then every 5 minutes
+                // while the app stays open — a release reaches running
+                // apps within minutes, not on next restart.
                 std::thread::sleep(std::time::Duration::from_secs(15));
-                tauri::async_runtime::block_on(check_for_updates(update_handle));
+                loop {
+                    tauri::async_runtime::block_on(check_for_updates(
+                        update_handle.clone(),
+                    ));
+                    std::thread::sleep(std::time::Duration::from_secs(5 * 60));
+                }
             });
 
             let nav_handle = app.handle().clone();
