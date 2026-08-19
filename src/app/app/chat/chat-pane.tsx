@@ -962,7 +962,7 @@ export function ChatPane(props: {
                           type="button"
                           aria-label="Reply"
                           onClick={() => setReplyTo(message)}
-                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-60 transition-opacity hover:bg-surface-2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-surface-2 [@media(hover:none)]:opacity-60"
                         >
                           <ReplyIcon />
                         </button>
@@ -1163,7 +1163,7 @@ export function ChatPane(props: {
                           type="button"
                           aria-label="Reply"
                           onClick={() => setReplyTo(message)}
-                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-60 transition-opacity hover:bg-surface-2 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                          className="shrink-0 rounded-lg p-1.5 text-muted opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-surface-2 [@media(hover:none)]:opacity-60"
                         >
                           <ReplyIcon />
                         </button>
