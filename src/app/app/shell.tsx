@@ -16,6 +16,7 @@ import {
   UserPenIcon,
 } from '@/lib/ui/icons'
 
+import { AutoRefresh } from './auto-refresh'
 import { Dock, type DockItem } from './dock'
 import { NotificationCenter } from './notification-center'
 import { QuickSwitch } from './quick-switch'
@@ -199,6 +200,7 @@ export function AppShell(props: {
 
       {/* Desktop notifications — behaviour only, listens across all groups */}
       <NotificationCenter me={{ userId: props.me.userId }} groups={props.groups} />
+      <AutoRefresh />
 
       {/* First-login: choose a theme (dismiss = keep whatever is applied) */}
       {pickingTheme && (
