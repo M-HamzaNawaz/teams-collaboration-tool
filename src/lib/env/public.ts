@@ -16,12 +16,15 @@ const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url({ error: 'must be a valid URL' }),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'must not be empty'),
   NEXT_PUBLIC_APP_URL: z.url({ error: 'must be a valid URL' }),
+  // Web push: optional — the subscribe UI simply stays dormant without it.
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 })
 
 const parsed = publicSchema.safeParse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
 })
 
 if (!parsed.success) {

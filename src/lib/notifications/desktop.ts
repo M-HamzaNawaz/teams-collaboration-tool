@@ -6,6 +6,7 @@ import {
   isDesktopShell,
   shellRequestNotifyPermission,
 } from '@/lib/desktop-shell'
+import { disablePush, enablePush } from '@/lib/push/register'
 
 /**
  * Desktop-notification preference — permission (a browser fact) plus an
@@ -42,7 +43,11 @@ export function useDesktopNotifications() {
         return
       }
       setPermission(Notification.permission as NotifyPermission)
-      setEnabled(localStorage.getItem(KEY) === 'on')
+      const on = localStorage.getItem(KEY) === 'on'
+      setEnabled(on)
+      // Tier 2: an enabled browser keeps its push subscription registered
+      // (idempotent) so closed/minimized windows still get notified.
+      if (on && Notification.permission === 'granted') void enablePush()
     })
     const sync = () => setEnabled(localStorage.getItem(KEY) === 'on')
     window.addEventListener(EVENT, sync)
@@ -78,6 +83,10 @@ export function useDesktopNotifications() {
     localStorage.setItem(KEY, next)
     setEnabled(next === 'on')
     window.dispatchEvent(new Event(EVENT))
+    // Tier 2 rides the same switch: on = this browser subscribes to web
+    // push (works minimized/closed), off = subscription dropped.
+    if (next === 'on') void enablePush()
+    else void disablePush()
   }, [])
 
   return {

@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { isDesktopShell, shellNotify } from '@/lib/desktop-shell'
 import { useDesktopNotifications } from '@/lib/notifications/desktop'
 import { playNotificationSound } from '@/lib/notifications/sound'
+import { isPushActive } from '@/lib/push/register'
 import {
   subscribeToGroupMessages,
   type RealtimeMessage,
@@ -83,6 +84,9 @@ export function NotificationCenter(props: {
         )
         return
       }
+      // Tier 2 active: the service worker shows this push even when the
+      // page sleeps — a second in-page banner would double-notify.
+      if (isPushActive()) return
       try {
         const note = new Notification(who ? `${who} · ${where}` : `New message · ${where}`, {
           body: message.body.slice(0, 140),

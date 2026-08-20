@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { getSession } from '@/lib/auth/session'
 import { authorize } from '@/lib/authz/authorize'
+import { sendGroupMessagePush } from '@/lib/push/send'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -48,7 +49,7 @@ export async function POST(
   // probes and unknown ids share one 404.
   const { data: message } = await service
     .from('messages')
-    .select('group_id, workspace_id, status')
+    .select('group_id, workspace_id, status, sender_id, body')
     .eq('id', messageId)
     .maybeSingle()
 
@@ -81,6 +82,17 @@ export async function POST(
       )
     }
     return Response.json({ error: 'resolution failed' }, { status: 500 })
+  }
+
+  // Approval IS delivery — now closed/minimized browsers hear about it.
+  if (parsed.data.decision === 'approved') {
+    void sendGroupMessagePush(service, {
+      workspaceId,
+      groupId: message.group_id as string,
+      messageId,
+      senderId: message.sender_id as string,
+      body: message.body as string,
+    })
   }
 
   return Response.json({ resolved: data })

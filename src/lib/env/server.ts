@@ -22,6 +22,10 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 
+  // Web push (Tier 2): optional so environments without the key boot fine —
+  // pushes silently no-op until both VAPID halves are configured.
+  VAPID_PRIVATE_KEY: z.string().optional(),
+
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),

@@ -9,6 +9,7 @@ import { stripFormatting } from '@/lib/ui/message-format'
 import { sendEmail } from '@/lib/email/send'
 import { publicEnv } from '@/lib/env/public'
 import { logError } from '@/lib/log'
+import { sendGroupMessagePush } from '@/lib/push/send'
 import { serviceClient } from '@/lib/supabase/service-client'
 
 /**
@@ -145,6 +146,18 @@ export async function POST(request: Request) {
     status: 'pending' | 'delivered'
     created_at: string
     delivered_at: string | null
+  }
+
+  // Tier 2: closed/minimized browsers hear about it too. Best-effort and
+  // ONLY for delivered messages — a held message pushes to nobody.
+  if (message.status === 'delivered') {
+    void sendGroupMessagePush(service, {
+      workspaceId,
+      groupId,
+      messageId: message.id,
+      senderId: session.userId,
+      body,
+    })
   }
 
   // Held → nudge admin dashboards now (M6-03 subscribes), and fall back to

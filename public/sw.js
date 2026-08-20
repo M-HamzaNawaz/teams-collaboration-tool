@@ -54,3 +54,44 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+/* ── Web push (Tier 2) ──────────────────────────────────────────────
+   The server sends an encrypted payload; showing a notification is
+   mandatory on push (Chrome shows a generic one otherwise). tag=groupId
+   collapses a burst from one group into a single banner. */
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    /* malformed payload — show the fallback below */
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Confide', {
+      body: data.body || 'New message',
+      tag: data.tag || 'confide',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { groupId: data.groupId || null },
+    }),
+  )
+})
+
+/* Click: focus an open Confide window and steer it to the group, or open
+   a fresh one. */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const groupId = event.notification.data && event.notification.data.groupId
+  const target = groupId ? `/app/chat?g=${groupId}` : '/app/chat'
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const win of wins) {
+        if (win.url.includes('/app')) {
+          win.focus()
+          return win.navigate(target)
+        }
+      }
+      return clients.openWindow(target)
+    }),
+  )
+})
