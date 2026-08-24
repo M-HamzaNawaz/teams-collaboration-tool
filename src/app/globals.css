@@ -421,6 +421,16 @@ body {
   background: transparent;
 }
 
+/* Scrolls, but shows no track. For strips that are meant to read as a
+   single row of controls — the composer's formatting bar on a phone —
+   where the 8px track above would add height and look like a defect. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Attention dot: "something is waiting", no number ──────────────
      The one deliberate red in the palette — the user asked for a quiet
      red dot, and a teal dot on a teal-active item would say nothing. ── */

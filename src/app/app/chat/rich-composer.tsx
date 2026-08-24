@@ -241,9 +241,12 @@ export function RichComposer(props: {
           style={{ gridTemplateRows: showToolbar ? '1fr' : '0fr' }}
         >
           <div className="min-h-0 overflow-hidden">
-          {/* flex-wrap: at phone width the row folds to two lines instead of
-              cutting icons off at the screen edge. */}
-          <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1 text-muted">
+          {/* One line that scrolls sideways on a phone. flex-wrap folded
+              these onto a second row and left `<>` and the code block
+              orphaned down there; now the last button sits half-cut at the
+              right edge, which is its own "keep going" cue. Desktop has the
+              width for the whole set, so it keeps the plain wrapping row. */}
+          <div className="no-scrollbar flex items-center gap-0.5 overflow-x-auto overscroll-x-contain border-b border-border px-2 py-1 text-muted sm:flex-wrap sm:overflow-x-visible">
             <ToolbarButton label="Bold (Ctrl+B)" active={active.bold} onClick={() => exec('bold')}>
               <BoldIcon />
             </ToolbarButton>
@@ -256,7 +259,7 @@ export function RichComposer(props: {
             <ToolbarButton label="Strikethrough" active={active.strikeThrough} onClick={() => exec('strikeThrough')}>
               <StrikethroughIcon />
             </ToolbarButton>
-            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="mx-1 h-4 w-px shrink-0 bg-border" />
             <ToolbarButton label="Insert link" onClick={addLink}>
               <LinkIcon />
             </ToolbarButton>
@@ -266,11 +269,11 @@ export function RichComposer(props: {
             <ToolbarButton label="Bulleted list" onClick={() => exec('insertUnorderedList')}>
               <ListIcon />
             </ToolbarButton>
-            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="mx-1 h-4 w-px shrink-0 bg-border" />
             <ToolbarButton label="Quote" onClick={() => exec('formatBlock', 'blockquote')}>
               <QuoteIcon />
             </ToolbarButton>
-            <span className="mx-1 h-4 w-px bg-border" />
+            <span className="mx-1 h-4 w-px shrink-0 bg-border" />
             <ToolbarButton label="Inline code (Ctrl+E)" onClick={toggleCode}>
               <CodeIcon />
             </ToolbarButton>
@@ -352,7 +355,7 @@ export function RichComposer(props: {
           >
             <AtSignIcon />
           </ToolbarButton>
-          <span className="mx-1 h-4 w-px bg-border" />
+          <span className="mx-1 h-4 w-px shrink-0 bg-border" />
           <ToolbarButton label="Video calls arrive in Phase 3" disabled>
             <VideoIcon />
           </ToolbarButton>
@@ -433,7 +436,7 @@ function ToolbarButton(props: {
       // Keep the caret in the editor when a toolbar button is pressed.
       onMouseDown={(e) => e.preventDefault()}
       onClick={props.onClick}
-      className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-sm transition-colors ${
+      className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg px-1.5 text-sm transition-colors ${
         props.active ? 'bg-surface-2 text-foreground' : 'hover:bg-surface-2'
       } disabled:opacity-35`}
     >
