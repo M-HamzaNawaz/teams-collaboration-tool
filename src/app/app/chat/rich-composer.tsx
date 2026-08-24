@@ -121,7 +121,18 @@ export function RichComposer(props: {
   const editorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showToolbar, setShowToolbar] = useState(true)
-  const [popover, setPopover] = useState<'emoji' | 'mention' | null>(null)
+  const [popover, setPopover] = useState<'emoji' | null>(null)
+  /** Text typed after a live `@`, or null when the caret is not in one. */
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionIndex, setMentionIndex] = useState(0)
+  /**
+   * The query Escape dismissed. mentionQuery is a pure reading of the
+   * caret, so clearing it does nothing — the keyup right behind Escape
+   * reads the same `@token` and reopens. Holding the dismissed VALUE
+   * keeps it shut until the token actually changes, which is how every
+   * other autocomplete behaves: Escape hides, typing more brings it back.
+   */
+  const [mentionDismissed, setMentionDismissed] = useState<string | null>(null)
   const [empty, setEmpty] = useState(true)
   const [active, setActive] = useState<Record<string, boolean>>({})
 
@@ -194,6 +205,69 @@ export function RichComposer(props: {
     syncState()
   }
 
+  /**
+   * The `@token` the caret currently sits in, or null.
+   *
+   * Deliberately narrow, because the composer is also where people paste
+   * logs and addresses: the `@` must open a word (start of the node, or
+   * after whitespace), so `ahmed.k@gmail.com` never opens the picker — and
+   * that address is exactly the kind of string detect() is watching for.
+   * A query that opens with a space closes it again, so "@ " is not a menu
+   * that never goes away.
+   */
+  function readMentionToken() {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) {
+      return null
+    }
+    const node = selection.anchorNode
+    if (!node || node.nodeType !== Node.TEXT_NODE) return null
+    if (!editorRef.current?.contains(node)) return null
+
+    const offset = selection.anchorOffset
+    const before = (node.textContent ?? '').slice(0, offset)
+    const at = before.lastIndexOf('@')
+    if (at === -1) return null
+    if (at > 0 && !/\s/.test(before[at - 1])) return null
+
+    const query = before.slice(at + 1)
+    // A trailing space closes the token: it is how "I am done naming
+    // someone" looks, and it is what stops the menu reopening on top of
+    // the "@Sarah D. " this just inserted.
+    if (query.length > 30 || /^\s|\s$|[\n\r]/.test(query)) return null
+    return { node, at, offset, query }
+  }
+
+  const syncMention = useCallback(() => {
+    const token = readMentionToken()
+    setMentionQuery((current) => {
+      const next = token ? token.query : null
+      if (next !== current) setMentionIndex(0)
+      return next
+    })
+  }, [])
+
+  /** Swap the typed `@query` for the chosen name. */
+  function applyMention(person: { name: string }) {
+    const token = readMentionToken()
+    const el = editorRef.current
+    if (!token || !el) return
+    el.focus()
+    const range = document.createRange()
+    range.setStart(token.node, token.at)
+    range.setEnd(token.node, token.offset)
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    // execCommand rather than direct DOM surgery: it replaces the selection
+    // AND keeps the editor's native undo stack intact.
+    document.execCommand('insertText', false, `@${person.name} `)
+    setMentionQuery(null)
+    setMentionIndex(0)
+    setMentionDismissed(null)
+    syncState()
+  }
+
   function insertText(text: string) {
     editorRef.current?.focus()
     document.execCommand('insertText', false, text)
@@ -212,6 +286,19 @@ export function RichComposer(props: {
     else insertText(url)
   }
 
+  const mentionMatches =
+    mentionQuery === null
+      ? []
+      : props.mentions
+          .filter((person) =>
+            person.name.toLowerCase().includes(mentionQuery.trim().toLowerCase()),
+          )
+          .slice(0, 8)
+  // No candidates = no menu, so a query nobody matches stops swallowing
+  // the Enter key.
+  const mentionOpen =
+    mentionMatches.length > 0 && mentionQuery !== mentionDismissed
+
   function send() {
     const el = editorRef.current
     if (!el || props.sending) return
@@ -221,6 +308,8 @@ export function RichComposer(props: {
     el.innerHTML = ''
     setEmpty(true)
     setPopover(null)
+    setMentionQuery(null)
+    setMentionDismissed(null)
   }
 
   return (
@@ -231,6 +320,34 @@ export function RichComposer(props: {
       }}
       className="pb-safe border-t border-border bg-surface p-3"
     >
+      {/* Above the composer, not below it: the composer is pinned to the
+          bottom of the screen, so a list under it would open off-screen. */}
+      {mentionOpen && (
+        <div
+          role="listbox"
+          aria-label="People in this group"
+          className="mb-2 max-h-56 overflow-y-auto rounded-[10px] border border-border bg-surface shadow-e2 sm:max-w-xs"
+        >
+          {mentionMatches.map((person, i) => (
+            <button
+              key={person.userId}
+              type="button"
+              role="option"
+              aria-selected={i === mentionIndex}
+              // Keep the caret where it is — a blur here would lose the
+              // `@query` range this replaces.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => applyMention(person)}
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${
+                i === mentionIndex ? 'bg-hover' : 'hover:bg-hover'
+              }`}
+            >
+              <PersonMark name={person.name} size={24} />
+              <span className="min-w-0 flex-1 truncate">{person.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="rounded-[10px] border border-border bg-surface focus-within:border-teal-d">
         {/* The row slides open/closed (0fr→1fr) instead of popping — the
             thread above shares this column, so an instant mount made the
@@ -294,11 +411,40 @@ export function RichComposer(props: {
           data-placeholder={props.placeholder}
           onInput={() => {
             syncState()
+            syncMention()
             props.onTyping()
           }}
-          onKeyUp={syncState}
-          onMouseUp={syncState}
+          onKeyUp={() => {
+            syncState()
+            syncMention()
+          }}
+          onMouseUp={() => {
+            syncState()
+            syncMention()
+          }}
           onKeyDown={(e) => {
+            // While the picker is up it owns Enter — otherwise choosing a
+            // name would send a half-typed message instead.
+            if (mentionOpen) {
+              if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault()
+                setMentionIndex((i) => {
+                  const next = e.key === 'ArrowDown' ? i + 1 : i - 1
+                  return (next + mentionMatches.length) % mentionMatches.length
+                })
+                return
+              }
+              if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault()
+                applyMention(mentionMatches[mentionIndex])
+                return
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setMentionDismissed(mentionQuery)
+                return
+              }
+            }
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
               send()
@@ -348,10 +494,15 @@ export function RichComposer(props: {
           >
             <SmileIcon />
           </ToolbarButton>
+          {/* The picker now follows the caret, so the button's whole job
+              is to type the `@` that opens it. */}
           <ToolbarButton
             label="Mention someone"
-            active={popover === 'mention'}
-            onClick={() => setPopover(popover === 'mention' ? null : 'mention')}
+            active={mentionQuery !== null}
+            onClick={() => {
+              insertText('@')
+              syncMention()
+            }}
           >
             <AtSignIcon />
           </ToolbarButton>
@@ -395,27 +546,6 @@ export function RichComposer(props: {
         </div>
       )}
 
-      {popover === 'mention' && (
-        <div className="mt-2 flex max-w-sm flex-col overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
-          {props.mentions.map((person) => (
-            <button
-              key={person.userId}
-              type="button"
-              className="flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover"
-              onClick={() => {
-                insertText(`@${person.name} `)
-                setPopover(null)
-              }}
-            >
-              <PersonMark name={person.name} size={24} />
-              {person.name}
-            </button>
-          ))}
-          {props.mentions.length === 0 && (
-            <p className="px-3 py-2 text-sm text-muted">Nobody else here yet.</p>
-          )}
-        </div>
-      )}
     </form>
   )
 }
