@@ -137,15 +137,24 @@ export function TopBar(props: {
         </div>
       )}
 
-      {/* Search (⌘K) — opens the quick switch */}
-      <div className="flex min-w-0 flex-1 justify-center px-2">
+      {/* Search (⌘K) — the centered field from sm up. On a phone the field
+          is squeezed between the workspace name and the bell until it is an
+          empty rectangle, so below sm it collapses to an icon button beside
+          the bell. min-w-9 keeps the neighbours' pressure off the icon. */}
+      <div className="flex min-w-9 flex-1 justify-end sm:min-w-0 sm:justify-center sm:px-2">
         <button
           onClick={props.onOpenSearch}
-          className="flex h-9 w-full max-w-130 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-muted hover:bg-hover"
+          aria-label="Search"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-hover sm:w-full sm:max-w-130 sm:justify-start sm:gap-2 sm:border sm:border-border sm:bg-surface sm:px-3 sm:text-sm sm:text-muted"
         >
-          <SearchIcon />
-          <span className="min-w-0 flex-1 truncate text-left">Search</span>
-          <span className="hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] sm:inline">
+          {/* A bare <svg> is flex-shrinkable — it is what vanished first. */}
+          <span className="flex shrink-0 items-center">
+            <SearchIcon />
+          </span>
+          <span className="hidden min-w-0 flex-1 truncate text-left sm:block">
+            Search
+          </span>
+          <span className="hidden shrink-0 rounded-md border border-border px-1.5 py-0.5 font-mono text-[10px] sm:inline">
             ⌘K
           </span>
         </button>
@@ -166,7 +175,9 @@ export function TopBar(props: {
       </button>
 
       {menu === 'bell' && (
-        <div className="absolute right-14 top-14 w-72 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
+        // w-72 anchored 56px from the right runs off the left edge of a
+        // narrow phone. Below sm it spans the bar instead; sm+ is unchanged.
+        <div className="absolute left-3 right-3 top-14 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2 sm:left-auto sm:right-14 sm:w-72">
           <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted">
             Waiting on you
           </p>

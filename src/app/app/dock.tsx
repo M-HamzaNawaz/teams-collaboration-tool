@@ -336,7 +336,10 @@ export function Dock(props: {
         className="dock-label fixed z-500 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background"
       />
 
-      {/* Account */}
+      {/* Account. The drawer fills most of a phone screen, so its menu
+          opens UPWARD inside the rail; the desktop rail keeps hanging it
+          off the right edge — `contents` leaves that path's layout alone. */}
+      <div className={props.drawer ? 'relative w-full' : 'contents'}>
       <button
         onClick={() => setAccountOpen((v) => !v)}
         aria-label="Account"
@@ -362,7 +365,15 @@ export function Dock(props: {
       </button>
 
       {accountOpen && (
-        <div className="absolute bottom-3 left-full z-50 ml-2 w-56 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2">
+        <div
+          className={`absolute z-50 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2 ${
+            props.drawer
+              ? // 232px rail on a 360px phone: hung off the right edge the
+                // menu lands off-screen, so open it above, rail-width.
+                'inset-x-0 bottom-full mb-2'
+              : 'bottom-3 left-full ml-2 w-56'
+          }`}
+        >
           <div className="border-b border-border px-3 py-2">
             <p className="truncate text-sm font-medium">{props.me.displayName}</p>
             <p className="truncate text-xs text-muted">{props.me.roleLabel}</p>
@@ -392,6 +403,7 @@ export function Dock(props: {
           </button>
         </div>
       )}
+      </div>
 
       {renaming &&
         (props.isAdmin ? (
