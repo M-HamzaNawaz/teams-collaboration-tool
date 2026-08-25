@@ -16,6 +16,7 @@ import {
   UserPenIcon,
 } from '@/lib/ui/icons'
 
+import { AppUpdateNotice } from './app-update-notice'
 import { AutoRefresh } from './auto-refresh'
 import { Dock, type DockItem } from './dock'
 import { NotificationCenter } from './notification-center'
@@ -187,6 +188,7 @@ export function AppShell(props: {
           onOpenDock={() => setDockOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}
         />
+        <AppUpdateNotice />
         <div className="min-h-0 flex-1">{props.children}</div>
       </div>
 

@@ -55,9 +55,26 @@ fn is_app_host(host: &str) -> bool {
         || host.ends_with(".supabase.co")
 }
 
-/// External-link clicks become same-window navigations so on_navigation can
-/// route them to the system browser (target=_blank is inert in a webview).
-const INIT_JS: &str = r#"
+/// Injected before any page script. Two jobs:
+///
+/// 1. Announce which shell this is and what version, as
+///    `window.__CONFIDE_SHELL__`. Android cannot auto-update itself, so the
+///    WEB app — which does reach every phone on each deploy — is what tells
+///    people a newer APK exists. It cannot do that without knowing what is
+///    currently running. Baked in at compile time from Cargo.toml, so it can
+///    never drift from the binary it describes.
+///
+///    A shell too old to set this leaves it undefined, and the web side reads
+///    that absence as "outdated" — which is the correct answer.
+///
+/// 2. Turn external-link clicks into same-window navigations so
+///    on_navigation can route them to the system browser (target=_blank is
+///    inert in a webview).
+const INIT_JS: &str = concat!(
+    "window.__CONFIDE_SHELL__={version:'",
+    env!("CARGO_PKG_VERSION"),
+    "'};",
+    r#"
 (function () {
   document.addEventListener('click', function (event) {
     var anchor = event.target && event.target.closest ? event.target.closest('a[href]') : null;
@@ -70,7 +87,8 @@ const INIT_JS: &str = r#"
     }
   }, true);
 })();
-"#;
+"#
+);
 
 /// Update checks: 15 seconds after launch, then every 5 minutes while the app
 /// stays open — a release published mid-day reaches running apps too. If a
