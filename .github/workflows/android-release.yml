@@ -49,13 +49,13 @@ jobs:
       KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -158,10 +158,10 @@ jobs:
             # Release build. Gradle leaves it unsigned; apksigner below signs
             # it — patching the generated build.gradle.kts would mean redoing
             # that surgery every time `android init` regenerates the file.
-            npx tauri android build --apk
+            npx tauri android build --apk --split-per-abi
           else
             echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — building a DEBUG-signed APK. Installable, but not for real distribution."
-            npx tauri android build --apk --debug
+            npx tauri android build --apk --split-per-abi --debug
           fi
 
       - name: Sign and align
@@ -203,7 +203,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: confide-android-apk
           path: dist/*.apk
@@ -218,5 +218,5 @@ jobs:
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
             gh release create "$GITHUB_REF_NAME" \
               --title "Confide Android $GITHUB_REF_NAME" \
-              --notes "Sideload the APK below. Android needs \"Install unknown apps\" allowed for your browser or file manager the first time. The app updates its content automatically on every web deploy — you only need a new APK when the shell itself changes."
+              --notes "Download the **arm64-v8a** APK — that is every Android phone made since roughly 2017. The other files are for older 32-bit devices and emulators. Android needs \"Install unknown apps\" allowed for your browser or file manager the first time. The app updates its content automatically on every web deploy; you only need a new APK when the shell itself changes."
           gh release upload "$GITHUB_REF_NAME" dist/*.apk --clobber
