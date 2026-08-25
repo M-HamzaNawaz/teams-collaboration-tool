@@ -6,13 +6,17 @@ import { PersonMark } from '@/lib/ui/avatar'
 import {
   AtSignIcon,
   BoldIcon,
+  CameraIcon,
   CodeBlockIcon,
   CodeIcon,
+  FileTextIcon,
+  ImageIcon,
   ItalicIcon,
   LinkIcon,
   ListIcon,
   ListOrderedIcon,
   MicIcon,
+  PaperclipIcon,
   PlusIcon,
   QuoteIcon,
   SendIcon,
@@ -121,7 +125,7 @@ export function RichComposer(props: {
   const editorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showToolbar, setShowToolbar] = useState(true)
-  const [popover, setPopover] = useState<'emoji' | null>(null)
+  const [popover, setPopover] = useState<'emoji' | 'attach' | null>(null)
   /** Text typed after a live `@`, or null when the caret is not in one. */
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [mentionIndex, setMentionIndex] = useState(0)
@@ -268,6 +272,25 @@ export function RichComposer(props: {
     syncState()
   }
 
+  /**
+   * Open the OS picker filtered to one kind of file.
+   *
+   * A convenience, NOT a restriction: /api/files has no MIME allow-list —
+   * it takes anything under the size ceiling — and every OS picker lets you
+   * switch back to "All files" anyway. The point is to skip the scrolling,
+   * not to enforce a policy the server does not have.
+   */
+  function pickFile(accept: string, capture?: string) {
+    const input = fileInputRef.current
+    if (!input) return
+    input.accept = accept
+    // Left set, `capture` would keep sending every later pick to the camera.
+    if (capture) input.setAttribute('capture', capture)
+    else input.removeAttribute('capture')
+    input.click()
+    setPopover(null)
+  }
+
   function insertText(text: string) {
     editorRef.current?.focus()
     document.execCommand('insertText', false, text)
@@ -320,6 +343,78 @@ export function RichComposer(props: {
       }}
       className="pb-safe border-t border-border bg-surface p-3"
     >
+      {/* Documents first: this is an agency/client work tool, and it is the
+          case that actually comes up. Worth knowing while reading this list —
+          file CONTENTS are not scanned in v1 (TECHNICAL_PLAN §10), so a
+          number written inside a screenshot goes straight through. The menu
+          does not widen that hole, but it does put it one tap closer. */}
+      {popover === 'attach' && (
+        <div
+          role="menu"
+          aria-label="Attach a file"
+          className="mb-2 overflow-hidden rounded-[10px] border border-border bg-surface shadow-e2 sm:max-w-xs"
+        >
+          {[
+            {
+              label: 'Document',
+              hint: 'PDF, Word, Excel, text, zip',
+              Icon: FileTextIcon,
+              accept:
+                '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.rtf,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv,application/zip',
+            },
+            {
+              label: 'Photo or video',
+              hint: 'From this device',
+              Icon: ImageIcon,
+              accept: 'image/*,video/*',
+            },
+            {
+              label: 'Any file',
+              hint: 'No filter',
+              Icon: PaperclipIcon,
+              accept: '',
+            },
+          ].map((choice) => (
+            <button
+              key={choice.label}
+              type="button"
+              role="menuitem"
+              onClick={() => pickFile(choice.accept)}
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-hover"
+            >
+              <span className="shrink-0 text-muted">
+                <choice.Icon />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm">{choice.label}</span>
+                <span className="block truncate text-xs text-muted">
+                  {choice.hint}
+                </span>
+              </span>
+            </button>
+          ))}
+          {/* Only where a camera is the obvious thing behind this button —
+              `capture` is inert on a desktop and would just reopen the same
+              picker under a misleading name. */}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => pickFile('image/*', 'environment')}
+            className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-hover [@media(hover:hover)]:hidden"
+          >
+            <span className="shrink-0 text-muted">
+              <CameraIcon />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm">Take a photo</span>
+              <span className="block truncate text-xs text-muted">
+                Open the camera
+              </span>
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* Above the composer, not below it: the composer is pinned to the
           bottom of the screen, so a list under it would open off-screen. */}
       {mentionOpen && (
@@ -477,7 +572,11 @@ export function RichComposer(props: {
               e.target.value = ''
             }}
           />
-          <ToolbarButton label="Attach a file" onClick={() => fileInputRef.current?.click()}>
+          <ToolbarButton
+            label="Attach a file"
+            active={popover === 'attach'}
+            onClick={() => setPopover(popover === 'attach' ? null : 'attach')}
+          >
             <PlusIcon />
           </ToolbarButton>
           <ToolbarButton
