@@ -160,7 +160,19 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Anything not on this list is silently replaced by site_url, which is how a
+# password-reset link ends up on the wrong app: the reset route asks for
+# `${NEXT_PUBLIC_APP_URL}/reset`, and if that is not allowed here the mail
+# lands somewhere else entirely. Both host aliases and both ports are listed
+# because .env.local decides which pair a given machine uses (port 3000 is
+# often already taken), and the scaffold's default entry was `https://` on a
+# plain-http localhost — allow-listing a URL nothing can ever request.
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "http://localhost:3001/**",
+  "http://127.0.0.1:3000/**",
+  "http://127.0.0.1:3001/**",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 # Confide runs 10-minute JWTs (M3-02): removal revokes refresh tokens, so a
 # removed member's access cannot outlive this window even if RLS were bypassed.
