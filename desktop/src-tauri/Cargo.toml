@@ -5,18 +5,32 @@ description = "Confide — team collaboration with client-contact protection"
 authors = ["Algotix AI"]
 edition = "2021"
 
+# Android loads the app as a shared library, not as an executable, so the
+# real crate is the lib and main.rs is a thin desktop wrapper. staticlib and
+# cdylib are what the mobile toolchains link; rlib keeps main.rs able to
+# call run().
+[lib]
+name = "confide_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
-tauri-plugin-single-instance = "2"
-tauri-plugin-window-state = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-notification = "2"
-tauri-plugin-updater = "2"
 tauri-plugin-dialog = "2"
 serde_json = "1"
+
+# These three publish `android = "none"` / `ios = "none"` in their own
+# package metadata — they are desktop-only, and linking them into a mobile
+# build fails to compile. Scoped by target rather than cfg-gated in code so
+# they are not even fetched for an Android build.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-updater = "2"
 
 [profile.release]
 codegen-units = 1
