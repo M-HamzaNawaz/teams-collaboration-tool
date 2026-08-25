@@ -55,9 +55,19 @@ export default function ResetPage() {
   async function updatePassword(event: React.FormEvent) {
     event.preventDefault()
     setBusy(true)
-    const { error } = await browserClient().auth.updateUser({ password })
-    if (error) {
-      setMessage(error.message)
+    // Via the API, not browserClient().auth.updateUser(): the server route
+    // is what writes the auth.password_changed audit entry. Calling Supabase
+    // straight from here changed the credential without leaving a trace.
+    const response = await fetch('/api/auth/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null
+      setMessage(data?.error ?? 'Could not set that password.')
       setBusy(false)
       return
     }
