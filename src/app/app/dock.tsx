@@ -309,7 +309,14 @@ export function Dock(props: {
                     {item.alert &&
                       (expanded ? (
                         <span
-                          className="alert-dot h-2 w-2 shrink-0 rounded-full"
+                          // `relative` is load-bearing: .alert-dot::after is
+                          // inset-0 absolute, so without a positioned dot it
+                          // resolves against the row (.dock-item relative) and
+                          // the "ping" becomes a 207x44 red pill scaling to
+                          // 497x106 — across the row and out over the page.
+                          // The collapsed rail's dot is already `absolute`,
+                          // which is why this only showed when expanded.
+                          className="alert-dot relative h-2 w-2 shrink-0 rounded-full"
                           aria-label="needs attention"
                         />
                       ) : (
