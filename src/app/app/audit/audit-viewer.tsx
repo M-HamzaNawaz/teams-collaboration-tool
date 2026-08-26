@@ -55,6 +55,8 @@ export function AuditViewer(props: {
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(50)
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
   const [check, setCheck] = useState<ChainCheck | null>(
     props.initialCheck ?? null,
   )
@@ -147,6 +149,24 @@ export function AuditViewer(props: {
     )
   }, [entries])
 
+  useEffect(() => {
+    if (!exportOpen) return
+    function onDown(event: MouseEvent) {
+      if (!exportRef.current?.contains(event.target as Node)) {
+        setExportOpen(false)
+      }
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setExportOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [exportOpen])
+
   async function runVerify() {
     setVerifying(true)
     const response = await fetch('/api/audit/verify', { method: 'POST' })
@@ -157,11 +177,27 @@ export function AuditViewer(props: {
     setVerifying(false)
   }
 
-  function exportCsv() {
+  /**
+   * Three exports, not one. The plain timeline proves a process ran; it
+   * cannot show WHAT was caught, because every held row records only
+   * `findings_count: 1`. The findings column is the fact a dispute turns on.
+   * The full message text is everything around that fact — ordinary client
+   * conversation — so it is a separate, deliberate choice, and the server
+   * records an audit entry when either content column is taken.
+   */
+  function exportCsv(include?: 'findings' | 'body') {
     const params = new URLSearchParams()
     if (groupId) params.set('groupId', groupId)
     if (actorName) params.set('actorName', actorName)
     if (eventType) params.set('eventType', eventType)
+    // Bodies without findings would be a wall of text with nothing pointing
+    // at the reason any of it is in the file.
+    if (include === 'findings') params.set('findings', '1')
+    if (include === 'body') {
+      params.set('findings', '1')
+      params.set('body', '1')
+    }
+    setExportOpen(false)
     openDownload(`/api/audit/export?${params}`)
   }
 
@@ -176,9 +212,53 @@ export function AuditViewer(props: {
         title="Audit log"
         description="Every action, forever — the evidence surface"
         actions={
-          <button onClick={exportCsv} className="btn btn-secondary">
-            <DownloadIcon /> Export CSV
-          </button>
+          <div ref={exportRef} className="relative">
+            <button
+              onClick={() => setExportOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={exportOpen}
+              className="btn btn-secondary"
+            >
+              <DownloadIcon /> Export CSV
+            </button>
+            {exportOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-11 z-40 w-72 overflow-hidden rounded-[10px] border border-border bg-surface text-left shadow-e2"
+              >
+                {[
+                  {
+                    label: 'Timeline only',
+                    hint: 'Who did what, when. No message content.',
+                    include: undefined,
+                  },
+                  {
+                    label: 'Timeline + findings',
+                    hint: 'Adds what was detected — "03001234567".',
+                    include: 'findings' as const,
+                  },
+                  {
+                    label: 'Timeline + full messages',
+                    hint: 'Adds every message body. Recorded in the log.',
+                    include: 'body' as const,
+                  },
+                ].map((choice) => (
+                  <button
+                    key={choice.label}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => exportCsv(choice.include)}
+                    className="block w-full px-3 py-2.5 text-left hover:bg-hover"
+                  >
+                    <span className="block text-sm">{choice.label}</span>
+                    <span className="block text-xs text-muted">
+                      {choice.hint}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         }
       />
 
