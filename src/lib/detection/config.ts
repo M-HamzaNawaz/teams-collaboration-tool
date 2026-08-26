@@ -69,6 +69,9 @@ export const defaultDetectionConfig: DetectionConfig = {
    * UAE — and a glued international number stops being a bypass.
    */
   phoneCountryCodes: [],
+
+  /** Off. Groups opt in via hold_numbers_min_digits (lib/groups/settings). */
+  holdAnyDigitRun: null,
 }
 
 /** Merge a workspace's stored partial config over the defaults. */
@@ -87,5 +90,7 @@ export function resolveDetectionConfig(
       overrides.holdThreshold ?? defaultDetectionConfig.holdThreshold,
     phoneCountryCodes:
       overrides.phoneCountryCodes ?? defaultDetectionConfig.phoneCountryCodes,
+    holdAnyDigitRun:
+      overrides.holdAnyDigitRun ?? defaultDetectionConfig.holdAnyDigitRun,
   }
 }

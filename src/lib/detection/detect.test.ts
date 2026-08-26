@@ -104,4 +104,46 @@ describe('detect() — workspace config', () => {
   it('empty input allows', () => {
     expect(detect('').action).toBe('allow')
   })
+
+  it('a configured country code holds a glued international number', () => {
+    const glued = 'werhdsf923001234567'
+    expect(detect(glued).action).toBe('flag_only')
+    expect(detect(glued, { phoneCountryCodes: ['92'] }).action).toBe('hold')
+  })
+
+  it('negative context still outranks a configured country code', () => {
+    // The country-code check lives in the RULE, so finalize() has already
+    // applied the NEGATIVE_CONTEXT cap by the time it matters.
+    expect(
+      detect('tracking 923001234567', { phoneCountryCodes: ['92'] }).action,
+    ).toBe('flag_only')
+  })
+})
+
+describe('detect() — strict mode (hold_numbers_min_digits)', () => {
+  const strict = { holdAnyDigitRun: 7 }
+
+  it('is inert unless a group turns it on', () => {
+    expect(detect('order 4111222233 shipped').action).toBe('flag_only')
+  })
+
+  it('holds a long number no other rule would hold', () => {
+    expect(detect('werhdsf123435432435', strict).action).toBe('hold')
+  })
+
+  it('counts digits through separators, so grouping does not evade it', () => {
+    expect(detect('zoom meeting id 883 7623 1157', strict).action).toBe('hold')
+  })
+
+  it('holds ordinary references too — that IS the trade the group opted into', () => {
+    expect(detect('order 4111222233 shipped', strict).action).toBe('hold')
+    expect(detect('invoice 8837462910 is paid', strict).action).toBe('hold')
+  })
+
+  it('leaves short numbers and dates alone, or it would read as broken', () => {
+    expect(detect('meet at 3pm tomorrow', strict).action).toBe('allow')
+    expect(detect('standup in 10', strict).action).toBe('allow')
+    expect(detect('v2.0.1 is tagged', strict).action).toBe('allow')
+    expect(detect('the demo is on 2026-08-04', strict).action).toBe('allow')
+  })
 })

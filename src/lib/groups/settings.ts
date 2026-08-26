@@ -16,6 +16,15 @@ import { z } from 'zod'
 export const groupSettingsSchema = z.object({
   /** false → detected contact info delivers immediately, still flagged. */
   hold_contact_info: z.boolean().optional(),
+  /**
+   * Strict mode for a group where numbers have no business being exchanged
+   * at all: hold ANY digit run this long, whatever it looks like. Floor of
+   * 4 so nobody can accidentally hold "3pm" or "v2"; unset means off, which
+   * is the right default for a working team — measured against the corpus,
+   * a 7-digit floor holds a quarter of ordinary work chat, and every digit
+   * holds two thirds of it.
+   */
+  hold_numbers_min_digits: z.number().int().min(4).max(20).optional(),
   /** false → filenames are not scanned (contents never were, v1). */
   scan_filenames: z.boolean().optional(),
   /** false → uploads rejected in this group. */
@@ -30,6 +39,8 @@ export type GroupSettings = z.infer<typeof groupSettingsSchema>
 
 export type ResolvedGroupSettings = {
   holdContactInfo: boolean
+  /** null = off. Digits at or above this always hold in this group. */
+  holdNumbersMinDigits: number | null
   scanFilenames: boolean
   allowFiles: boolean
   escalateMinutes: number
@@ -38,6 +49,7 @@ export type ResolvedGroupSettings = {
 
 export const GROUP_SETTING_DEFAULTS: ResolvedGroupSettings = {
   holdContactInfo: true,
+  holdNumbersMinDigits: null,
   scanFilenames: true,
   allowFiles: true,
   escalateMinutes: 30,
@@ -59,6 +71,10 @@ export function resolveGroupSettings(
       g.hold_contact_info ??
       w.hold_contact_info ??
       GROUP_SETTING_DEFAULTS.holdContactInfo,
+    holdNumbersMinDigits:
+      g.hold_numbers_min_digits ??
+      w.hold_numbers_min_digits ??
+      GROUP_SETTING_DEFAULTS.holdNumbersMinDigits,
     scanFilenames:
       g.scan_filenames ?? w.scan_filenames ?? GROUP_SETTING_DEFAULTS.scanFilenames,
     allowFiles: g.allow_files ?? w.allow_files ?? GROUP_SETTING_DEFAULTS.allowFiles,

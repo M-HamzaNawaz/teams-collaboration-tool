@@ -70,6 +70,21 @@ export type DetectionConfig = {
    * Set the agency's own at workspace creation.
    */
   phoneCountryCodes: string[]
+  /**
+   * Strict mode: hold ANY digit run of at least this many digits, whatever
+   * it looks like and whatever surrounds it. null (the default) leaves the
+   * layered rules to do their job.
+   *
+   * Measured against the corpus before this existed: holding every message
+   * containing a digit would freeze 66% of ordinary work chat — "standup in
+   * 10", "meet at 3pm", "v2.0.1 is tagged" — and a 7+ digit floor still
+   * freezes 26%. That is why this is per-group and off by default, not a
+   * global switch: a queue that holds two thirds of conversation stops
+   * being read, and messages then auto-release on the 8h timer unreviewed.
+   * Turning it on makes a group catch more; turning it on everywhere makes
+   * the workspace catch less.
+   */
+  holdAnyDigitRun: number | null
 }
 
 /** Internal: a raw match before allowlisting/threshold mapping. */

@@ -236,6 +236,31 @@ export const phoneRules: Rule[] = [
     },
   },
   {
+    // Strict mode only — inert unless a group set hold_numbers_min_digits.
+    // No guards, no context, no allowlist: the point of the setting is that
+    // in THIS group a long number is not explainable, so an order reference
+    // gets held too and someone waves it through.
+    id: 'phone.any-digit-run',
+    type: 'phone',
+    target: 'normalized',
+    find(text, config) {
+      const min = config?.holdAnyDigitRun
+      if (typeof min !== 'number' || min < 1) return []
+      const matches: RuleMatch[] = []
+      // Separators counted through, so "883 7623 1157" is eleven digits and
+      // not three short runs — writing a number in groups is the first
+      // thing anyone tries, and strict mode exists to be unarguable.
+      for (const m of text.matchAll(/\d(?:[\s.\-()]{0,2}\d)*/g)) {
+        if (digitCount(m[0]) < min) continue
+        // A date is not a number anyone is smuggling, and holding one would
+        // make strict mode look broken rather than strict.
+        if (ISO_DATE_START.test(m[0])) continue
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence: 0.95 })
+      }
+      return matches
+    },
+  },
+  {
     id: 'phone.spelled-digits',
     type: 'phone',
     target: 'normalized',

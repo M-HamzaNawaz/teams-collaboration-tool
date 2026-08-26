@@ -93,8 +93,25 @@ export async function POST(request: Request) {
     .select('settings_jsonb')
     .eq('id', workspaceId)
     .single()
-  const config = (ws?.settings_jsonb as { detection?: Partial<DetectionConfig> } | null)
-    ?.detection
+  const workspaceDetection = (
+    ws?.settings_jsonb as { detection?: Partial<DetectionConfig> } | null
+  )?.detection
+
+  // Per-group strict mode has to reach detect() itself, not just adjust the
+  // verdict afterwards: "hold any long number" needs a FINDING to exist, and
+  // the layered rules deliberately produce none for an order reference.
+  const groupRulesForDetection = resolveGroupSettings(
+    authz.group?.settings_jsonb,
+    (ws?.settings_jsonb as { moderation?: unknown } | null)?.moderation,
+  )
+  const config: Partial<DetectionConfig> | undefined =
+    groupRulesForDetection.holdNumbersMinDigits === null
+      ? workspaceDetection
+      : {
+          ...workspaceDetection,
+          holdAnyDigitRun: groupRulesForDetection.holdNumbersMinDigits,
+        }
+
   let verdict = detect(body, config)
   const stripped = stripFormatting(body)
   if (stripped !== body) {
@@ -111,10 +128,7 @@ export async function POST(request: Request) {
   // (e.g. an internal team room). Detection still ran, the flag row is
   // still written, the audit entry still records it — only delivery
   // differs. There is no setting that skips detection.
-  const groupRules = resolveGroupSettings(
-    authz.group?.settings_jsonb,
-    (ws?.settings_jsonb as { moderation?: unknown } | null)?.moderation,
-  )
+  const groupRules = groupRulesForDetection
   if (verdict.action === 'hold' && !groupRules.holdContactInfo) {
     verdict = { action: 'flag_only', findings: verdict.findings }
   }
