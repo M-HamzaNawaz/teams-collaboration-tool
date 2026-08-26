@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { GroupRow } from '@/lib/types'
 import { useEscape } from '@/lib/ui/dismiss'
 import { HoldButton } from '@/lib/ui/hold-button'
-import { ArchiveIcon, LoaderIcon } from '@/lib/ui/icons'
+import { ArchiveIcon, CheckIcon, LoaderIcon } from '@/lib/ui/icons'
 
 /** Turning arc shown inside a busy confirm button. */
 function Spinner() {
@@ -34,6 +34,7 @@ export function GroupActions(props: {
   const [open, setOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [confirmingArchive, setConfirmingArchive] = useState(false)
+  const [savingLevel, setSavingLevel] = useState(false)
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,6 +94,59 @@ export function GroupActions(props: {
     setBusy(false)
   }
 
+  /**
+   * Screening strictness, straight from the menu. Until now these lived only
+   * in settings_jsonb at creation time, so "hold every number in this room"
+   * meant hand-editing the database — the rule existed and the switch did
+   * not. Percentages are measured against the corpus, and they are shown
+   * because a third of held messages is a real cost someone should agree to
+   * before choosing it, not discover afterwards.
+   */
+  const LEVELS: Array<{
+    label: string
+    hint: string
+    value: number | null
+  }> = [
+    {
+      label: 'Contact info only',
+      hint: 'Phone numbers, emails, handles. Recommended.',
+      value: null,
+    },
+    {
+      label: 'Long numbers too',
+      hint: '7+ digits — also holds invoice and order refs (~28%).',
+      value: 7,
+    },
+    {
+      label: 'Any number at all',
+      hint: 'Every digit, including "3pm" and "v2.0.1" (~67%).',
+      value: 1,
+    },
+  ]
+  const currentLevel =
+    (props.group.settings_jsonb as { hold_numbers_min_digits?: number } | null)
+      ?.hold_numbers_min_digits ?? null
+
+  async function setLevel(value: number | null) {
+    setSavingLevel(true)
+    setError(null)
+    const response = await fetch(`/api/groups/${props.group.id}/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ holdNumbersMinDigits: value }),
+    })
+    setSavingLevel(false)
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null
+      setError(data?.error ?? 'could not save that')
+      return
+    }
+    setOpen(false)
+    router.refresh()
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -137,6 +191,37 @@ export function GroupActions(props: {
                 Purges messages and files. The audit trail survives.
               </span>
             </button>
+          )}
+
+          {props.group.status === 'active' && (
+            <div className="border-t border-border">
+              <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted">
+                Hold for review
+              </p>
+              {LEVELS.map((level) => {
+                const active = currentLevel === level.value
+                return (
+                  <button
+                    key={level.label}
+                    onClick={() => !active && setLevel(level.value)}
+                    disabled={savingLevel}
+                    className={`flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-surface-2 disabled:opacity-50 ${
+                      active ? 'bg-sel' : ''
+                    }`}
+                  >
+                    <span className="mt-0.5 shrink-0 text-teal-t">
+                      {active ? <CheckIcon /> : <span className="block w-4" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm">{level.label}</span>
+                      <span className="block text-xs text-muted">
+                        {level.hint}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           )}
 
           {error && <p className="px-3 pb-2 text-xs text-danger">{error}</p>}
