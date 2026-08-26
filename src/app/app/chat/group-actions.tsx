@@ -123,11 +123,35 @@ export function GroupActions(props: {
       value: 1,
     },
   ]
-  const currentLevel =
+  const levelFromServer =
     (props.group.settings_jsonb as { hold_numbers_min_digits?: number } | null)
       ?.hold_numbers_min_digits ?? null
 
+  /**
+   * The tick is driven by LOCAL state, not by props.
+   *
+   * It was read straight off props.group, which the chat page had already
+   * rendered — so a save changed the database and the audit log while the
+   * menu carried on showing the old level. The setting looked broken when it
+   * had worked, which invites clicking it again; the audit trail ended up
+   * with three identical entries proving exactly that.
+   *
+   * Re-synced only when the GROUP changes, so switching rooms reads the
+   * server value while a just-made choice is never clobbered by a prop that
+   * has not caught up yet.
+   */
+  const [level, setLevelState] = useState<number | null>(levelFromServer)
+  const syncedFor = useRef(props.group.id)
+  useEffect(() => {
+    if (syncedFor.current !== props.group.id) {
+      syncedFor.current = props.group.id
+      setLevelState(levelFromServer)
+    }
+  }, [props.group.id, levelFromServer])
+
   async function setLevel(value: number | null) {
+    const previous = level
+    setLevelState(value) // move the tick now; the request is the slow part
     setSavingLevel(true)
     setError(null)
     const response = await fetch(`/api/groups/${props.group.id}/settings`, {
@@ -137,14 +161,23 @@ export function GroupActions(props: {
     })
     setSavingLevel(false)
     if (!response.ok) {
+      setLevelState(previous) // put it back rather than lie about the state
       const data = (await response.json().catch(() => null)) as
         | { error?: string }
         | null
       setError(data?.error ?? 'could not save that')
       return
     }
-    setOpen(false)
-    router.refresh()
+    // Neither onChanged() nor router.refresh() belongs here. onChanged is
+    // wired to setSelected(null) — right for archive and delete, where the
+    // group stops being viewable, and wrong here: it shut the whole chat
+    // pane on a settings tweak. router.refresh() remounted this component
+    // and closed the menu with it. Nothing else on screen renders the level,
+    // and the write path reads settings from the database per message rather
+    // than from this prop, so the change is live either way.
+    //
+    // The menu stays open and the tick moves. That IS the confirmation, and
+    // its absence was why a save that worked read as no response at all.
   }
 
   return (
@@ -198,12 +231,12 @@ export function GroupActions(props: {
               <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted">
                 Hold for review
               </p>
-              {LEVELS.map((level) => {
-                const active = currentLevel === level.value
+              {LEVELS.map((choice) => {
+                const active = level === choice.value
                 return (
                   <button
-                    key={level.label}
-                    onClick={() => !active && setLevel(level.value)}
+                    key={choice.label}
+                    onClick={() => !active && setLevel(choice.value)}
                     disabled={savingLevel}
                     className={`flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-surface-2 disabled:opacity-50 ${
                       active ? 'bg-sel' : ''
@@ -213,9 +246,9 @@ export function GroupActions(props: {
                       {active ? <CheckIcon /> : <span className="block w-4" />}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm">{level.label}</span>
+                      <span className="block text-sm">{choice.label}</span>
                       <span className="block text-xs text-muted">
-                        {level.hint}
+                        {choice.hint}
                       </span>
                     </span>
                   </button>
