@@ -32,8 +32,15 @@ const SEPARATED =
  * nothing at all and no amount of surrounding context could rescue it: the
  * rule never fired to be boosted. A bare run this long is still only
  * flag_only on its own; it takes a phone word nearby to hold.
+ *
+ * Lower bound is 9 because several countries write national mobile numbers
+ * in nine digits (Spain, Portugal, the Netherlands). At 10 those were not
+ * merely unheld, they were unseen. Zero of the corpus's 94 allow-cases
+ * contain a bare nine-digit run, so the floor cost nothing to lower — and a
+ * nine-digit run still only reaches flag_only unless something else speaks
+ * for it.
  */
-const CONTIGUOUS = /(?<![\d.,-])\d{10,15}(?![\d.,-])/g
+const CONTIGUOUS = /(?<![\d.,-])\d{9,15}(?![\d.,-])/g
 
 /**
  * One digit at a time: "0 3 0 0 1 2 3 4 5 6 7".
@@ -64,7 +71,7 @@ const CONTEXT =
  * message delivers flagged instead of freezing a courier update.
  */
 const NEGATIVE_CONTEXT =
-  /(?:tracking|order|invoice|account|ticket|case|reference|ref|serial|pin|code|otp|passcode|id|txn|transaction|iban|version|build|sha|hash|commit|digest|checksum|seed|nonce)\b[^0-9]{0,24}$/
+  /(?:tracking|order|invoice|account|ticket|case|reference|ref|serial|pin|code|otp|passcode|id|txn|transaction|iban|version|build|sha|hash|commit|digest|checksum|seed|nonce|part|model|sku|batch|lot|item|unit|room|suite|floor)\b[^0-9]{0,24}$/
 
 /** Impostor guards, tested against the matched text itself. */
 const ISO_DATE_START = /^(?:19|20)\d{2}\b/ // 2026-08-04, "2024 2025" year lists

@@ -253,3 +253,9 @@
 {"text": "werhdsf923001234567", "expect": "flag_only", "types": ["phone"]}
 {"text": "werhdsf03001234567", "expect": "hold", "types": ["phone"]}
 {"text": "abc1234567890", "expect": "flag_only", "types": ["phone"]}
+{"text": "chek contact232490523", "expect": "hold", "types": ["phone"]}
+{"text": "asdsajd123432132", "expect": "flag_only", "types": ["phone"]}
+{"text": "part number 456789012 is out of stock", "expect": "flag_only"}
+{"text": "employee id 012345678 in the export", "expect": "flag_only"}
+{"text": "the zip+4 is 902101234", "expect": "flag_only"}
+{"text": "sku 300100200 restocked", "expect": "flag_only"}
