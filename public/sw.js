@@ -33,8 +33,23 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url)
 
+  // Cache-first is safe ONLY because production filenames are content
+  // hashed, so new code means a new URL and a guaranteed miss. A dev server
+  // serves chunks at stable, path-derived URLs whose contents change on
+  // every edit, so the same rule would pin the browser to whatever it loaded
+  // first — forever, and through a hard refresh. Registration is
+  // production-only, but a worker outlives the build that registered it, so
+  // this refuses to do it on a local origin rather than trusting that.
+  const isLocal =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === '[::1]'
+
   // Static assets: cache-first (immutable, hashed filenames).
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/')) {
+  if (
+    !isLocal &&
+    (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/'))
+  ) {
     event.respondWith(
       caches.open(CACHE).then(async (cache) => {
         const hit = await cache.match(request)
