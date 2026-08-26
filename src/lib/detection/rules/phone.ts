@@ -62,7 +62,25 @@ const SPELLED =
  * digits, so the keyword binds to THIS number and not an earlier one.
  */
 const CONTEXT =
-  /(?:number|phone|mobile|cell|call|text|sms|msg|dm|dial|ring|whatsapp|contact|reach|inbox|digits|talk\s+(?:to|on)|hit\s+me|ping\s+me|message\s+me|msg\s+me|text\s+me)\b[^0-9]{0,20}$/
+  /(?:^|[^a-z])(?:number|phone|mobile|cell|call|text|sms|msg|dm|dial|ring|whatsapp|contact|reach|inbox|digits|talk\s+(?:to|on)|hit\s+me|ping\s+me|message\s+me|msg\s+me|text\s+me)\b[^0-9]{0,20}$/
+
+/**
+ * A phone word GLUED to the digits: "callmeat18703450042".
+ *
+ * CONTEXT demands a word boundary after its keyword, and there is none when
+ * the whole phrase is run together — which is exactly why someone runs it
+ * together. "call me at 18703450042" held; the same sentence with the spaces
+ * taken out did not, and removing spaces is the cheapest evasion there is.
+ *
+ * Three constraints keep ordinary text out. The keyword must OPEN the letter
+ * run touching the digits, so "recalled123456789" (a run beginning "re") does
+ * not qualify. Anything after it must be a CONNECTOR — me, us, at, on, is —
+ * so "callmeat" reads as call+me+at while "callback123456789" does not read
+ * as anything. And the run must be the one against the digits, so a word
+ * earlier in the sentence is irrelevant.
+ */
+const GLUED_CONTEXT =
+  /(?:^|[^a-z])(?:whatsapp|telegram|contact|call|phone|mobile|number|sms|msg|inbox|reach|dm)(?:me|us|my|at|on|is|no|number)*$/
 
 /**
  * Words that say the digits are an identifier, not a phone: tracking numbers,
@@ -108,7 +126,8 @@ type Signals = { boost: number; capped: boolean }
 function contextSignals(text: string, start: number): Signals {
   const window = text.slice(Math.max(0, start - 40), start)
   if (NEGATIVE_CONTEXT.test(window)) return { boost: 0, capped: true }
-  return { boost: CONTEXT.test(window) ? 0.25 : 0, capped: false }
+  const spoken = CONTEXT.test(window) || GLUED_CONTEXT.test(window)
+  return { boost: spoken ? 0.25 : 0, capped: false }
 }
 
 /**

@@ -259,3 +259,13 @@
 {"text": "employee id 012345678 in the export", "expect": "flag_only"}
 {"text": "the zip+4 is 902101234", "expect": "flag_only"}
 {"text": "sku 300100200 restocked", "expect": "flag_only"}
+{"text": "callmeat18703450042", "expect": "hold", "types": ["phone"]}
+{"text": "callme18703450042", "expect": "hold", "types": ["phone"]}
+{"text": "whatsapp18703450042", "expect": "hold", "types": ["phone"]}
+{"text": "contactme122342323432", "expect": "hold", "types": ["phone"]}
+{"text": "recalled123456789 rows in the export", "expect": "flag_only"}
+{"text": "context123456789 loaded from cache", "expect": "flag_only"}
+{"text": "during123456789 the migration run", "expect": "flag_only"}
+{"text": "string123456789 buffer overflow", "expect": "flag_only"}
+{"text": "the callback123456789 fired twice", "expect": "flag_only"}
+{"text": "iorewqouew122342323432", "expect": "flag_only", "types": ["phone"]}
