@@ -156,4 +156,20 @@ describe('detect() — strict mode (hold_numbers_min_digits)', () => {
     expect(detect('v2.0.1 is tagged', strict).action).toBe('allow')
     expect(detect('the demo is on 2026-08-04', strict).action).toBe('allow')
   })
+
+  it('min 1 really does mean ANY digit — a group may ask for that', () => {
+    // The extreme setting, for a room whose rule is "no numbers here, take
+    // it to a call". Measured at ~67% of ordinary chat held, which is the
+    // point rather than a defect; it is per-group and off by default.
+    const any = { holdAnyDigitRun: 1 }
+    expect(detect('meet at 3pm tomorrow', any).action).toBe('hold')
+    expect(detect('standup in 10', any).action).toBe('hold')
+    expect(detect('v2.0.1 is tagged', any).action).toBe('hold')
+  })
+
+  it('even min 1 cannot hold a message with no digits in it', () => {
+    expect(detect('morning team, all good here', { holdAnyDigitRun: 1 }).action).toBe(
+      'allow',
+    )
+  })
 })

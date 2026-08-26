@@ -18,13 +18,22 @@ export const groupSettingsSchema = z.object({
   hold_contact_info: z.boolean().optional(),
   /**
    * Strict mode for a group where numbers have no business being exchanged
-   * at all: hold ANY digit run this long, whatever it looks like. Floor of
-   * 4 so nobody can accidentally hold "3pm" or "v2"; unset means off, which
-   * is the right default for a working team — measured against the corpus,
-   * a 7-digit floor holds a quarter of ordinary work chat, and every digit
-   * holds two thirds of it.
+   * at all: hold ANY digit run this long, whatever it looks like and
+   * whatever surrounds it. Unset means off.
+   *
+   * Measured against the corpus so the choice is an informed one:
+   *
+   *   7+  holds ~22% of ordinary work chat — invoice and order refs, zoom
+   *       ids, tracking numbers
+   *   4+  adds years, room numbers, ports, error codes
+   *   1   holds ~66% — "standup in 10", "meet at 3pm", "v2.0.1 is tagged"
+   *
+   * 1 is allowed because a group can legitimately want it: a client room
+   * where the rule is simply "no numbers here, take it to a call". It is a
+   * per-group decision and the price is paid only by that group. It would
+   * be the wrong default for a working team, and it is not the default.
    */
-  hold_numbers_min_digits: z.number().int().min(4).max(20).optional(),
+  hold_numbers_min_digits: z.number().int().min(1).max(20).optional(),
   /** false → filenames are not scanned (contents never were, v1). */
   scan_filenames: z.boolean().optional(),
   /** false → uploads rejected in this group. */
