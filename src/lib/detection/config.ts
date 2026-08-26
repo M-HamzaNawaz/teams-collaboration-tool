@@ -62,6 +62,13 @@ export const defaultDetectionConfig: DetectionConfig = {
    * phones, wa.me links) on hold and ambiguous digit runs on flag_only.
    */
   holdThreshold: 0.7,
+
+  /**
+   * Empty until a workspace names its own. Fill this at workspace creation
+   * with the agency's country code(s) — "92" for Pakistan, "971" for the
+   * UAE — and a glued international number stops being a bypass.
+   */
+  phoneCountryCodes: [],
 }
 
 /** Merge a workspace's stored partial config over the defaults. */
@@ -78,5 +85,7 @@ export function resolveDetectionConfig(
       overrides.flagOnlyLocalParts ?? defaultDetectionConfig.flagOnlyLocalParts,
     holdThreshold:
       overrides.holdThreshold ?? defaultDetectionConfig.holdThreshold,
+    phoneCountryCodes:
+      overrides.phoneCountryCodes ?? defaultDetectionConfig.phoneCountryCodes,
   }
 }

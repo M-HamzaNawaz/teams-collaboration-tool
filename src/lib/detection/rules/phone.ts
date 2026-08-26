@@ -177,7 +177,7 @@ export const phoneRules: Rule[] = [
     id: 'phone.contiguous',
     type: 'phone',
     target: 'normalized',
-    find(rawText) {
+    find(rawText, config) {
       // Same length, so every index below still lines up with rawText.
       const text = foldDigitLookalikes(rawText)
       const matches: RuleMatch[] = []
@@ -194,11 +194,28 @@ export const phoneRules: Rule[] = [
         // start with 0, national numbers do, and that is what makes
         // "on03001234567" a phone number rather than a reference. Without
         // this, gluing the digits to any word is a bypass.
-        const leadingZero = m[0].startsWith('0')
-        if (!signals.boost && !leadingZero && precededByIdMarker(text, m.index)) {
-          continue
-        }
-        const confidence = finalize(m[0].startsWith('0') ? 0.72 : 0.6, signals)
+        // A leading zero is national format; a configured country code is
+        // international format. Both say "phone" loudly enough to outrank a
+        // letter glued in front. Checked HERE rather than in mapAction so
+        // NEGATIVE_CONTEXT still wins — "tracking 923001234567" stays capped
+        // at flag_only, because finalize() has already seen the cap.
+        const strongShape =
+          m[0].startsWith('0') ||
+          (config?.phoneCountryCodes ?? []).some(
+            (code) => code.length > 0 && m[0].startsWith(code),
+          )
+        const leadingZero = strongShape
+        // DEMOTE, never drop. mapAction() states the principle for
+        // allowlists — "findings are never dropped entirely: the audit trail
+        // records everything, which is the difference between an allowlist
+        // and a blind spot" — and it holds here too. Gluing letters onto a
+        // number should make it quiet, not invisible: "werhdsf123435432435"
+        // used to produce no finding whatsoever, so nobody could see the
+        // attempt had been made.
+        const idMarker =
+          !signals.boost && !leadingZero && precededByIdMarker(text, m.index)
+        const base = finalize(leadingZero ? 0.72 : 0.6, signals)
+        const confidence = idMarker ? Math.min(base, 0.5) : base
         matches.push({ start: m.index, end: m.index + m[0].length, confidence })
       }
       return matches

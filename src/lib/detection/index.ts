@@ -52,7 +52,7 @@ export function detect(
   for (const rule of allRules) {
     const target = rule.target === 'raw' ? text : normalized.text
 
-    for (const match of rule.find(target)) {
+    for (const match of rule.find(target, resolved)) {
       const span: [number, number] =
         rule.target === 'raw'
           ? [match.start, match.end]

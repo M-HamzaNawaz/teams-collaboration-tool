@@ -168,7 +168,12 @@ export default async function DashboardPage() {
         action: string
         resolution: string | null
       }>
-      flagged7d = flagRows.length
+      // "Caught this week" sits directly above a hint reading "N blocked ·
+      // N auto-released" — both outcomes only a HELD message can reach. So
+      // counting flag_only rows here put two populations in one number and
+      // made the headline disagree with its own subtitle: a flagged-but-
+      // delivered message was never caught by anything.
+      flagged7d = flagRows.filter((f) => f.action === 'hold').length
       blocked7d = flagRows.filter((f) => f.resolution === 'blocked').length
       autoApproved7d = flagRows.filter(
         (f) => f.resolution === 'auto_approved',

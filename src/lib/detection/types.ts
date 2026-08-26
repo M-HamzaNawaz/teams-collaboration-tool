@@ -58,6 +58,18 @@ export type DetectionConfig = {
   flagOnlyLocalParts: string[]
   /** Findings with confidence >= this hold the message; below it, flag_only. */
   holdThreshold: number
+  /**
+   * Country calling codes this workspace actually uses, without the '+'
+   * ("92", "971", "44"). A phone-length digit run opening with one is read
+   * as strong phone shape, exactly like a leading zero — enough to outrank
+   * the ID-marker guard and hold on its own, so gluing letters in front of
+   * a full international number stops working.
+   *
+   * Empty by default, and deliberately so: a code that is not yours is just
+   * two more digits, and guessing turns order numbers into held messages.
+   * Set the agency's own at workspace creation.
+   */
+  phoneCountryCodes: string[]
 }
 
 /** Internal: a raw match before allowlisting/threshold mapping. */
@@ -78,5 +90,10 @@ export type Rule = {
    *                so base58/bech32 shapes only exist pre-normalization).
    */
   target: 'normalized' | 'raw'
-  find(text: string): RuleMatch[]
+  /**
+   * Config is passed so a rule can use workspace facts while deciding what
+   * it FOUND, not just how the finding is scored afterwards. Rules that do
+   * not care simply ignore it — the engine stays pure either way.
+   */
+  find(text: string, config?: DetectionConfig): RuleMatch[]
 }
