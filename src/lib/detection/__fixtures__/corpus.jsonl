@@ -214,3 +214,10 @@
 {"text": "can you re-run the pipeline?", "expect": "allow"}
 {"text": "the contrast ratio is 4.5:1", "expect": "allow"}
 {"text": "tests green, 148 passed 0 failed", "expect": "allow"}
+{"text": "call me at02232322332", "expect": "hold", "types": ["phone"]}
+{"text": "call me at03001234567 anytime", "expect": "hold", "types": ["phone"]}
+{"text": "whatsapp me on03451234567", "expect": "hold", "types": ["phone"]}
+{"text": "my number is0300 123 4567", "expect": "hold", "types": ["phone"]}
+{"text": "build v1234567890 is deployed", "expect": "allow"}
+{"text": "order abc1234567890 shipped today", "expect": "allow"}
+{"text": "see ticket ref9876543210 for details", "expect": "allow"}

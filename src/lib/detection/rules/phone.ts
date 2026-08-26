@@ -62,7 +62,15 @@ function contextSignals(text: string, start: number): Signals {
   return { boost: CONTEXT.test(window) ? 0.25 : 0, capped: false }
 }
 
-/** Char immediately before the match — '#' or a letter means ID/version, not phone. */
+/**
+ * Char immediately before the match — '#' or a letter means ID/version, not
+ * phone (v1234567890, abc1234567890, #1234567890).
+ *
+ * Callers must NOT apply this when the surrounding words already say phone.
+ * "call me at0300123456" is a number someone forgot to put a space in, and
+ * letting a letter veto it makes one missing space a bypass of the whole
+ * engine — which is the opposite of what this guard is for.
+ */
 function precededByIdMarker(text: string, start: number): boolean {
   if (start === 0) return false
   const before = text[start - 1]
@@ -101,13 +109,15 @@ export const phoneRules: Rule[] = [
         if (digits < 7 || digits > 14) continue
         if (ISO_DATE_START.test(s)) continue // dates, datetimes, year ranges
         if (CURRENCY_NEAR.test(text.slice(Math.max(0, m.index - 8), m.index))) continue // "PKR 10 500 000"
-        if (precededByIdMarker(text, m.index)) continue
 
         // Leading 0 or a parenthesised area code is a strong phone signal;
         // other grouped digits stay below the hold threshold unless the
         // words around them say phone.
         const strongShape = /^[(0]/.test(s)
         const signals = contextSignals(text, m.index)
+        // Phone words nearby outrank the ID-marker guard; without them it
+        // stands.
+        if (!signals.boost && precededByIdMarker(text, m.index)) continue
         const confidence = finalize(strongShape ? 0.75 : 0.62, signals)
         matches.push({ start: m.index, end: m.index + s.length, confidence })
       }
@@ -121,11 +131,14 @@ export const phoneRules: Rule[] = [
     find(text) {
       const matches: RuleMatch[] = []
       for (const m of text.matchAll(CONTIGUOUS)) {
-        if (precededByIdMarker(text, m.index)) continue
         if (ISO_DATE_START.test(m[0]) && m[0].length <= 10) continue // 2026080400-ish stamps
         // Bare digit runs are timestamps, order IDs, tracking numbers — a
         // leading 0 (03001234567) or phone words nearby raise it to hold.
         const signals = contextSignals(text, m.index)
+        // Phone words nearby outrank the ID-marker guard; without them it
+        // stands. A NEGATIVE_CONTEXT hit leaves boost at 0, so "tracking
+        // number abc1234567890" is still skipped.
+        if (!signals.boost && precededByIdMarker(text, m.index)) continue
         const confidence = finalize(m[0].startsWith('0') ? 0.72 : 0.6, signals)
         matches.push({ start: m.index, end: m.index + m[0].length, confidence })
       }
