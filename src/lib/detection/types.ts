@@ -65,9 +65,21 @@ export type DetectionConfig = {
    * the ID-marker guard and hold on its own, so gluing letters in front of
    * a full international number stops working.
    *
-   * Empty by default, and deliberately so: a code that is not yours is just
-   * two more digits, and guessing turns order numbers into held messages.
-   * Set the agency's own at workspace creation.
+   * Empty by default, and deliberately so. List the two- or three-digit
+   * codes of countries you ACTUALLY work in — measured against the corpus,
+   * ["92","971","44"] costs zero false holds.
+   *
+   * Do NOT reach for "all of them". All 202 assigned E.164 codes begin with
+   * digits 1-9 — every digit — so the list stops being a signal and becomes
+   * "is a number", holding 13% of ordinary work chat: epoch timestamps, row
+   * counts, latency figures. Single-digit codes fail the same way on their
+   * own: ["1"] held three of five benign test strings, including "the file
+   * has 123456789 bytes".
+   *
+   * A number shared ACROSS countries is written +92… or 0092… anyway, and
+   * both of those are already held for every country with no configuration.
+   * This setting only covers bare digits with no plus and no leading zero,
+   * which is a local number — or an evasion.
    */
   phoneCountryCodes: string[]
   /**
