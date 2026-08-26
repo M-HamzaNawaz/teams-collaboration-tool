@@ -521,11 +521,23 @@ body {
   outline: none;
   box-shadow: none;
 }
+/* Positioning context for the placeholder below. */
+.composer-editor {
+  position: relative;
+}
 .composer-editor:empty::before,
 .composer-editor:has(> br:only-child)::before {
   content: attr(data-placeholder);
   color: var(--muted);
   pointer-events: none;
+  /* Out of flow, or it occupies real inline space and the caret — which
+     sits at offset 0 of the element's own (empty) content — renders AFTER
+     the placeholder instead of at the start of the line.
+     No left/top: an absolutely positioned box with auto offsets keeps its
+     static position, which is exactly where the first typed character
+     goes. Setting left:0 would align it to the padding box and misplace it
+     by the editor's own padding. */
+  position: absolute;
 }
 .composer-editor ul {
   list-style: disc;
