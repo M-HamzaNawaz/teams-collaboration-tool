@@ -76,10 +76,11 @@ export type DetectionConfig = {
    * own: ["1"] held three of five benign test strings, including "the file
    * has 123456789 bytes".
    *
-   * A number shared ACROSS countries is written +92… or 0092… anyway, and
-   * both of those are already held for every country with no configuration.
-   * This setting only covers bare digits with no plus and no leading zero,
-   * which is a local number — or an evasion.
+   * Mostly redundant now: the engine validates a bare digit run against
+   * libphonenumber, so a real number from ANY country holds without being
+   * named here. This remains as an escape hatch for runs the library
+   * rejects but you know to be numbers — a new range its metadata has not
+   * caught up with, or a local format it does not model.
    */
   phoneCountryCodes: string[]
   /**

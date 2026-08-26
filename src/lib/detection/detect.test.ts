@@ -105,10 +105,20 @@ describe('detect() — workspace config', () => {
     expect(detect('').action).toBe('allow')
   })
 
-  it('a configured country code holds a glued international number', () => {
-    const glued = 'werhdsf923001234567'
-    expect(detect(glued).action).toBe('flag_only')
-    expect(detect(glued, { phoneCountryCodes: ['92'] }).action).toBe('hold')
+  it('recognises a real foreign number with no configuration at all', () => {
+    // libphonenumber validates the digits as a PK mobile, so this holds
+    // without anyone naming Pakistan anywhere. That is the whole point:
+    // clients can be in any country and nobody has to predict which.
+    expect(detect('werhdsf923001234567').action).toBe('hold')
+    expect(detect('glued971501234567').action).toBe('hold') // UAE
+    expect(detect('glued33612345678').action).toBe('hold') // France
+  })
+
+  it('does not mistake work identifiers for numbers from somewhere', () => {
+    // The same check has to REJECT these, or it is just "is a number".
+    expect(detect('epoch 1722787200').action).not.toBe('hold')
+    expect(detect('we processed 2345678901 rows').action).not.toBe('hold')
+    expect(detect('werhdsf123435432435').action).not.toBe('hold')
   })
 
   it('negative context still outranks a configured country code', () => {

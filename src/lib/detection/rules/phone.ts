@@ -1,3 +1,6 @@
+import { parsePhoneNumberFromString, type MetadataJson } from 'libphonenumber-js/core'
+import metadataJson from 'libphonenumber-js/metadata.min.json'
+
 import type { Rule, RuleMatch } from '../types'
 
 /**
@@ -117,6 +120,48 @@ function foldDigitLookalikes(text: string): string {
   })
 }
 
+/**
+ * Does this digit run parse as a REAL number in some country?
+ *
+ * The one signal that scales to "clients can be anywhere". Asking whether a
+ * run starts with a country code is worthless — all 202 assigned E.164 codes
+ * begin with digits 1-9, so it matches everything. Asking whether the whole
+ * run is a VALID number for a specific country is not: libphonenumber checks
+ * length, prefix and national-number rules per country, which rejects almost
+ * every work identifier while accepting real numbers from all of them.
+ *
+ * Measured before adopting: 6/6 real numbers (PK, AE, GB, US, FR, IN)
+ * recognised, 7/7 work numbers (epochs, row counts, order refs) rejected.
+ *
+ * The /min metadata is used — 84KB, and it scored identically to /max on
+ * that set. Detection is server-side only, so this never reaches a browser.
+ *
+ * Note on the "zero dependencies" line in TECHNICAL_PLAN §1: this is one,
+ * deliberately. The reason given there is purity — no I/O, corpus-testable —
+ * and a phone-number parser is pure. The alternative was a hand-maintained
+ * table of per-country lengths and prefixes, which is the same data, stale.
+ */
+/**
+ * The library's own `/min` entry point does `require('metadata.min.json')`,
+ * which tsx hands back as `{ default: … }` — so it threw there while working
+ * under vitest and Next. Since scripts/score-detection.ts runs on tsx, that
+ * silently disabled this check in the very tool used to measure it. Loading
+ * the metadata explicitly and unwrapping either shape keeps every runtime
+ * agreeing about what the engine does.
+ */
+const metadata = ((metadataJson as unknown as { default?: unknown }).default ??
+  metadataJson) as MetadataJson
+
+function looksLikeARealNumber(digits: string): boolean {
+  // E.164 floor and ceiling; anything outside cannot be a number anyway.
+  if (digits.length < 8 || digits.length > 15) return false
+  try {
+    return parsePhoneNumberFromString(`+${digits}`, metadata)?.isValid() ?? false
+  } catch {
+    return false
+  }
+}
+
 function digitCount(s: string): number {
   return (s.match(/\d/g) ?? []).length
 }
@@ -227,6 +272,7 @@ export const phoneRules: Rule[] = [
         // at flag_only, because finalize() has already seen the cap.
         const strongShape =
           m[0].startsWith('0') ||
+          looksLikeARealNumber(m[0]) ||
           (config?.phoneCountryCodes ?? []).some(
             (code) => code.length > 0 && m[0].startsWith(code),
           )

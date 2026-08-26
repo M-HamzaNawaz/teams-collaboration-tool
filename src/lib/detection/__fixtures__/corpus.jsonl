@@ -250,7 +250,7 @@
 {"text": "connect to node 1234567890123", "expect": "flag_only"}
 {"text": "ping latency 1234567890 ns", "expect": "flag_only"}
 {"text": "werhdsf123435432435", "expect": "flag_only", "types": ["phone"]}
-{"text": "werhdsf923001234567", "expect": "flag_only", "types": ["phone"]}
+{"text": "werhdsf923001234567", "expect": "hold", "types": ["phone"]}
 {"text": "werhdsf03001234567", "expect": "hold", "types": ["phone"]}
 {"text": "abc1234567890", "expect": "flag_only", "types": ["phone"]}
 {"text": "chek contact232490523", "expect": "hold", "types": ["phone"]}
