@@ -221,3 +221,21 @@
 {"text": "build v1234567890 is deployed", "expect": "allow"}
 {"text": "order abc1234567890 shipped today", "expect": "allow"}
 {"text": "see ticket ref9876543210 for details", "expect": "allow"}
+{"text": "john@gmail,com", "expect": "hold", "types": ["email"]}
+{"text": "reach me john@gmail dot com", "expect": "hold", "types": ["email"]}
+{"text": "john@gmail·com", "expect": "hold", "types": ["email"]}
+{"text": "john[@]gmail[.]com", "expect": "hold", "types": ["email"]}
+{"text": "sarah(@)outlook(.)com", "expect": "hold", "types": ["email"]}
+{"text": "john at gmail period com", "expect": "hold", "types": ["email"]}
+{"text": "ping me on03001234567", "expect": "hold", "types": ["phone"]}
+{"text": "0 3 0 0 1 2 3 4 5 6 7", "expect": "hold", "types": ["phone"]}
+{"text": "03OO1234567", "expect": "hold", "types": ["phone"]}
+{"text": "zero3001234567", "expect": "hold", "types": ["phone"]}
+{"text": "counting down 1 2 3 4 5 6 7 8 9 0 go", "expect": "allow"}
+{"text": "the sequence is 2 0 2 4 1 0 0 1 0 5 for the export", "expect": "allow"}
+{"text": "sha 000111000111000", "expect": "allow"}
+{"text": "commit 0a1b2c3d4e5f6789", "expect": "allow"}
+{"text": "the pool id is 0oo0oo0oo0oo", "expect": "allow"}
+{"text": "error code 0x00110011", "expect": "allow"}
+{"text": "meet at 9 dot 30 sharp", "expect": "allow"}
+{"text": "docs are at github.com", "expect": "allow"}

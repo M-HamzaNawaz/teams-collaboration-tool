@@ -14,7 +14,7 @@ const STANDARD = /[a-z0-9][a-z0-9._%+-]*@[a-z0-9][a-z0-9.-]*\.[a-z]{2,24}\b/g
  * as domain separators.
  */
 const BRACKETED_AT =
-  /([a-z0-9][a-z0-9._+-]{0,63})\s*(?:\[\s*at\s*\]|\(\s*at\s*\)|\{\s*at\s*\})\s*([a-z0-9][a-z0-9-]{0,62})((?:\s*(?:\[\s*dot\s*\]|\(\s*dot\s*\)|\{\s*dot\s*\}|\.|\s+dot\s+)\s*[a-z0-9-]{1,63})+)/g
+  /([a-z0-9][a-z0-9._+-]{0,63})\s*(?:\[\s*(?:at|@)\s*\]|\(\s*(?:at|@)\s*\)|\{\s*(?:at|@)\s*\})\s*([a-z0-9][a-z0-9-]{0,62})((?:\s*(?:\[\s*(?:dot|\.)\s*\]|\(\s*(?:dot|\.)\s*\)|\{\s*(?:dot|\.)\s*\}|\.|\s+(?:dot|period)\s+)\s*[a-z0-9-]{1,63})+)/g
 
 /**
  * Bare-word obfuscation: "john at gmail dot com". The at-marker is just the
@@ -24,7 +24,21 @@ const BRACKETED_AT =
  * github.com" out while catching "john at gmail dot com".
  */
 const BARE_AT =
-  /([a-z0-9][a-z0-9._+-]{0,63})\s+at\s+([a-z0-9][a-z0-9-]{0,62})((?:\s*(?:\[\s*dot\s*\]|\(\s*dot\s*\)|\{\s*dot\s*\}|\s+dot\s+)\s*[a-z0-9-]{1,63})+)/g
+  /([a-z0-9][a-z0-9._+-]{0,63})\s+at\s+([a-z0-9][a-z0-9-]{0,62})((?:\s*(?:\[\s*(?:dot|\.)\s*\]|\(\s*(?:dot|\.)\s*\)|\{\s*(?:dot|\.)\s*\}|\s+(?:dot|period)\s+)\s*[a-z0-9-]{1,63})+)/g
+
+/**
+ * A literal '@' with a disguised domain separator: "john@gmail,com",
+ * "john@gmail dot com", "john@gmail·com".
+ *
+ * This is the cheap half of obfuscation — people swap the dot because it is
+ * the character a naive scanner keys on, and leave the '@' alone. The '@' is
+ * doing the work here: it is unambiguous in a way " at " never is, so the
+ * separator can be loose without the prose false positives that force
+ * BARE_AT to demand a spelled "dot". A comma between an address and a TLD is
+ * either evasion or a typo, and both are worth an admin's eyes.
+ */
+const AT_LOOSE_DOT =
+  /([a-z0-9][a-z0-9._%+-]*)@([a-z0-9][a-z0-9-]*)\s*(?:,|·|\[\s*\.\s*\]|\(\s*\.\s*\)|\s+(?:dot|period)\s+)\s*([a-z]{2,24})\b/g
 
 /**
  * Words that precede " at " constantly in prose. A BARE_AT match whose
@@ -37,10 +51,20 @@ const PROSE_USERNAMES = new Set([
   'begins', 'ends', 'am', 'pm', 'you', 'they', 'im', 'available',
 ])
 
-/** The final domain label must be a plausible TLD ("meet at 5 dot 30" → '30' fails). */
+/**
+ * The final domain label must be a plausible TLD ("meet at 5 dot 30" → '30'
+ * fails).
+ *
+ * Must recognise every separator the patterns above accept. When it lagged
+ * behind them it silently rejected real matches: "john[@]gmail[.]com" split
+ * on the bare '.' inside "[.]" and produced "]com", and "john at gmail
+ * period com" never split at all — both matched the pattern and were thrown
+ * away by this guard.
+ */
 function lastLabelIsTld(matchText: string): boolean {
   const labels = matchText
-    .replace(/\[\s*dot\s*\]|\(\s*dot\s*\)|\{\s*dot\s*\}/g, ' dot ')
+    .replace(/\[\s*(?:dot|\.)\s*\]|\(\s*(?:dot|\.)\s*\)|\{\s*(?:dot|\.)\s*\}/g, ' dot ')
+    .replace(/\s+period\s+/g, ' dot ')
     .split(/\s+dot\s+|\./)
   const last = labels[labels.length - 1]?.trim()
   return /^[a-z]{2,24}$/.test(last ?? '')
@@ -103,6 +127,12 @@ export const emailRules: Rule[] = [
     type: 'email',
     target: 'normalized',
     find: (text) => collectObfuscated(BRACKETED_AT, text, 0.9, false),
+  },
+  {
+    id: 'email.at-loose-dot',
+    type: 'email',
+    target: 'normalized',
+    find: (text) => collectSimple(AT_LOOSE_DOT, text, 0.9),
   },
   {
     id: 'email.bare-at-spelled-dot',

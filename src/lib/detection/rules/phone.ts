@@ -25,6 +25,16 @@ const SEPARATED =
 /** Bare digit run, phone-length. Hyphen in the guards keeps UUID/ID segments out. */
 const CONTIGUOUS = /(?<![\d.,-])\d{10,13}(?![\d.,-])/g
 
+/**
+ * One digit at a time: "0 3 0 0 1 2 3 4 5 6 7".
+ *
+ * SEPARATED wants groups of 2-8, so single digits fall straight through it —
+ * spacing every character is the obvious next move once someone learns that
+ * "03001234567" is caught. Ten or more is well past anything a person writes
+ * as a list, and the leading zero still decides hold vs flag.
+ */
+const SPACED_DIGITS = /(?<![\d\s.,-])\d(?:[ \t]\d){9,14}(?![\d.,-])/g
+
 /** Spelled-out digits: "zero three zero zero one two three…" (≥7 digit-words). */
 const SPELLED =
   /\b(?:(?:zero|one|two|three|four|five|six|seven|eight|nine|oh)[\s,-]+){6,}(?:zero|one|two|three|four|five|six|seven|eight|nine|oh)\b/g
@@ -44,11 +54,33 @@ const CONTEXT =
  * message delivers flagged instead of freezing a courier update.
  */
 const NEGATIVE_CONTEXT =
-  /(?:tracking|order|invoice|account|ticket|case|reference|ref|serial|pin|code|otp|passcode|id|txn|transaction|iban|version|build)\b[^0-9]{0,24}$/
+  /(?:tracking|order|invoice|account|ticket|case|reference|ref|serial|pin|code|otp|passcode|id|txn|transaction|iban|version|build|sha|hash|commit|digest|checksum|seed|nonce)\b[^0-9]{0,24}$/
 
 /** Impostor guards, tested against the matched text itself. */
 const ISO_DATE_START = /^(?:19|20)\d{2}\b/ // 2026-08-04, "2024 2025" year lists
 const CURRENCY_NEAR = /(?:rs|pkr|usd|eur|gbp|aed|inr|[$€£₹])\s*\.?\s*$/
+
+/**
+ * Inside a run that is ALREADY mostly digits, letters that ape digits are
+ * digits: "03oo1234567", "030012345l7". One-for-one substitution, so offsets
+ * are unchanged and spans still point at what the sender actually typed.
+ *
+ * Scoped to digit-dominant runs deliberately. normalize.ts declines to fold
+ * o/0 and l/1 globally because doing so "would corrupt legitimate text and
+ * inflate false positives" — that judgement is right for prose. It does not
+ * apply inside an eleven-character run that is already eight-tenths digits,
+ * where a letter is not a letter.
+ */
+const LOOKALIKE_RUN = /[0-9oli]{10,16}/g
+
+function foldDigitLookalikes(text: string): string {
+  return text.replace(LOOKALIKE_RUN, (run) => {
+    const digits = (run.match(/\d/g) ?? []).length
+    // At most three impostors; beyond that it is a word, not a number.
+    if (digits < run.length - 3) return run
+    return run.replace(/o/g, '0').replace(/[li]/g, '1')
+  })
+}
 
 function digitCount(s: string): number {
   return (s.match(/\d/g) ?? []).length
@@ -92,7 +124,14 @@ export const phoneRules: Rule[] = [
       for (const m of text.matchAll(INTERNATIONAL)) {
         const digits = digitCount(m[0])
         if (digits < 8 || digits > 16) continue
-        matches.push({ start: m.index, end: m.index + m[0].length, confidence: 0.95 })
+        // A leading '+' is unambiguous — nothing but a phone number is
+        // written that way, so no surrounding word talks it down. '00' is
+        // not: "sha 000111000111000" is a digest, and this rule read it as
+        // a Chinese mobile. Only the 00 form answers to NEGATIVE_CONTEXT.
+        const explicitPlus = m[0].trimStart().startsWith('+')
+        const signals = contextSignals(text, m.index)
+        const confidence = !explicitPlus && signals.capped ? 0.5 : 0.95
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence })
       }
       return matches
     },
@@ -128,7 +167,9 @@ export const phoneRules: Rule[] = [
     id: 'phone.contiguous',
     type: 'phone',
     target: 'normalized',
-    find(text) {
+    find(rawText) {
+      // Same length, so every index below still lines up with rawText.
+      const text = foldDigitLookalikes(rawText)
       const matches: RuleMatch[] = []
       for (const m of text.matchAll(CONTIGUOUS)) {
         if (ISO_DATE_START.test(m[0]) && m[0].length <= 10) continue // 2026080400-ish stamps
@@ -138,8 +179,30 @@ export const phoneRules: Rule[] = [
         // Phone words nearby outrank the ID-marker guard; without them it
         // stands. A NEGATIVE_CONTEXT hit leaves boost at 0, so "tracking
         // number abc1234567890" is still skipped.
-        if (!signals.boost && precededByIdMarker(text, m.index)) continue
+        //
+        // A LEADING ZERO outranks it too: identifiers and versions do not
+        // start with 0, national numbers do, and that is what makes
+        // "on03001234567" a phone number rather than a reference. Without
+        // this, gluing the digits to any word is a bypass.
+        const leadingZero = m[0].startsWith('0')
+        if (!signals.boost && !leadingZero && precededByIdMarker(text, m.index)) {
+          continue
+        }
         const confidence = finalize(m[0].startsWith('0') ? 0.72 : 0.6, signals)
+        matches.push({ start: m.index, end: m.index + m[0].length, confidence })
+      }
+      return matches
+    },
+  },
+  {
+    id: 'phone.spaced-digits',
+    type: 'phone',
+    target: 'normalized',
+    find(text) {
+      const matches: RuleMatch[] = []
+      for (const m of text.matchAll(SPACED_DIGITS)) {
+        const signals = contextSignals(text, m.index)
+        const confidence = finalize(m[0].startsWith('0') ? 0.75 : 0.62, signals)
         matches.push({ start: m.index, end: m.index + m[0].length, confidence })
       }
       return matches
