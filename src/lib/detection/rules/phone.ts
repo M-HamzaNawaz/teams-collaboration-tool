@@ -22,8 +22,18 @@ const INTERNATIONAL =
 const SEPARATED =
   /(?<![\d.,-])(?:\(\d{2,4}\)|\d{2,4})(?:[\s.-]\d{2,8}){1,4}(?![\d,.-])/g
 
-/** Bare digit run, phone-length. Hyphen in the guards keeps UUID/ID segments out. */
-const CONTIGUOUS = /(?<![\d.,-])\d{10,13}(?![\d.,-])/g
+/**
+ * Bare digit run, phone-length. Hyphen in the guards keeps UUID/ID segments
+ * out.
+ *
+ * Upper bound is 15 because that is E.164's — the international numbering
+ * standard caps a full number, country code included, at fifteen digits. The
+ * old ceiling of 13 was below the real one, so "at123243252345243" matched
+ * nothing at all and no amount of surrounding context could rescue it: the
+ * rule never fired to be boosted. A bare run this long is still only
+ * flag_only on its own; it takes a phone word nearby to hold.
+ */
+const CONTIGUOUS = /(?<![\d.,-])\d{10,15}(?![\d.,-])/g
 
 /**
  * One digit at a time: "0 3 0 0 1 2 3 4 5 6 7".
@@ -45,7 +55,7 @@ const SPELLED =
  * digits, so the keyword binds to THIS number and not an earlier one.
  */
 const CONTEXT =
-  /(?:number|phone|mobile|cell|call|text|dial|ring|whatsapp|contact|reach)\b[^0-9]{0,20}$/
+  /(?:number|phone|mobile|cell|call|text|sms|msg|dm|dial|ring|whatsapp|contact|reach|inbox|digits|talk\s+(?:to|on)|hit\s+me|ping\s+me|message\s+me|msg\s+me|text\s+me)\b[^0-9]{0,20}$/
 
 /**
  * Words that say the digits are an identifier, not a phone: tracking numbers,

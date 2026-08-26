@@ -239,3 +239,13 @@
 {"text": "error code 0x00110011", "expect": "allow"}
 {"text": "meet at 9 dot 30 sharp", "expect": "allow"}
 {"text": "docs are at github.com", "expect": "allow"}
+{"text": "now talk to at123243252345243", "expect": "hold", "types": ["phone"]}
+{"text": "talk to me on 923001234567", "expect": "hold", "types": ["phone"]}
+{"text": "hit me on 03001234567", "expect": "hold", "types": ["phone"]}
+{"text": "text me 123243252345243", "expect": "hold", "types": ["phone"]}
+{"text": "we hit 1000000000 users this quarter", "expect": "allow"}
+{"text": "hit the 1234567890 milestone today", "expect": "allow"}
+{"text": "the message 1234567890123 was delivered", "expect": "allow"}
+{"text": "num of records: 1234567890", "expect": "allow"}
+{"text": "connect to node 1234567890123", "expect": "allow"}
+{"text": "ping latency 1234567890 ns", "expect": "allow"}
