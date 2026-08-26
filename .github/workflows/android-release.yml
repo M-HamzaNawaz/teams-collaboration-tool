@@ -62,9 +62,14 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
+      # arm64 only. Every Android phone made since roughly 2017 is arm64, so
+      # the other three ABIs were three extra files nobody installs and three
+      # extra compiles per run. To bring them back, add
+      # armv7-linux-androideabi / i686-linux-android / x86_64-linux-android
+      # here and the matching --target values below.
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android
 
       - uses: swatinem/rust-cache@v2
         with:
@@ -153,15 +158,23 @@ jobs:
 
       - name: Build the APK
         working-directory: desktop
+        env:
+          # Debug builds keep full symbols, which is where ~100 MB of the
+          # 115 MB APK came from — the four ABIs were never the problem.
+          # Nobody debugs the Rust shell (the webview is inspected from
+          # chrome://inspect), so strip them. Set as an env override rather
+          # than a [profile.dev] block so local `tauri dev` keeps its
+          # symbols; this affects CI only.
+          CARGO_PROFILE_DEV_STRIP: debuginfo
         run: |
           if [ "${{ steps.keystore.outputs.present }}" = "true" ]; then
             # Release build. Gradle leaves it unsigned; apksigner below signs
             # it — patching the generated build.gradle.kts would mean redoing
             # that surgery every time `android init` regenerates the file.
-            npx tauri android build --apk --split-per-abi
+            npx tauri android build --apk --split-per-abi --target aarch64
           else
             echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — building a DEBUG-signed APK. Installable, but not for real distribution."
-            npx tauri android build --apk --split-per-abi --debug
+            npx tauri android build --apk --split-per-abi --target aarch64 --debug
           fi
 
       - name: Sign and align
@@ -218,5 +231,5 @@ jobs:
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
             gh release create "$GITHUB_REF_NAME" \
               --title "Confide Android $GITHUB_REF_NAME" \
-              --notes "Download the **arm64-v8a** APK — that is every Android phone made since roughly 2017. The other files are for older 32-bit devices and emulators. Android needs \"Install unknown apps\" allowed for your browser or file manager the first time. The app updates its content automatically on every web deploy; you only need a new APK when the shell itself changes."
+              --notes "Download the APK below and tap it. Android will ask you to allow \"Install unknown apps\" for your browser or file manager the first time. Built for arm64, which is every Android phone made since roughly 2017. The app updates its content automatically on every web deploy; you only need a new APK when the shell itself changes."
           gh release upload "$GITHUB_REF_NAME" dist/*.apk --clobber
