@@ -64,9 +64,62 @@ export function ChatShell(props: {
     return () => ctx.revert()
   }, [])
 
+  /**
+   * Mobile back, done as history rather than as a gesture handler.
+   *
+   * On Android the left-edge swipe IS the system back gesture — there is
+   * nothing to invent, only something to answer. Opening a conversation
+   * pushes a history entry, so the swipe, the hardware/gesture back, the
+   * browser back button and the in-app arrow all land in the same place:
+   * the conversation list. Writing a custom swipe listener instead would
+   * fight the OS for the same touch and still leave the real back button
+   * broken.
+   *
+   * Same URL, only a state entry — the group already lives in ?g= for deep
+   * links, and pushing that per tap would fill the address bar's history
+   * with every room the user glanced at.
+   *
+   * Desktop pushes nothing: both panes are visible, so there is no "back"
+   * to go to, and back should leave the page as it always has.
+   */
+  const MOBILE_ENTRY = 'confide:chat'
+
+  function isMobileViewport() {
+    return (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 767px)').matches // below Tailwind md
+    )
+  }
+
   function openGroup(group: GroupRow) {
     setSelected(group)
+    // Only from the list, so the ⌘K switcher opening a group while already
+    // in a conversation does not stack a second entry.
+    if (mobileView === 'list' && isMobileViewport()) {
+      window.history.pushState({ [MOBILE_ENTRY]: true }, '')
+    }
     setMobileView('chat')
+  }
+
+  useEffect(() => {
+    function onPopState() {
+      // Whatever the user pressed or swiped, they meant "out of this
+      // conversation". Only meaningful on mobile; on desktop the list is
+      // never hidden, so this is a no-op there.
+      setMobileView('list')
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  function closeGroup() {
+    // Through history, not straight to state: otherwise the arrow leaves the
+    // pushed entry behind and the next back press appears to do nothing.
+    if ((window.history.state as Record<string, unknown> | null)?.[MOBILE_ENTRY]) {
+      window.history.back()
+    } else {
+      setMobileView('list')
+    }
   }
 
   return (
@@ -112,7 +165,7 @@ export function ChatShell(props: {
                   ? props.initialMessages
                   : undefined
               }
-              onBack={() => setMobileView('list')}
+              onBack={closeGroup}
               onGroupChanged={() => setSelected(null)}
             />
           ) : (
