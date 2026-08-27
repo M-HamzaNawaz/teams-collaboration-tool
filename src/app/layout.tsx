@@ -31,6 +31,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // The soft keyboard must shrink the LAYOUT viewport, not just the visual
+  // one. Without this the spec default is `resizes-visual`: the keyboard
+  // covers the bottom of the page while dvh still reports the full screen,
+  // so the app shell (h-dvh) keeps its full height and the composer sits
+  // underneath the keyboard — typing into a box you cannot see. Minimising
+  // and reopening the app forced a recalculation, which is why it looked
+  // correct the second time.
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f7f7" },
     { media: "(prefers-color-scheme: dark)", color: "#121415" },
