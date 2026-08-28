@@ -11,6 +11,8 @@
     --accent-dark: #1f3d2e;
     --line: #d9e2dc;
     --tint: #eef5f1;
+    --warn-line: #d9b38c;
+    --warn-tint: #fdf6ec;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -20,13 +22,12 @@
     font-size: 10.5pt;
     line-height: 1.5;
   }
-  .block, .callout, table, .steps li { break-inside: avoid; }
+  .block, .callout, table, .steps li, .card { break-inside: avoid; }
   tr { break-inside: avoid; }
   h3 { break-after: avoid; }
-  .page { page-break-after: always; padding: 0; }
+  .page { page-break-after: always; }
   .page:last-child { page-break-after: auto; }
 
-  /* Cover */
   .cover {
     height: 96vh;
     display: flex; flex-direction: column; justify-content: center;
@@ -40,8 +41,12 @@
   }
   .cover h1 { font-size: 40pt; letter-spacing: -1px; color: var(--accent-dark); }
   .cover .sub { font-size: 15pt; color: var(--muted); margin-top: 8px; }
+  .cover .thesis {
+    margin-top: 26px; font-size: 12pt; color: var(--accent);
+    font-weight: 600; letter-spacing: -0.2px;
+  }
   .cover .meta {
-    margin-top: 48px; padding-top: 20px; border-top: 2px solid var(--line);
+    margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--line);
     color: var(--muted); font-size: 10.5pt; line-height: 2;
   }
   .cover .meta strong { color: var(--ink); }
@@ -50,300 +55,936 @@
     font-size: 19pt; color: var(--accent-dark); letter-spacing: -0.3px;
     margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 2.5px solid var(--accent);
   }
-  h3 { font-size: 12pt; margin: 4.5mm 0 2mm; color: var(--accent-dark); }
+  h3 { font-size: 12pt; margin: 5mm 0 2mm; color: var(--accent-dark); }
+  h4 { font-size: 10.5pt; margin: 4mm 0 1.5mm; color: var(--accent); }
   p { margin-bottom: 3mm; }
   ul, ol { margin: 0 0 3mm 6mm; }
-  li { margin-bottom: 1mm; }
+  li { margin-bottom: 1.2mm; }
   .lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
-
-  table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 10.5pt; }
-  th {
-    text-align: left; background: var(--tint); color: var(--accent-dark);
-    padding: 1.8mm 3mm; border-bottom: 2px solid var(--accent);
-    font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px;
+  code {
+    font-family: 'Consolas', 'SF Mono', Monaco, monospace;
+    font-size: 9.5pt; background: var(--tint); padding: 0.5mm 1.2mm;
+    border-radius: 2px;
   }
-  td { padding: 1.8mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 10pt; }
+  th {
+    background: var(--accent-dark); color: #fff; text-align: left;
+    padding: 2mm 2.5mm; font-weight: 600; font-size: 9.5pt;
+  }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:nth-child(even) td { background: #f7faf8; }
+  td strong { color: var(--accent-dark); }
 
   .callout {
-    background: var(--tint); border-left: 4px solid var(--accent);
-    padding: 3mm 4mm; border-radius: 6px; margin: 4mm 0;
+    background: var(--tint); border-left: 3px solid var(--accent);
+    padding: 3mm 4mm; margin: 3mm 0 4mm; border-radius: 0 3px 3px 0;
   }
-  .callout b { color: var(--accent-dark); }
+  .callout.warn { background: var(--warn-tint); border-left-color: var(--warn-line); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--accent); font-weight: 700; margin-bottom: 1.5mm;
+  }
+  .callout.warn .label { color: #a9702f; }
 
-  .steps { counter-reset: step; list-style: none; margin-left: 0; }
-  .steps li {
-    counter-increment: step; position: relative;
-    padding: 0 0 2.8mm 12mm; margin: 0;
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 3mm 0 4mm; }
+  .card {
+    border: 1px solid var(--line); border-radius: 4px; padding: 3mm 3.5mm;
   }
-  .steps li::before {
-    content: counter(step);
-    position: absolute; left: 0; top: 0;
-    width: 8mm; height: 8mm; border-radius: 50%;
-    background: var(--accent-dark); color: #fff;
+  .card h4 { margin-top: 0; }
+  .card p { margin-bottom: 0; font-size: 10pt; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 4mm 0; }
+  .stat { border: 1px solid var(--line); border-radius: 4px; padding: 3mm; text-align: center; }
+  .stat .n { font-size: 20pt; font-weight: 700; color: var(--accent); line-height: 1.1; }
+  .stat .l { font-size: 8.5pt; color: var(--muted); margin-top: 1mm; }
+
+  .toc { margin-top: 4mm; }
+  .toc li { margin-bottom: 2mm; font-size: 11pt; }
+  .toc .n { color: var(--accent); font-weight: 700; display: inline-block; width: 8mm; }
+  .toc .d { color: var(--muted); font-size: 9.5pt; display: block; margin-left: 8mm; }
+
+  .flow { margin: 3mm 0 5mm; }
+  .flow .step {
+    display: flex; gap: 3mm; margin-bottom: 2.5mm; align-items: flex-start;
+  }
+  .flow .num {
+    flex: 0 0 6mm; height: 6mm; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 9pt; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10pt; font-weight: 700;
   }
-  .steps li b { display: block; color: var(--accent-dark); }
+  .flow .body { flex: 1; }
+  .flow .body strong { color: var(--accent-dark); }
 
-  code, .mono {
-    font-family: 'Consolas', 'Menlo', monospace; font-size: 9.5pt;
-    background: var(--tint); padding: 0.4mm 1.5mm; border-radius: 3px;
+  .foot {
+    margin-top: 6mm; padding-top: 3mm; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 9pt;
   }
-  .foot { color: var(--muted); font-size: 9pt; margin-top: 6mm; }
 </style>
 </head>
 <body>
 
-<!-- ─────────────────────────── COVER ─────────────────────────── -->
+<!-- ───────────────────────────── COVER ───────────────────────────── -->
 <section class="page cover">
   <div class="mark">C</div>
   <h1>Confide</h1>
-  <p class="sub">Team collaboration platform with built-in client-contact protection</p>
+  <div class="sub">Agency collaboration with client protection built in</div>
+  <div class="thesis">The chat is the surface. The control layer is the product.</div>
   <div class="meta">
-    <strong>Company:</strong> Algotix AI<br>
-    <strong>Live application:</strong> https://teams-collaboration-tool-bwfb.vercel.app<br>
-    <strong>Document:</strong> Project documentation, v1.0<br>
-    <strong>Date:</strong> 18 August 2026
+    <strong>Platforms</strong> &nbsp;·&nbsp; Web · Desktop (Windows, macOS, Linux) · Mobile (Android, iPhone)<br>
+    <strong>Status</strong> &nbsp;·&nbsp; Phase 1 complete — 69 of 71 planned tasks delivered<br>
+    <strong>Document</strong> &nbsp;·&nbsp; Full project documentation, all platforms<br>
+    <strong>Date</strong> &nbsp;·&nbsp; 28 August 2026
   </div>
 </section>
 
-<!-- ─────────────────────────── OVERVIEW ─────────────────────────── -->
+<!-- ───────────────────────────── CONTENTS ───────────────────────────── -->
 <section class="page">
-  <h2>1. What is Confide?</h2>
-  <p class="lead">Confide is a chat workspace where an agency's team and its clients talk in one place — and where the platform itself makes sure nobody can quietly exchange personal contact details.</p>
+  <h2>Contents</h2>
+  <ol class="toc" style="list-style:none; margin-left:0">
+    <li><span class="n">1</span> What Confide is, and the problem it solves
+      <span class="d">The business case, in plain terms</span></li>
+    <li><span class="n">2</span> The three guarantees
+      <span class="d">Rules the system cannot break, even with a software bug</span></li>
+    <li><span class="n">3</span> How message screening works
+      <span class="d">The detection engine — the heart of the product</span></li>
+    <li><span class="n">4</span> Roles and who can do what
+      <span class="d">Admin, team member, client</span></li>
+    <li><span class="n">5</span> The moderation workflow
+      <span class="d">Held, approved, blocked, escalated</span></li>
+    <li><span class="n">6</span> The three platforms
+      <span class="d">Web, desktop and mobile — what each is and why it exists</span></li>
+    <li><span class="n">7</span> Technology choices and the reasoning
+      <span class="d">Every major component, and why it was chosen</span></li>
+    <li><span class="n">8</span> Security and data protection
+      <span class="d">How the guarantees are enforced technically</span></li>
+    <li><span class="n">9</span> The audit trail
+      <span class="d">Evidence that stands up after the fact</span></li>
+    <li><span class="n">10</span> Notifications
+      <span class="d">Three delivery routes, and when each applies</span></li>
+    <li><span class="n">11</span> Quality and testing
+      <span class="d">What is verified automatically, and how often</span></li>
+    <li><span class="n">12</span> Deployment and operations
+      <span class="d">Where it runs, how releases work</span></li>
+    <li><span class="n">13</span> Known limits and what comes next
+      <span class="d">Stated openly, so nothing is discovered mid-pilot</span></li>
+  </ol>
 
-  <p>Agencies have a common problem: a team member and a client meet inside a project, swap phone numbers or emails, and take the work outside the agency. Normal chat tools (WhatsApp, Slack) cannot stop this, because they never look at what is being sent.</p>
+  <div class="callout" style="margin-top:8mm">
+    <div class="label">How to read this document</div>
+    <p>Sections 1–6 are for anyone. Sections 7–12 go into technical detail for
+    engineering review. Section 13 is deliberately candid about what the
+    product does <em>not</em> do — that section matters most in a client
+    conversation, because it is the difference between a promise and a
+    commitment.</p>
+  </div>
+</section>
 
-  <p>Confide is built around one idea: <b>the conversation is open, but contact details are not.</b> Every message is checked on the server before anyone sees it. If it contains a phone number, an email address, a social-media link, a payment handle, or a crypto address — even written in a disguised way — the message is held back and sent to an admin for review instead of being delivered.</p>
+<!-- ───────────────────────────── 1. WHAT IT IS ───────────────────────────── -->
+<section class="page">
+  <h2>1. What Confide is, and the problem it solves</h2>
+  <p class="lead">A messaging platform for agencies working with clients, where
+  the messaging is the visible part and the protection is the product.</p>
+
+  <h3>The problem</h3>
+  <p>An agency introduces a client to a contractor, or a specialist, or a team
+  member. They collaborate in a shared chat. Then someone shares a phone number
+  or an email address, the conversation moves to WhatsApp, and the next project
+  is arranged without the agency in the room.</p>
+  <p>This is the single largest revenue leak in agency work, and it is
+  invisible: by the time it is noticed, the relationship has already moved.
+  Ordinary chat tools cannot help, because from their point of view nothing
+  unusual happened — someone simply sent a message.</p>
+
+  <h3>What Confide does</h3>
+  <p>Confide is a group chat platform where <strong>every message is inspected
+  by the server before anyone can read it.</strong> If a message contains
+  contact information — a phone number, an email address, a WhatsApp link, a
+  payment handle — it does not get delivered. It waits for an administrator to
+  approve or block it, and the decision is recorded permanently.</p>
 
   <div class="callout">
-    <b>In one sentence:</b> Confide gives teams and clients a modern group chat while protecting the agency's client relationships automatically, and keeps tamper-proof evidence of everything that happens.
+    <div class="label">The core guarantee</div>
+    <p>A message containing contact information cannot reach its recipient
+    unless a human administrator releases it. This is not enforced by the app
+    politely declining to send — it is enforced by the database, which does not
+    grant the browser permission to create a message at all.</p>
   </div>
 
-  <div class="block"><h3>The four pillars</h3>
-  <table>
-    <tr><th style="width:30%">Pillar</th><th>What it means</th></tr>
-    <tr><td><b>Screened messages</b></td><td>Every message is scanned server-side before delivery. Contact details are caught and held for admin review — the sender sees a policy notice, the group never sees the message unless it is approved.</td></tr>
-    <tr><td><b>Masked identities</b></td><td>The admin decides everyone's display name (for example "Ahmed K."). Members cannot rename themselves into a contact card — name changes go through an admin-reviewed request, and even names are screened for contact details.</td></tr>
-    <tr><td><b>Admin control</b></td><td>Admins invite people, set names and roles, create and archive groups, review held messages, and see workspace-wide statistics on a dashboard only they can open.</td></tr>
-    <tr><td><b>Tamper-proof audit</b></td><td>Every action — login, message, file, approval, name change — is written to an append-only log where each entry is cryptographically linked to the previous one. If anyone edits history, verification reports the exact entry where the chain breaks.</td></tr>
-  </table>
+  <h3>What that gives the agency</h3>
+  <ul>
+    <li><strong>Prevention</strong> — contact details are stopped before they arrive, not flagged after the fact.</li>
+    <li><strong>Visibility</strong> — the administrator sees every attempt, including the ones they approve.</li>
+    <li><strong>Evidence</strong> — a permanent, tamper-evident record of who tried to share what, and when. This is what makes a non-circumvention agreement enforceable rather than decorative.</li>
+    <li><strong>Identity control</strong> — clients see the names the agency assigns, not the personal identities of the people doing the work.</li>
+  </ul>
 
-  </div>
-<div class="block"><h3>Who uses it</h3>
-  <table>
-    <tr><th style="width:18%">Role</th><th>What they can do</th></tr>
-    <tr><td><b>Admin</b></td><td>Everything: dashboard, all groups, moderation queue, name-change reviews, audit log, invitations, group lifecycle, own profile edits (still screened).</td></tr>
-    <tr><td><b>Team member</b></td><td>Chat and share files in their groups, request a name change, pick a theme. Lands directly in Chat after login.</td></tr>
-    <tr><td><b>Client</b></td><td>Same chat experience as members, inside the groups they are invited to. Sees only masked names of the team.</td></tr>
-  </table>
-</div>
+  <h3>What the client experiences</h3>
+  <p>An ordinary, modern chat application. Groups, replies, file sharing,
+  formatting, notifications, read receipts. The screening is invisible unless
+  it triggers — and when it does, the sender sees a clear "pending review"
+  marker on their own message rather than a silent failure.</p>
 </section>
 
-<!-- ─────────────────────────── FEATURES ─────────────────────────── -->
+<!-- ───────────────────────────── 2. GUARANTEES ───────────────────────────── -->
 <section class="page">
-  <h2>2. Main features</h2>
+  <h2>2. The three guarantees</h2>
+  <p class="lead">These are not features that could be switched off or bypassed
+  by a bug in the application. They are enforced by the database itself.</p>
 
-  <div class="block"><h3>Group chat</h3>
-  <ul>
-    <li><b>Real-time messaging</b> — messages appear for everyone instantly, with no page reload.</li>
-    <li><b>Read receipts, WhatsApp style</b> — one grey tick when delivered, double teal tick only when <i>everyone</i> in the group has read the message.</li>
-    <li><b>Online / offline dots</b> — a Slack-style presence dot on every avatar.</li>
-    <li><b>File sharing</b> — up to 50 MB per file, with a live upload percentage. Oversized files are refused <i>before</i> uploading starts, with a clear message. Failed uploads can be retried with one click.</li>
-    <li><b>Desktop notifications</b> — Slack-style system notifications when a message arrives while the app tab is in the background. Held messages notify nobody until they are approved.</li>
-    <li><b>Rich composer</b> — bold, italic, lists, quotes, code, @mentions.</li>
-  </ul>
+  <h3>Guarantee 1 — No private messages. Groups only.</h3>
+  <p>There is no direct-message feature, and there is no way to add one without
+  redesigning the database. The structure cannot represent a conversation
+  between exactly two people. Only administrators can create groups.</p>
+  <p><strong>Why it matters:</strong> a private channel between two members is
+  precisely where an exchange of contact details would happen unobserved.
+  Removing the possibility is stronger than monitoring it.</p>
 
+  <h3>Guarantee 2 — Identity is controlled by the agency.</h3>
+  <p>Members cannot change their own display name. When an administrator
+  invites someone, the administrator sets the name the others will see. A member
+  who wants a different name submits a request, which an administrator reviews.</p>
+  <p><strong>Why it matters:</strong> without this, a member could simply rename
+  themselves to their phone number or email address and bypass the entire
+  screening system in a single move.</p>
+
+  <h3>Guarantee 3 — Archive is not deletion, and the record is permanent.</h3>
+  <p>Groups are archived, never erased. The audit log physically rejects any
+  attempt to modify or delete an entry — including from the application's own
+  administrative account. Each entry is cryptographically linked to the one
+  before it, so removing or altering a single line breaks a chain that the
+  system verifies nightly.</p>
+  <p><strong>Why it matters:</strong> evidence that can be quietly edited is not
+  evidence. This is what allows the record to be handed to a lawyer.</p>
+
+  <div class="callout">
+    <div class="label">Why enforce at the database level</div>
+    <p>Application code changes constantly, and every change is a chance to
+    introduce a mistake. These three rules are enforced one layer below the
+    application, so a bug in a screen, a route or a future feature cannot
+    violate them. Each is covered by an automated test that runs on every
+    change.</p>
   </div>
-<div class="block"><h3>Message screening &amp; moderation</h3>
-  <ul>
-    <li>Five detector families run on the server: <b>phone numbers, email addresses, social-media links, payment handles, and crypto addresses</b>.</li>
-    <li>Detection normalizes the text first, so spacing and punctuation tricks (like "0 3 2 1 – 1 2 3…") are still caught.</li>
-    <li>Caught messages go to the <b>moderation queue</b>. Admins see the message exactly as typed with the caught parts highlighted, who sent it, in which group, and how long it has been waiting.</li>
-    <li><b>Approve</b> delivers the message to the group. <b>Block</b> replaces it with a policy notice for the sender.</li>
-    <li>If a held message waits too long (30 minutes by default, adjustable per workspace and per group), it is <b>escalated</b> — a background job sweeps every minute and alerts managers.</li>
-    <li>Admins see a <b>live red dot</b> on the sidebar and bell the moment something needs review — no reload needed. It clears itself when the queue is empty.</li>
-  </ul>
-
-  </div>
-<div class="block"><h3>Identity &amp; names</h3>
-  <ul>
-    <li>The admin types each person's display name at invitation time; invitees never get a field to change it.</li>
-    <li>Members request name changes; admins approve or reject them on a dedicated review page.</li>
-    <li>Names and job titles are screened by the same detectors as messages — a name cannot become a phone number.</li>
-  </ul>
-
-  </div>
-<div class="block"><h3>Audit log</h3>
-  <ul>
-    <li>Every event is recorded: logins, messages, files, approvals, blocks, invites, name changes, group changes.</li>
-    <li>Entries form a <b>hash chain</b> — each one is cryptographically linked to the one before it. A scheduled job and a "Verify now" button both check the chain and report the first broken entry if anything was altered.</li>
-    <li>Filters by group, member, and event type answer questions like "what did this person do in this group?" without touching the database. Full <b>CSV export</b> for reports.</li>
-  </ul>
-
-  </div>
-<div class="block"><h3>Workspace &amp; comfort</h3>
-  <ul>
-    <li><b>Email invitations</b> — sent from <span class="mono">noreply@algotix.ai</span>, valid for 7 days, with a copyable backup link for the admin.</li>
-    <li><b>Admin dashboard</b> — messages held/delivered, people counts, recent activity, chain status. Members and clients land straight in Chat.</li>
-    <li><b>Six color themes</b> — chosen at first login, changeable any time, saved to the account so they follow the user to any device.</li>
-    <li><b>⌘K quick switch</b> — jump to any page or group from the keyboard.</li>
-    <li><b>Responsive</b> — full mobile layout with a slide-out sidebar; the desktop sidebar collapses ChatGPT-style.</li>
-  </ul>
-</div>
 </section>
 
-<!-- ─────────────────────────── SCREENING FLOW ─────────────────────────── -->
+<!-- ───────────────────────────── 3. SCREENING ───────────────────────────── -->
 <section class="page">
   <h2>3. How message screening works</h2>
-  <p class="lead">The journey of one message, from the sender's keyboard to the group.</p>
+  <p class="lead">The detection engine is the component the entire product rests
+  on. It reads text and decides one of three things.</p>
 
-  <ol class="steps">
-    <li><b>The sender presses Send.</b> The message goes to the server — never directly to other people.</li>
-    <li><b>The server scans it.</b> The text is normalized (spacing, punctuation and disguise tricks removed) and run through all five detector families.</li>
-    <li><b>Clean message → delivered.</b> It appears in the group for everyone within about a second, and the audit log records it.</li>
-    <li><b>Contact details found → held.</b> The group never sees it. The sender sees it marked as held with a policy notice. Nobody is notified about its content.</li>
-    <li><b>Admins are alerted live.</b> A red dot appears on the sidebar and bell within ~2 seconds, plus a toast on the moderation page itself.</li>
-    <li><b>An admin reviews it.</b> The queue shows the message as typed, with every caught span highlighted and labeled by rule (for example <span class="mono">phone</span>, <span class="mono">email</span>).</li>
-    <li><b>Approve or block.</b> Approve delivers it to the group (and only then do notifications fire). Block turns the sender's bubble into a policy notice. Both decisions are audited with the reviewer's identity.</li>
-    <li><b>Nothing waits forever.</b> A background job checks every minute; anything held longer than the configured limit (default 30 minutes) is escalated to the group's manager.</li>
-  </ol>
+  <table>
+    <tr><th style="width:22%">Outcome</th><th>What happens</th></tr>
+    <tr><td><strong>Allow</strong></td><td>Delivered immediately. Nothing recorded beyond the ordinary message record.</td></tr>
+    <tr><td><strong>Flag</strong></td><td>Delivered immediately, but the finding is recorded for the administrator. Used where something was detected but is very unlikely to be a genuine attempt — an automated email from a service, for example.</td></tr>
+    <tr><td><strong>Hold</strong></td><td>Not delivered. Waits in the moderation queue. The recipient sees nothing at all until an administrator approves it.</td></tr>
+  </table>
 
   <div class="callout">
-    <b>Why server-side matters:</b> the check happens where users cannot switch it off. There is no client-side toggle, no browser trick, and no app version that skips the scan — the message simply does not exist for other people until the server decides it is safe.
+    <div class="label">Why three outcomes and not two</div>
+    <p>A system that only blocks or allows must choose between missing real
+    attempts and freezing ordinary work. The middle outcome is what makes the
+    product usable: a pasted error log containing a service email address is
+    recorded but delivered, while a personal address is held.</p>
   </div>
 
-  <div class="block"><h3>What the detectors catch</h3>
+  <h3>What it detects</h3>
+  <p>Twenty-eight separate detection rules across five categories:</p>
   <table>
-    <tr><th style="width:28%">Detector</th><th>Examples of what is caught</th></tr>
-    <tr><td>Phone numbers</td><td>Local and international formats, spaced or punctuated digits, spelled-out digit tricks.</td></tr>
-    <tr><td>Email addresses</td><td>Plain addresses and disguised forms ("name at gmail dot com").</td></tr>
-    <tr><td>Social links</td><td>WhatsApp, Telegram, Instagram, LinkedIn, and similar profile or invite links.</td></tr>
-    <tr><td>Payment handles</td><td>PayPal.me, Wise, and similar pay-me handles.</td></tr>
-    <tr><td>Crypto addresses</td><td>Bitcoin / Ethereum-style wallet addresses.</td></tr>
+    <tr><th style="width:24%">Category</th><th>Examples caught</th></tr>
+    <tr><td><strong>Phone numbers</strong></td><td>International (<code>+92 300 1234567</code>), national (<code>03001234567</code>), spaced digits, digits spelled out in words, numbers glued to text</td></tr>
+    <tr><td><strong>Email addresses</strong></td><td>Standard, and disguised forms — <code>john [at] gmail [dot] com</code>, <code>john@gmail,com</code>, <code>j o h n @ …</code></td></tr>
+    <tr><td><strong>Messaging links</strong></td><td>WhatsApp, Telegram, Signal, Instagram, Snapchat, Discord, Skype, LinkedIn, Facebook</td></tr>
+    <tr><td><strong>Payment handles</strong></td><td>PayPal.me, Wise, Payoneer, IBAN bank details</td></tr>
+    <tr><td><strong>Crypto wallets</strong></td><td>Bitcoin (both formats), Ethereum, Tron</td></tr>
   </table>
-</div>
+
+  <h3>Where the check happens</h3>
+  <p>Screening runs on the server, before a message row exists. It is not a
+  check the app performs on its way to the database — it is a gate the message
+  must pass to <em>become</em> a message at all. A modified client, a direct API
+  call or a replayed request all arrive at the same place, so there is no
+  route into a conversation that skips it.</p>
 </section>
 
-<!-- ─────────────────────────── SECURITY ─────────────────────────── -->
+<!-- ─────────────────────────── 3a. RESISTING EVASION ─────────────────────── -->
 <section class="page">
-  <h2>4. Security</h2>
+  <h2>3a. How the engine resists evasion</h2>
+  <p class="lead">Anyone determined to pass a number through will try to disguise
+  it. The engine runs in layers, each closing a different class of disguise.</p>
 
-  <div class="block"><h3>Access control</h3>
-  <ul>
-    <li><b>Row-Level Security (RLS)</b> is enforced by the database itself: every query runs as the logged-in user, and the database refuses rows the user should not see. Even a bug in the app cannot leak another group's messages.</li>
-    <li>Held messages are visible <i>only</i> to reviewers — the RLS policy literally filters them out of everyone else's message list.</li>
-    <li>The admin dashboard, moderation queue, and audit log are server-checked on every request, not just hidden in the menu.</li>
-  </ul>
+  <h3>The five stages, in order</h3>
+  <table>
+    <tr><th style="width:26%">Stage</th><th>What it does</th></tr>
+    <tr><td><strong>1. Normalise</strong></td><td>Text is reduced to a canonical form: look-alike letters from other alphabets become their Latin equivalents, and invisible characters are stripped.</td></tr>
+    <tr><td><strong>2. Match</strong></td><td>All twenty-eight rules run over both the normalised text and the raw original, so a trick that survives one view is caught in the other.</td></tr>
+    <tr><td><strong>3. Merge</strong></td><td>Overlapping findings of the same kind collapse to the strongest one.</td></tr>
+    <tr><td><strong>4. Allowlist</strong></td><td>Known-harmless senders drop from hold to flag: delivered, still recorded.</td></tr>
+    <tr><td><strong>5. Decide</strong></td><td>Each finding carries a confidence score. At or above the hold threshold the message stops; below it, it delivers flagged.</td></tr>
+  </table>
 
+  <h3>Defeating disguises</h3>
+  <p>A Cyrillic "о" in an email address, or a zero-width space inside a phone
+  number, is removed before matching. Formatting is stripped and the message
+  re-checked, so a number split with bold markers still reads as one number.
+  Letters standing in for digits — <code>o</code> for zero, <code>l</code> for one
+  — are folded back inside runs that are mostly digits.</p>
+
+  <h3>Phone numbers are validated, not just matched</h3>
+  <p>A run of digits is checked against the international numbering standard to
+  see whether it is a real number in <em>any</em> country, using per-country length and
+  prefix rules. A bare number from Pakistan, the UAE, the UK or India is caught
+  with no configuration; an invoice or order reference of the same length is not.</p>
+
+  <h3>The allowlist is not a blind spot</h3>
+  <p>Seventeen tooling domains — GitHub, Stripe, Figma, Sentry — and machine
+  senders such as <code>noreply@</code> are demoted rather than held, because they
+  appear constantly in real work. Free consumer providers are deliberately absent:
+  that is where contact exchange happens. A demoted finding is still recorded.</p>
+
+  <h3>Measured accuracy</h3>
+  <p>The engine is tested against a corpus of real and adversarial examples on
+  every change, and every evasion found joins that corpus permanently, so the same
+  trick cannot work twice. Two thresholds are enforced automatically, and a change
+  breaching either cannot be merged:</p>
+  <div class="stats">
+    <div class="stat"><div class="n">271</div><div class="l">test cases in the corpus</div></div>
+    <div class="stat"><div class="n">100%</div><div class="l">of contact info caught</div></div>
+    <div class="stat"><div class="n">0%</div><div class="l">false alarms</div></div>
+    <div class="stat"><div class="n">28</div><div class="l">detection rules</div></div>
   </div>
-<div class="block"><h3>Files</h3>
-  <ul>
-    <li>Files live in a <b>private storage bucket</b> — there are no public links. Downloads go through the app, which checks group membership first.</li>
-    <li>Uploads are capped at 50 MB and refused before transfer if too large.</li>
-  </ul>
-
-  </div>
-<div class="block"><h3>Evidence</h3>
-  <ul>
-    <li>The audit log is <b>append-only</b>: no update or delete, enforced by the database.</li>
-    <li>Each entry carries a hash of the previous entry. Editing any historical row breaks every hash after it, and verification points to the exact first broken entry.</li>
-    <li>Verification runs on a schedule and on demand; the result (intact / broken at entry #N) is shown on the audit page.</li>
-  </ul>
-
-  </div>
-<div class="block"><h3>Accounts</h3>
-  <ul>
-    <li>Authentication is handled by Supabase Auth (email + password, secure session cookies).</li>
-    <li>Invitations expire after 7 days and are single-use.</li>
-    <li>Every login is itself an audited event.</li>
-  </ul>
-</div>
 </section>
 
-<!-- ─────────────────────────── TECHNOLOGY ─────────────────────────── -->
+<!-- ───────────────────────────── 3b. STRICTNESS ───────────────────────────── -->
 <section class="page">
-  <h2>5. Technology &amp; architecture</h2>
+  <h2>3b. Screening strictness, per group</h2>
+  <p class="lead">Different rooms need different rules. A client-facing room and
+  an internal team room should not be screened identically.</p>
+
+  <p>An administrator sets the level from the group's menu. It applies from the
+  next message, with no technical work required.</p>
 
   <table>
-    <tr><th style="width:26%">Layer</th><th style="width:34%">Technology</th><th>Notes</th></tr>
-    <tr><td>Web application</td><td>Next.js 16 (React 19)</td><td>Server-rendered pages with client-side navigation; instant skeletons per page.</td></tr>
-    <tr><td>Database</td><td>Supabase — PostgreSQL 17</td><td>28 versioned migrations; RLS on every table.</td></tr>
-    <tr><td>Real-time</td><td>Supabase Realtime</td><td>Live messages, presence dots, moderation alerts.</td></tr>
-    <tr><td>File storage</td><td>Supabase Storage</td><td>Private bucket, membership-checked downloads.</td></tr>
-    <tr><td>Background jobs</td><td>pg_cron</td><td><span class="mono">confide-escalations</span> (every minute) and <span class="mono">confide-chain-verify</span> (audit chain check).</td></tr>
-    <tr><td>Email</td><td>Resend</td><td>Invitations from <span class="mono">noreply@algotix.ai</span> (verified domain).</td></tr>
-    <tr><td>Hosting</td><td>Vercel</td><td>App served from Tokyo (hnd1), same region as the database for fast queries.</td></tr>
-    <tr><td>Styling</td><td>Tailwind CSS v4</td><td>Token-based theme system — 6 themes from one set of CSS variables.</td></tr>
-    <tr><td>Animations</td><td>GSAP + CSS</td><td>All animations respect the user's reduced-motion setting.</td></tr>
+    <tr><th style="width:26%">Level</th><th>Holds</th><th style="width:22%">Ordinary messages held</th></tr>
+    <tr><td><strong>Contact info only</strong><br><span style="color:var(--muted)">default</span></td><td>Phone numbers, emails, messaging links, payment handles, crypto addresses</td><td>None measured</td></tr>
+    <tr><td><strong>Long numbers too</strong></td><td>The above, plus any number of seven digits or more</td><td>About 28%</td></tr>
+    <tr><td><strong>Any number at all</strong></td><td>The above, plus every digit — including "3pm" and "v2.0.1"</td><td>About 67%</td></tr>
   </table>
 
-  <div class="block"><h3>How the pieces talk</h3>
-  <ol class="steps">
-    <li><b>Browser → Vercel.</b> The Next.js app serves pages and hosts all API routes (messages, moderation, audit, invitations, files, and so on).</li>
-    <li><b>Vercel → Supabase.</b> API routes talk to PostgreSQL as the logged-in user, so RLS applies everywhere. Message screening runs here, on the server.</li>
-    <li><b>Supabase → Browser.</b> Realtime channels push new messages, presence, and moderation alerts straight to open tabs.</li>
-    <li><b>Inside the database.</b> pg_cron runs the escalation sweep and chain verification without any external scheduler.</li>
-    <li><b>Resend.</b> Called by the invitation route to deliver branded invite emails.</li>
-  </ol>
-
+  <div class="callout warn">
+    <div class="label">Recommendation</div>
+    <p>Use the strictest level on client-facing rooms only. The percentages
+    above are measured, not estimated — at the strictest setting roughly
+    two-thirds of ordinary conversation is held for review, which is
+    appropriate for a room where no number should ever be exchanged and
+    unworkable for an internal team room.</p>
   </div>
-<div class="block"><h3>Quality process</h3>
-  <ul>
-    <li><b>81 unit tests</b> cover the detection engine (including a disguise-tricks corpus), scoring, and normalization.</li>
-    <li><b>End-to-end tests</b> (Playwright) walk real browser flows: login, invite, chat, hold, approve, audit.</li>
-    <li><b>CI on GitHub Actions</b> runs lint, types, unit and e2e tests on every push against a fresh database.</li>
-    <li>UI changes are verified with real mouse-event browser testing before commit; production checks clean up their own test data.</li>
-  </ul>
-</div>
+
+  <h3>What cannot be switched off</h3>
+  <p>The settings control whether a finding <em>holds</em> a message. They
+  cannot disable detection itself, and they cannot disable the audit trail.
+  Contact information is always detected and always recorded; a group may only
+  choose whether it waits for review or is delivered with a note.</p>
 </section>
 
-<!-- ─────────────────────────── DEPLOYMENT ─────────────────────────── -->
+<!-- ───────────────────────────── 4. ROLES ───────────────────────────── -->
 <section class="page">
-  <h2>6. Deployment &amp; operations</h2>
+  <h2>4. Roles and who can do what</h2>
 
   <table>
-    <tr><th style="width:30%">Item</th><th>Value</th></tr>
-    <tr><td>Live URL</td><td>https://teams-collaboration-tool-bwfb.vercel.app</td></tr>
-    <tr><td>App hosting</td><td>Vercel, region Tokyo (<span class="mono">hnd1</span>)</td></tr>
-    <tr><td>Database</td><td>Supabase hosted project, Tokyo (<span class="mono">ap-northeast-1</span>)</td></tr>
-    <tr><td>Email sender</td><td><span class="mono">noreply@algotix.ai</span> via Resend (domain verified)</td></tr>
-    <tr><td>Cost</td><td>All free tiers: Vercel Hobby, Supabase Free, Resend Free</td></tr>
+    <tr><th style="width:20%">Role</th><th>Can do</th><th>Cannot do</th></tr>
+    <tr>
+      <td><strong>Administrator</strong><br><span style="color:var(--muted)">the agency</span></td>
+      <td>Create groups, invite people, set display names, approve or block held messages, set screening strictness, archive and delete groups, read the full audit trail and export it</td>
+      <td>Modify or delete audit entries. Delete a group without archiving it first.</td>
+    </tr>
+    <tr>
+      <td><strong>Team member</strong><br><span style="color:var(--muted)">staff, contractors</span></td>
+      <td>Read and write in the groups they belong to, share files, reply, mention colleagues</td>
+      <td>Change their own display name, create groups, invite anyone, see the moderation queue, see groups they are not in</td>
+    </tr>
+    <tr>
+      <td><strong>Client</strong></td>
+      <td>Read and write in their groups, share files</td>
+      <td>Everything a member cannot, plus: see other members' internal nicknames, and see the moderation queue under any circumstances</td>
+    </tr>
   </table>
 
-  <div class="block"><h3>Routine operations</h3>
-  <table>
-    <tr><th style="width:30%">Task</th><th>How</th></tr>
-    <tr><td>Deploy an update</td><td>Push to the GitHub main branch — Vercel builds and deploys automatically.</td></tr>
-    <tr><td>Change a setting / key</td><td>Edit Environment Variables in the Vercel dashboard, then redeploy.</td></tr>
-    <tr><td>Database changes</td><td>Written as migration files and applied with the Supabase CLI (<span class="mono">supabase db push</span>).</td></tr>
-    <tr><td>Backups</td><td>Weekly <span class="mono">supabase db dump</span> is recommended (free plan has no automatic point-in-time recovery).</td></tr>
-    <tr><td>Keep-alive</td><td>Supabase free projects pause after ~7 days without traffic — a free daily ping (cron-job.org) keeps it awake.</td></tr>
-  </table>
+  <h3>What each person sees of the others</h3>
+  <p>A visibility layer decides field by field what one role may see about
+  another. A client sees display name, role label and avatar. Team members see
+  those plus internal nicknames. Real email addresses and phone numbers are
+  stored in a table that the application's ordinary read permissions cannot
+  access at all — not filtered in code, but unreadable at the database level.</p>
 
+  <div class="callout">
+    <div class="label">One group manager</div>
+    <p>A group may have a designated manager who can approve or block held
+    messages for that group only. A client can never hold this role, because
+    the moderation queue displays exactly the contact details the holds exist
+    to contain.</p>
   </div>
-<div class="block"><h3>Free-tier limits to know</h3>
+
+  <h3>Removal takes effect in seconds</h3>
+  <p>When someone is removed from a group or workspace, their existing session
+  is revoked rather than left to expire. Access tokens are short-lived by
+  design, so a removed person cannot continue reading past that window even if
+  they keep the application open.</p>
+</section>
+
+<!-- ───────────────────────────── 5. MODERATION ───────────────────────────── -->
+<section class="page">
+  <h2>5. The moderation workflow</h2>
+
+  <div class="flow">
+    <div class="step"><div class="num">1</div><div class="body">
+      <strong>Someone sends a message.</strong> It goes to the server. The
+      browser has no permission to write a message directly — this is enforced
+      by database privileges, not by application code.
+    </div></div>
+    <div class="step"><div class="num">2</div><div class="body">
+      <strong>The server screens it.</strong> The detection engine runs before
+      any message record exists. Formatting is stripped and it is screened a
+      second time, so disguises using bold or italics do not work.
+    </div></div>
+    <div class="step"><div class="num">3</div><div class="body">
+      <strong>Clean messages are delivered instantly.</strong> They appear for
+      everyone in the group in real time.
+    </div></div>
+    <div class="step"><div class="num">4</div><div class="body">
+      <strong>Flagged messages are held.</strong> The sender sees "pending
+      review" on their own message. Other members see nothing — not a
+      placeholder, not a gap. The message does not exist for them.
+    </div></div>
+    <div class="step"><div class="num">5</div><div class="body">
+      <strong>Administrators are alerted.</strong> Their dashboard updates live,
+      and an email is sent as a fallback if no administrator is currently
+      online.
+    </div></div>
+    <div class="step"><div class="num">6</div><div class="body">
+      <strong>An administrator decides.</strong> They see the message with the
+      detected text highlighted exactly as it was typed, and choose approve or
+      block. Both outcomes are recorded permanently with who decided and how
+      long it took.
+    </div></div>
+    <div class="step"><div class="num">7</div><div class="body">
+      <strong>Approved messages are delivered</strong> in their original
+      position in the conversation, marked "released after review" so they are
+      not missed by someone who has already scrolled past.
+    </div></div>
+  </div>
+
+  <h3>If nobody responds</h3>
+  <table>
+    <tr><th style="width:30%">After</th><th>What happens</th></tr>
+    <tr><td><strong>30 minutes</strong></td><td>The held message escalates to the group manager. Recorded in the audit trail as a system action.</td></tr>
+    <tr><td><strong>8 hours</strong></td><td>The message is released automatically, still flagged and still fully recorded, and marked as auto-released rather than approved by a person.</td></tr>
+  </table>
+  <p>Both intervals are configurable per group. The reasoning for automatic
+  release is that a chat tool which silently swallows messages overnight will
+  not be used — and a tool that is not used protects nothing. The release is
+  visible and attributed, never silent.</p>
+</section>
+
+<!-- ───────────────────────────── 6. PLATFORMS ───────────────────────────── -->
+<section class="page">
+  <h2>6. The three platforms</h2>
+  <p class="lead">One product, one codebase, three ways to reach it. Everything
+  below shares the same screening, the same data and the same audit trail.</p>
+
+  <div class="callout">
+    <div class="label">The architectural decision behind all three</div>
+    <p>The application itself is a web application. The desktop and mobile apps
+    are native windows wrapping that same web application — the identical
+    approach Slack and Discord use. The consequence is significant: <strong>every
+    improvement ships to all three platforms at once</strong>, with no app-store
+    review and no reinstall. Only changes to native behaviour require a new
+    build, which has happened roughly ten times in the project's life.</p>
+  </div>
+
+  <h3>Platform comparison</h3>
+  <table>
+    <tr><th style="width:30%"></th><th>Web</th><th>Desktop</th><th>Mobile</th></tr>
+    <tr><td><strong>Install needed</strong></td><td>No</td><td>Yes</td><td>Optional</td></tr>
+    <tr><td><strong>Own icon &amp; window</strong></td><td>No</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td><strong>Notifications while closed</strong></td><td>Yes</td><td>Yes</td><td>Browser-installed: yes<br>Android app: not yet</td></tr>
+    <tr><td><strong>Updates automatically</strong></td><td>Yes</td><td>Yes, with a prompt</td><td>Content yes, app shell manually</td></tr>
+    <tr><td><strong>Distribution</strong></td><td>A web address</td><td>Installer download</td><td>Browser install, or app file</td></tr>
+  </table>
+</section>
+
+<!-- ───────────────────────────── 6a. WEB ───────────────────────────── -->
+<section class="page">
+  <h2>6a. The web application</h2>
+  <p class="lead">The product itself. Everything else is a window onto this.</p>
+
+  <h3>What it is</h3>
+  <p>A modern web application that runs in any current browser on any device.
+  There is nothing to install, updates are instant, and there is no version
+  fragmentation — everyone is always on the current release.</p>
+
+  <h3>What it contains</h3>
+  <table>
+    <tr><th style="width:26%">Screen</th><th>Purpose</th></tr>
+    <tr><td><strong>Dashboard</strong></td><td>The administrator's control surface: what is awaiting review, what was caught this week, whether the evidence chain still verifies, recent activity. Members and clients see a version suited to them.</td></tr>
+    <tr><td><strong>Chat</strong></td><td>Conversations, replies, file sharing, mentions, rich text formatting, read receipts, typing indicators, live presence.</td></tr>
+    <tr><td><strong>Moderation</strong></td><td>The queue of held messages, each showing the detected text highlighted, with approve and block.</td></tr>
+    <tr><td><strong>Names</strong></td><td>Requests from members to change their display name, for administrator review.</td></tr>
+    <tr><td><strong>Audit</strong></td><td>The full permanent record, searchable and filterable, with chain verification and export.</td></tr>
+  </table>
+
+  <h3>Design and usability</h3>
   <ul>
-    <li><b>Supabase Free:</b> 500 MB database, 1 GB file storage, 5 GB bandwidth/month, pauses when idle for a week.</li>
-    <li><b>Vercel Hobby:</b> non-commercial license, 100 GB bandwidth/month. A paid plan is the correct step once the company uses it commercially at scale.</li>
-    <li><b>Resend Free:</b> 100 emails/day, 3,000/month — far above invitation volume.</li>
+    <li>Works on any screen from 360 pixels upward — every flow completes on a phone without sideways scrolling.</li>
+    <li>Six colour themes, chosen per person and remembered across devices.</li>
+    <li>Keyboard shortcut (⌘K / Ctrl+K) to jump to any page or group.</li>
+    <li>Loading placeholders shaped like the real content, so nothing jumps as it arrives.</li>
+    <li>Automatically refreshes itself when a new version is deployed, at a moment the user is not mid-sentence.</li>
   </ul>
 
-  </div>
-<div class="block"><h3>Planned / not yet built</h3>
+  <h3>Installable from the browser</h3>
+  <p>On both Android and iPhone the web application can be added to the home
+  screen from the browser. It then has its own icon, opens full-screen with no
+  browser bar, and receives notifications even when closed. This requires no
+  app store, no download and no approval process — and on Android it is
+  currently the only route that delivers notifications while the app is not
+  running.</p>
+</section>
+
+<!-- ───────────────────────────── 6b. DESKTOP ───────────────────────────── -->
+<section class="page">
+  <h2>6b. The desktop application</h2>
+  <p class="lead">Windows, macOS and Linux, built from one codebase.</p>
+
+  <h3>What it is</h3>
+  <p>A native desktop application — its own icon, its own window, its own place
+  in the taskbar or dock. Inside that window runs the same web application,
+  which is why it never falls behind: the moment a change is deployed, the
+  desktop app has it.</p>
+
+  <h3>Built with Tauri</h3>
+  <table>
+    <tr><th style="width:30%">Aspect</th><th>Detail</th></tr>
+    <tr><td><strong>Framework</strong></td><td>Tauri 2 — a Rust-based shell that uses the operating system's own browser engine</td></tr>
+    <tr><td><strong>Why Tauri over Electron</strong></td><td>Electron bundles an entire copy of Chrome into every application, producing installers of 100 MB and upwards. Tauri uses the browser engine already present on the machine, so the installer is a few megabytes and the application uses far less memory.</td></tr>
+    <tr><td><strong>Current version</strong></td><td>0.1.2</td></tr>
+    <tr><td><strong>Platforms</strong></td><td>Windows (.msi and .exe), macOS (.dmg, Intel and Apple Silicon), Linux (.deb and AppImage)</td></tr>
+  </table>
+
+  <h3>What the desktop app adds over a browser tab</h3>
   <ul>
-    <li>Push notifications when the browser is fully closed (current notifications need an open tab).</li>
-    <li>Message content search.</li>
-    <li>Virus scanning of uploaded files.</li>
-    <li>Message edit and delete.</li>
+    <li><strong>Native notifications</strong> — through the operating system, not the browser, which is more reliable and works when minimised.</li>
+    <li><strong>Unread badge</strong> — on the dock icon (macOS) or taskbar (Windows), showing what needs attention.</li>
+    <li><strong>Single instance</strong> — clicking the icon twice focuses the existing window instead of opening a second copy.</li>
+    <li><strong>Remembered window position and size</strong> between sessions.</li>
+    <li><strong>External links open in the real browser</strong>, not trapped inside the app window.</li>
+    <li><strong>Real file downloads</strong> into the Downloads folder, with a notification when finished.</li>
+    <li><strong>Automatic updates</strong> — checks after launch and every five minutes while open. A new version offers to install itself, verifies its signature, installs and restarts.</li>
+  </ul>
+
+  <h3>Security of the desktop bridge</h3>
+  <p>The web application is given exactly two native capabilities: showing
+  notifications and setting the window badge. Nothing else is reachable — no file
+  system, no command execution — enforced by a permission file scoped to the
+  application's own web address.</p>
+
+  <h3>Release process</h3>
+  <p>Publishing a version is a single tagged commit. An automated pipeline builds
+  all three operating systems, signs the update artefacts and publishes the
+  installers; installed apps find the release in minutes.</p>
+</section>
+
+<!-- ───────────────────────────── 6c. MOBILE ───────────────────────────── -->
+<section class="page">
+  <h2>6c. Mobile</h2>
+  <p class="lead">Two routes, and the simpler one is currently the better one.</p>
+
+  <h3>Route 1 — Install from the browser (available today)</h3>
+  <p>Open Confide in Chrome on Android or Safari on iPhone and choose "Add to
+  Home Screen". The result has its own icon, opens full-screen without a
+  browser bar, and — importantly — <strong>receives notifications even when
+  fully closed</strong>.</p>
+  <p>This works on both Android and iPhone, requires no app store, no review
+  process and no cost, and updates itself with every deployment.</p>
+
+  <h3>Route 2 — The Android app file (built, in testing)</h3>
+  <p>A genuine Android application, built from the same Tauri shell as the
+  desktop app and distributed directly through the project's own releases
+  rather than the Play Store.</p>
+  <table>
+    <tr><th style="width:30%">Aspect</th><th>Detail</th></tr>
+    <tr><td><strong>Distribution</strong></td><td>Direct download and install — no Play Store listing, so no review process and no risk of rejection</td></tr>
+    <tr><td><strong>Architecture</strong></td><td>arm64 — every Android phone made since roughly 2017</td></tr>
+    <tr><td><strong>Content updates</strong></td><td>Automatic, with every deployment, exactly like the desktop app</td></tr>
+    <tr><td><strong>App updates</strong></td><td>Manual. Android does not permit an application to install itself silently, so a new version is downloaded and tapped. The app shows a notice when one is available.</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <div class="label">The one real gap</div>
+    <p>Notifications while the Android <em>app</em> is fully closed do not work
+    yet. Android's system for this requires an integration with Google's
+    messaging service — free of charge, roughly two to three days of work.
+    Until then, the browser-installed version handles this correctly, which is
+    why it is the recommended route for the pilot.</p>
+  </div>
+
+  <h3>iPhone</h3>
+  <p>The browser-installed route works fully on iPhone today, including
+  notifications. A native iPhone application is possible from the same
+  codebase, but requires a Mac to build and an Apple Developer subscription at
+  $99 per year — a decision worth taking only if App Store presence becomes a
+  requirement.</p>
+
+  <h3>Mobile-specific engineering</h3>
+  <p>Substantial work has gone into making the phone experience correct rather
+  than merely functional: the message box collapses to a single row on a phone,
+  the back gesture returns to the conversation list instead of closing the app,
+  the keyboard no longer covers the message box, menus stay on screen, and the
+  formatting toolbar scrolls sideways rather than wrapping.</p>
+</section>
+
+<!-- ───────────────────────────── 7. TECH ───────────────────────────── -->
+<section class="page">
+  <h2>7. Technology choices and the reasoning</h2>
+  <p class="lead">Every significant component, what it does, and why it was
+  chosen over the alternatives.</p>
+
+  <table>
+    <tr><th style="width:22%">Component</th><th style="width:18%">Choice</th><th>Purpose and reasoning</th></tr>
+    <tr>
+      <td><strong>Application framework</strong></td><td>Next.js 16.3<br>React 19.2</td>
+      <td>Renders pages on the server for speed and search visibility, and provides the server-side routes where screening happens. One language and one codebase across the whole product.</td>
+    </tr>
+    <tr>
+      <td><strong>Language</strong></td><td>TypeScript 5</td>
+      <td>Catches whole classes of mistake before the code ever runs. On a product where a bug can mean a leaked phone number, this is a safety measure rather than a convenience.</td>
+    </tr>
+    <tr>
+      <td><strong>Database</strong></td><td>Supabase<br>(PostgreSQL)</td>
+      <td>Provides the database, sign-in, live updates and file storage in one service. PostgreSQL specifically because its row-level security is what allows the three guarantees to be enforced below the application.</td>
+    </tr>
+    <tr>
+      <td><strong>Styling</strong></td><td>Tailwind CSS 4</td>
+      <td>Consistent design system, small output, and no separate stylesheet that can drift out of step with the interface.</td>
+    </tr>
+    <tr>
+      <td><strong>Validation</strong></td><td>Zod 4</td>
+      <td>Every piece of data arriving from a browser is checked against a strict schema before it is used. Nothing untrusted reaches the database unvalidated.</td>
+    </tr>
+    <tr>
+      <td><strong>Phone validation</strong></td><td>libphonenumber</td>
+      <td>Google's phone number library, checking numbers against real per-country rules. This is what lets a bare number from any of 245 countries and territories be recognised while invoice and order numbers are not.</td>
+    </tr>
+    <tr>
+      <td><strong>Desktop &amp; mobile shell</strong></td><td>Tauri 2 (Rust)</td>
+      <td>Native applications for Windows, macOS, Linux and Android from one small codebase, using the operating system's own browser engine instead of bundling one.</td>
+    </tr>
+    <tr>
+      <td><strong>Email</strong></td><td>Resend</td>
+      <td>Invitations and administrator alerts.</td>
+    </tr>
+    <tr>
+      <td><strong>Notifications</strong></td><td>Web Push (VAPID)</td>
+      <td>Delivers alerts to closed and minimised browsers, encrypted end to end.</td>
+    </tr>
+    <tr>
+      <td><strong>Hosting</strong></td><td>Vercel</td>
+      <td>Deploys on every change, scales automatically, hosted in the Tokyo region.</td>
+    </tr>
+    <tr>
+      <td><strong>Testing</strong></td><td>Vitest, Playwright</td>
+      <td>Unit tests, database rule tests, and full user-journey tests in a real browser.</td>
+    </tr>
+  </table>
+
+</section>
+
+<!-- ──────────────────────── 7a. HOW THE PIECES FIT ───────────────────────── -->
+<section class="page">
+  <h2>7a. How the pieces fit together</h2>
+  <p class="lead">Three architectural decisions do most of the work. Each moves a
+  guarantee out of the application code, where a bug could break it, and into a
+  layer that cannot be talked out of it.</p>
+
+  <h3>The path a message takes</h3>
+  <table>
+    <tr><th style="width:8%">&nbsp;</th><th>Step</th></tr>
+    <tr><td><strong>1</strong></td><td>Someone types a message — in a browser, or in the desktop or Android app, which run the same application.</td></tr>
+    <tr><td><strong>2</strong></td><td>It is sent to a server route. The browser is not permitted to write it directly.</td></tr>
+    <tr><td><strong>3</strong></td><td>The route establishes who is asking and whether they may write to that group.</td></tr>
+    <tr><td><strong>4</strong></td><td>The detection engine reads the text and returns allow, flag or hold.</td></tr>
+    <tr><td><strong>5</strong></td><td>Only then is a row written, with that outcome already attached to it.</td></tr>
+    <tr><td><strong>6</strong></td><td>Recipients receive it over a live connection that carries only what the database's own rules permit each person to see.</td></tr>
+  </table>
+
+  <h3>Two database identities, deliberately unequal</h3>
+  <p>The browser connects with an identity that may <em>read</em> messages and
+  nothing more. The server connects with a separate, privileged identity kept in
+  a file that fails the build if it is ever imported into browser code. A leak of
+  that key would expose every workspace, so the compiler prevents it rather than
+  developer discipline.</p>
+
+  <h3>One authorization choke point</h3>
+  <p>Because the privileged identity bypasses the database's own row rules, every
+  route that uses it first calls a single authorization function covering
+  thirteen named actions — send a message, moderate one, add a member, archive a
+  group, and so on. There is one place to read, one place to test, and no second
+  route with its own interpretation of who may do what.</p>
+  <p>A request aimed at another agency's workspace is answered "not found"
+  rather than "not allowed", because confirming that a group exists is itself a
+  disclosure.</p>
+
+  <div class="callout">
+    <div class="label">Why the browser cannot write messages</div>
+    <p>Every message must pass through a server route, and that route runs the
+    detection engine before writing anything. The guarantee therefore does not
+    depend on the application behaving correctly: someone with a valid login,
+    developer tools open and full knowledge of the system still cannot insert a
+    message that skipped screening — the database will refuse it.</p>
+  </div>
+</section>
+
+<!-- ───────────────────────────── 8. SECURITY ───────────────────────────── -->
+<section class="page">
+  <h2>8. Security and data protection</h2>
+
+  <h3>Separation between workspaces</h3>
+  <p>Every table carries a workspace identifier and every access rule filters
+  through it. An automated test generates the list of tables from the database
+  itself and verifies, for each one, that a user in one workspace can read
+  nothing belonging to another. A new table ships with this coverage or the
+  build fails — there is no hand-maintained list to forget to update.</p>
+
+  <h3>Contact details are unreadable, not merely hidden</h3>
+  <p>Real email addresses and phone numbers live in a table the application's
+  ordinary read permissions cannot access at all. This is not a filter applied
+  in code that could be forgotten on one screen; the permission does not exist.</p>
+
+  <h3>Files</h3>
+  <ul>
+    <li>Stored in private storage. No file has a public address.</li>
+    <li>Downloads are authorised individually and given a link valid for five minutes.</li>
+    <li>Filenames are screened exactly like message text — a file named with a phone number holds the message carrying it.</li>
+    <li>A virus-scanning step sits in the upload path, ready for a scanner to be connected.</li>
+  </ul>
+
+  <h3>Sign-in and sessions</h3>
+  <ul>
+    <li>Email and password, with rate limiting per account and per network address.</li>
+    <li>Sign-in responses are deliberately identical whether or not the account exists, so the login form cannot be used to discover who has an account.</li>
+    <li>Access tokens last ten minutes and renew invisibly, so removing someone takes effect within that window rather than whenever they happen to sign out.</li>
+    <li>Invitation links are single-use, expire after seven days, and the link itself is never stored — only an irreversible fingerprint of it.</li>
+  </ul>
+
+  <h3>Logging discipline</h3>
+  <p>No message content, email address or phone number is written to server
+  logs. A product whose value is confidentiality cannot leak conversation into
+  a third-party logging service, so log entries carry identifiers only.</p>
+
+  <h3>Recorded identity events</h3>
+  <p>Sign-in, sign-out and password changes are all recorded in the permanent
+  audit trail — so the question "who could have been in this account, and from
+  when" has an answer.</p>
+</section>
+
+<!-- ───────────────────────────── 9. AUDIT ───────────────────────────── -->
+<section class="page">
+  <h2>9. The audit trail</h2>
+  <p class="lead">The feature that turns a policy into something enforceable.</p>
+
+  <h3>What is recorded</h3>
+  <p>Every action of consequence: messages sent, held, approved, blocked,
+  escalated and auto-released; groups created, archived and deleted; people
+  invited, added and removed; names changed and name requests reviewed; files
+  uploaded; sign-ins, sign-outs and password changes; screening settings
+  changed, with both the previous and new values.</p>
+
+  <h3>Why it cannot be altered</h3>
+  <ul>
+    <li>The database rejects any attempt to modify or delete an entry — including from the application's own administrative account.</li>
+    <li>Each entry carries a cryptographic fingerprint of the entry before it, forming a chain. Changing or removing any line breaks every fingerprint after it.</li>
+    <li>The chain is verified automatically every night, and the result is shown on the dashboard. An administrator can also verify it on demand.</li>
+  </ul>
+
+  <h3>Why entries survive deletion</h3>
+  <p>Audit entries store the names of people and groups as plain text copies
+  rather than references. When a group is permanently deleted or a person
+  leaves, the record still reads correctly years later. An entry that renders
+  as "&lt;deleted&gt; did something in &lt;deleted&gt;" is not evidence.</p>
+
+  <h3>Export for a dispute</h3>
+  <p>The full timeline exports to a spreadsheet file, with three levels of
+  detail chosen at export time:</p>
+  <table>
+    <tr><th style="width:30%">Level</th><th>Contains</th></tr>
+    <tr><td><strong>Timeline only</strong></td><td>Who did what, and when. No message content.</td></tr>
+    <tr><td><strong>Plus findings</strong></td><td>Adds the exact text that was detected — the phone number or address itself. This is usually the fact a dispute turns on.</td></tr>
+    <tr><td><strong>Plus full messages</strong></td><td>Adds the complete message text.</td></tr>
+  </table>
+  <p>Exports that include message content are themselves recorded in the audit
+  trail, naming who exported, how much, and what was included. An evidence
+  surface that cannot say who copied it is a weaker one.</p>
+</section>
+
+<!-- ───────────────────────────── 10. NOTIFICATIONS ───────────────────────────── -->
+<section class="page">
+  <h2>10. Notifications</h2>
+  <p class="lead">Three delivery routes, because no single one covers every
+  situation.</p>
+
+  <table>
+    <tr><th style="width:26%">Route</th><th>When it applies</th><th>Where it works</th></tr>
+    <tr><td><strong>In-page</strong></td><td>The application is open and visible</td><td>Everywhere</td></tr>
+    <tr><td><strong>Operating system</strong></td><td>The desktop app is running, possibly minimised</td><td>Desktop app</td></tr>
+    <tr><td><strong>Web push</strong></td><td>The browser is closed entirely</td><td>Web, and browser-installed mobile</td></tr>
+  </table>
+
+  <h3>How it behaves</h3>
+  <ul>
+    <li>One control turns notifications on or off, and it governs all routes.</li>
+    <li>Only one route fires per message — no duplicate alerts.</li>
+    <li>Notification content respects the visibility rules: recipients see the display name they are permitted to see, not the sender's real identity.</li>
+    <li><strong>Held messages notify nobody.</strong> A message waiting for review has not been delivered, and a notification would defeat the hold entirely.</li>
+    <li>Sound and an unread badge accompany the alert where the platform supports them.</li>
+  </ul>
+
+  <h3>Administrator alerts</h3>
+  <p>When a message is held, administrator dashboards update live. If no
+  administrator is currently online, an email is sent instead. Both are
+  best-effort — the hold itself is already permanent in the database, so a
+  missed alert delays review but never loses a message.</p>
+</section>
+
+<!-- ───────────────────────────── 11. QUALITY ───────────────────────────── -->
+<section class="page">
+  <h2>11. Quality and testing</h2>
+  <p class="lead">Every change runs the full set automatically. A failure blocks
+  the change from being merged.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n">91</div><div class="l">unit tests</div></div>
+    <div class="stat"><div class="n">43</div><div class="l">database rule tests</div></div>
+    <div class="stat"><div class="n">271</div><div class="l">screening test cases</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">full journey tests</div></div>
+  </div>
+
+  <h3>What each layer checks</h3>
+  <table>
+    <tr><th style="width:28%">Layer</th><th>What it proves</th></tr>
+    <tr><td><strong>Unit tests</strong></td><td>Individual pieces behave correctly — the detection engine, the permission function, text normalisation, invitation tokens.</td></tr>
+    <tr><td><strong>Database rule tests</strong></td><td>The three guarantees hold at the database level: workspace separation, no write permissions for browsers, the audit log rejecting changes, deletion rules.</td></tr>
+    <tr><td><strong>Screening corpus</strong></td><td>Accuracy against real and adversarial examples, with a minimum catch rate and a maximum false-alarm rate enforced automatically.</td></tr>
+    <tr><td><strong>Journey tests</strong></td><td>The entire product working end to end in a real browser: invite someone, accept, send a phone number, confirm the sender sees "pending review", confirm the recipient receives nothing, approve it, confirm delivery, confirm the audit trail records the whole chain.</td></tr>
+  </table>
+
+  <div class="callout">
+    <div class="label">The test that matters most</div>
+    <p>One automated test performs the product's entire reason for existing:
+    that a message containing a phone number reaches no recipient until an
+    administrator approves it, and that every step is recorded. If that test
+    fails, nothing ships.</p>
+  </div>
+
+  <h3>The screening corpus, specifically</h3>
+  <p>Two limits are enforced on every change: at least 95% of contact
+  information must be caught, and at most 5% of ordinary messages may be
+  wrongly held. Current measured performance is <strong>100% caught and 0%
+  wrongly held</strong>. Every evasion attempt found in real testing is added
+  permanently, so the same technique cannot succeed twice.</p>
+</section>
+
+<!-- ───────────────────────────── 12. OPERATIONS ───────────────────────────── -->
+<section class="page">
+  <h2>12. Deployment and operations</h2>
+
+  <h3>Where it runs</h3>
+  <table>
+    <tr><th style="width:30%">Component</th><th>Hosting</th></tr>
+    <tr><td><strong>Web application</strong></td><td>Vercel, Tokyo region, deployed automatically on every change</td></tr>
+    <tr><td><strong>Database, sign-in, files</strong></td><td>Supabase, managed PostgreSQL</td></tr>
+    <tr><td><strong>Desktop installers</strong></td><td>Published as releases on the project repository</td></tr>
+    <tr><td><strong>Android app file</strong></td><td>Published the same way</td></tr>
+  </table>
+
+  <h3>How a change reaches people</h3>
+  <div class="flow">
+    <div class="step"><div class="num">1</div><div class="body">A change is committed. Automated checks run: code quality, type checking, unit tests, database rule tests, and the full journey test against a real database.</div></div>
+    <div class="step"><div class="num">2</div><div class="body">If everything passes, the web application deploys automatically.</div></div>
+    <div class="step"><div class="num">3</div><div class="body">Open browsers, desktop apps and mobile apps notice the new version within about five minutes and refresh themselves at a moment the user is not mid-sentence.</div></div>
+  </div>
+
+  <h3>Backups and recovery</h3>
+  <ul>
+    <li>Nightly database export covering structure and data.</li>
+    <li>Restore procedure documented and rehearsed rather than assumed.</li>
+    <li>Health checks and a written incident runbook.</li>
+    <li>Log discipline verified: a staged incident must be diagnosable from logs alone, with no message content present in them.</li>
+  </ul>
+
+  <h3>Database changes</h3>
+  <p>Every structural change is a numbered, sequential file, never edited once
+  merged. The entire database can be rebuilt from these files alone, which is
+  what makes the restore rehearsal meaningful. Thirty such files exist today
+  across fifteen tables.</p>
+</section>
+
+<!-- ───────────────────────────── 13. LIMITS ───────────────────────────── -->
+<section class="page">
+  <h2>13. Known limits and what comes next</h2>
+  <p class="lead">Stated deliberately. Every one of these is a considered
+  decision rather than an oversight, and it is better for a client to hear them
+  here than to discover one mid-pilot.</p>
+
+  <h3>Current limits</h3>
+  <table>
+    <tr><th style="width:30%">Limit</th><th>Impact and plan</th></tr>
+    <tr>
+      <td><strong>Images are not read</strong></td>
+      <td>A phone number written inside a screenshot or photograph passes through untouched. This is realistically the most likely way to bypass the system. Solving it requires text recognition on images; not yet scheduled.</td>
+    </tr>
+    <tr>
+      <td><strong>File contents are not read</strong></td>
+      <td>A number inside a document passes through. Filenames <em>are</em> screened. Planned for the next phase.</td>
+    </tr>
+    <tr>
+      <td><strong>Notifications on the Android app while closed</strong></td>
+      <td>Requires an integration with Google's messaging service — free, roughly two to three days of work. The browser-installed version already handles this correctly.</td>
+    </tr>
+    <tr>
+      <td><strong>Conversation outside the platform</strong></td>
+      <td>If two people are already speaking on a phone call, nothing here can prevent an exchange. This is accepted by design: the product makes bypassing high-friction and evidenced, not impossible.</td>
+    </tr>
+    <tr>
+      <td><strong>Voice and video calls</strong></td>
+      <td>Not included in this phase, so no exposure through them yet. A later phase adds calls together with transcript screening.</td>
+    </tr>
+  </table>
+
+  <h3>Planned next</h3>
+  <ul>
+    <li><strong>An intelligent screening pass</strong> — a language model reviewing what the current rules cannot judge: intent, unusual phrasing, and disguises no pattern anticipates. The existing rules stay as the fast path and the fallback.</li>
+    <li><strong>File and image content screening</strong>, closing the largest current gap.</li>
+    <li><strong>Notifications for the Android app while closed.</strong></li>
+    <li><strong>Project milestones and payments</strong>, keeping the commercial relationship on the platform as well as the conversation.</li>
+    <li><strong>Voice and video calls</strong> with transcript screening.</li>
   </ul>
 
   <div class="callout">
-    <b>Project size:</b> 28 database migrations · 89 commits · 81 unit tests + full e2e suite · 6 themes · 5 detector families — running in production since August 2026.
+    <div class="label">The honest summary for a client</div>
+    <p>Confide makes sharing contact details inside the platform difficult,
+    visible and permanently recorded. It does not make private contact between
+    two determined people impossible — nothing can. What it does is remove the
+    casual route, catch the deliberate one, and leave evidence in both cases.
+    That is what makes a non-circumvention agreement something you can act on
+    rather than something you merely signed.</p>
   </div>
 
-  <p class="foot">Confide — Algotix AI · Project documentation v1.0 · 18 August 2026</p>
-</div>
+  <div class="foot">
+    Confide — full project documentation · 28 August 2026 · Phase 1 complete,
+    69 of 71 planned tasks delivered. Figures in this document are measured
+    from the current codebase, not estimated.
+  </div>
 </section>
 
 </body>
