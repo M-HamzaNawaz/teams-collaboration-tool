@@ -395,6 +395,8 @@
 <!-- ───────────────────────────── 4. ROLES ───────────────────────────── -->
 <section class="page">
   <h2>4. Roles and who can do what</h2>
+  <p class="lead">Two things decide what someone may do: their role in the
+  workspace, and whether they manage a particular group.</p>
 
   <table>
     <tr><th style="width:20%">Role</th><th>Can do</th><th>Cannot do</th></tr>
@@ -406,12 +408,12 @@
     <tr>
       <td><strong>Team member</strong><br><span style="color:var(--muted)">staff, contractors</span></td>
       <td>Read and write in the groups they belong to, share files, reply, mention colleagues</td>
-      <td>Change their own display name, create groups, invite anyone, see the moderation queue, see groups they are not in</td>
+      <td>Change their own display name, create groups, invite anyone, see groups they are not in. Sees the moderation queue only if made that group's manager</td>
     </tr>
     <tr>
       <td><strong>Client</strong></td>
-      <td>Read and write in their groups, share files</td>
-      <td>Everything a member cannot, plus: see other members' internal nicknames, and see the moderation queue under any circumstances</td>
+      <td>Everything a team member can, in their own groups: read and write, share files, reply, mention the other people in the group, and see who else is in it</td>
+      <td>Everything a member cannot, plus: be a group's manager, see other members' internal nicknames, or see the moderation queue under any circumstances</td>
     </tr>
   </table>
 
@@ -428,6 +430,9 @@
     messages for that group only. A client can never hold this role, because
     the moderation queue displays exactly the contact details the holds exist
     to contain.</p>
+    <p>That restriction is a database trigger rather than a check in the
+    application: the row promoting a client to manager cannot be written at
+    all, so no route, script or future feature can create one by mistake.</p>
   </div>
 
   <h3>Removal takes effect in seconds</h3>
