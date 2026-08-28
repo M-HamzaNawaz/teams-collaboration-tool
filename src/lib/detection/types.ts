@@ -91,7 +91,7 @@ export type DetectionConfig = {
    * Measured against the corpus before this existed: holding every message
    * containing a digit would freeze 66% of ordinary work chat — "standup in
    * 10", "meet at 3pm", "v2.0.1 is tagged" — and a 7+ digit floor still
-   * freezes 26%. That is why this is per-group and off by default, not a
+   * freezes 27%. That is why this is per-group and off by default, not a
    * global switch: a queue that holds two thirds of conversation stops
    * being read, and messages then auto-release on the 8h timer unreviewed.
    * Turning it on makes a group catch more; turning it on everywhere makes

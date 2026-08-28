@@ -133,7 +133,7 @@
   <div class="thesis">The chat is the surface. The control layer is the product.</div>
   <div class="meta">
     <strong>Platforms</strong> &nbsp;·&nbsp; Web · Desktop (Windows, macOS, Linux) · Mobile (Android, iPhone)<br>
-    <strong>Status</strong> &nbsp;·&nbsp; Phase 1 complete — 69 of 71 planned tasks delivered<br>
+    <strong>Status</strong> &nbsp;·&nbsp; Phase 1 complete — 68 of 70 planned tasks delivered<br>
     <strong>Document</strong> &nbsp;·&nbsp; Full project documentation, all platforms<br>
     <strong>Date</strong> &nbsp;·&nbsp; 28 August 2026
   </div>
@@ -234,12 +234,14 @@
   by a bug in the application. They are enforced by the database itself.</p>
 
   <h3>Guarantee 1 — No private messages. Groups only.</h3>
-  <p>There is no direct-message feature, and there is no way to add one without
-  redesigning the database. The structure cannot represent a conversation
-  between exactly two people. Only administrators can create groups.</p>
-  <p><strong>Why it matters:</strong> a private channel between two members is
-  precisely where an exchange of contact details would happen unobserved.
-  Removing the possibility is stronger than monitoring it.</p>
+  <p>There is no direct-message feature and no private channel. Every
+  conversation is a group, and only an administrator can create one. A group of
+  two people is possible — but only because an administrator made it, and it is
+  screened, audited and readable by that administrator exactly like every
+  other group.</p>
+  <p><strong>Why it matters:</strong> an unobserved channel between two members
+  is precisely where an exchange of contact details would happen. There is no
+  such channel to find, and none that a member can open.</p>
 
   <h3>Guarantee 2 — Identity is controlled by the agency.</h3>
   <p>Members cannot change their own display name. When an administrator
@@ -322,7 +324,7 @@
   <table>
     <tr><th style="width:26%">Stage</th><th>What it does</th></tr>
     <tr><td><strong>1. Normalise</strong></td><td>Text is reduced to a canonical form: look-alike letters from other alphabets become their Latin equivalents, and invisible characters are stripped.</td></tr>
-    <tr><td><strong>2. Match</strong></td><td>All twenty-eight rules run over both the normalised text and the raw original, so a trick that survives one view is caught in the other.</td></tr>
+    <tr><td><strong>2. Match</strong></td><td>Each rule reads the form it needs: most the normalised text, wallet addresses the original, where capitals carry meaning.</td></tr>
     <tr><td><strong>3. Merge</strong></td><td>Overlapping findings of the same kind collapse to the strongest one.</td></tr>
     <tr><td><strong>4. Allowlist</strong></td><td>Known-harmless senders drop from hold to flag: delivered, still recorded.</td></tr>
     <tr><td><strong>5. Decide</strong></td><td>Each finding carries a confidence score. At or above the hold threshold the message stops; below it, it delivers flagged.</td></tr>
@@ -372,8 +374,8 @@
   <table>
     <tr><th style="width:26%">Level</th><th>Holds</th><th style="width:22%">Ordinary messages held</th></tr>
     <tr><td><strong>Contact info only</strong><br><span style="color:var(--muted)">default</span></td><td>Phone numbers, emails, messaging links, payment handles, crypto addresses</td><td>None measured</td></tr>
-    <tr><td><strong>Long numbers too</strong></td><td>The above, plus any number of seven digits or more</td><td>About 28%</td></tr>
-    <tr><td><strong>Any number at all</strong></td><td>The above, plus every digit — including "3pm" and "v2.0.1"</td><td>About 67%</td></tr>
+    <tr><td><strong>Long numbers too</strong></td><td>The above, plus any number of seven digits or more</td><td>About 27%</td></tr>
+    <tr><td><strong>Any number at all</strong></td><td>The above, plus every digit — including "3pm" and "v2.0.1"</td><td>About 66%</td></tr>
   </table>
 
   <div class="callout warn">
@@ -509,7 +511,7 @@
     approach Slack and Discord use. The consequence is significant: <strong>every
     improvement ships to all three platforms at once</strong>, with no app-store
     review and no reinstall. Only changes to native behaviour require a new
-    build, which has happened roughly ten times in the project's life.</p>
+    build — two so far, both for the desktop app.</p>
   </div>
 
   <h3>Platform comparison</h3>
@@ -913,7 +915,7 @@
     <tr><td><strong>Web application</strong></td><td>Vercel, Tokyo region, deployed automatically on every change</td></tr>
     <tr><td><strong>Database, sign-in, files</strong></td><td>Supabase, managed PostgreSQL</td></tr>
     <tr><td><strong>Desktop installers</strong></td><td>Published as releases on the project repository</td></tr>
-    <tr><td><strong>Android app file</strong></td><td>Published the same way</td></tr>
+    <tr><td><strong>Android app file</strong></td><td>The same way, once the first release is tagged</td></tr>
   </table>
 
   <h3>How a change reaches people</h3>
@@ -991,7 +993,7 @@
 
   <div class="foot">
     Confide — full project documentation · 28 August 2026 · Phase 1 complete,
-    69 of 71 planned tasks delivered. Figures in this document are measured
+    68 of 70 planned tasks delivered. Figures in this document are measured
     from the current codebase, not estimated.
   </div>
 </section>
