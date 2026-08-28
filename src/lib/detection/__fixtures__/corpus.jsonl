@@ -269,3 +269,11 @@
 {"text": "string123456789 buffer overflow", "expect": "flag_only"}
 {"text": "the callback123456789 fired twice", "expect": "flag_only"}
 {"text": "iorewqouew122342323432", "expect": "flag_only", "types": ["phone"]}
+{"text": "call447304250183", "expect": "hold", "types": ["phone"]}
+{"text": "cell447304250183", "expect": "hold", "types": ["phone"]}
+{"text": "tel447304250183", "expect": "hold", "types": ["phone"]}
+{"text": "whatsapp me on 447304250183", "expect": "hold", "types": ["phone"]}
+{"text": "onetwothree", "expect": "allow", "types": []}
+{"text": "one two three", "expect": "allow", "types": []}
+{"text": "one two seven four", "expect": "allow", "types": []}
+{"text": "meet at 3pm tomorrow", "expect": "allow", "types": []}

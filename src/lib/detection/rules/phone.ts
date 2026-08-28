@@ -249,9 +249,23 @@ export const phoneRules: Rule[] = [
     type: 'phone',
     target: 'normalized',
     find(rawText, config) {
-      // Same length, so every index below still lines up with rawText.
-      const text = foldDigitLookalikes(rawText)
+      // BOTH readings are scored, and dedupeOverlaps() keeps the stronger.
+      //
+      // Folding is what catches "o3oo1234567", but it also swallows a real
+      // word's trailing lookalikes: LOOKALIKE_RUN takes the "ll" of
+      // "call447304250183" into the run, folds it to "11", and the number
+      // becomes 11447304250183 — valid in no country. That destroyed the two
+      // strongest signals at once (libphonenumber said no, and the glued
+      // keyword was left as "ca"), so the most obvious phrasing anyone would
+      // actually type dropped from hold to flag_only.
+      //
+      // Reading the raw text too costs one extra pass and cannot lower a
+      // score: dedupe takes the highest confidence of overlapping findings.
+      // Both strings are the same length, so spans stay aligned with rawText.
+      const folded = foldDigitLookalikes(rawText)
       const matches: RuleMatch[] = []
+      const seen = new Set<string>()
+      for (const text of folded === rawText ? [rawText] : [folded, rawText])
       for (const m of text.matchAll(CONTIGUOUS)) {
         if (ISO_DATE_START.test(m[0]) && m[0].length <= 10) continue // 2026080400-ish stamps
         // Bare digit runs are timestamps, order IDs, tracking numbers — a
@@ -288,6 +302,9 @@ export const phoneRules: Rule[] = [
           !signals.boost && !leadingZero && precededByIdMarker(text, m.index)
         const base = finalize(leadingZero ? 0.72 : 0.6, signals)
         const confidence = idMarker ? Math.min(base, 0.5) : base
+        const key = `${m.index}:${m[0].length}:${confidence}`
+        if (seen.has(key)) continue
+        seen.add(key)
         matches.push({ start: m.index, end: m.index + m[0].length, confidence })
       }
       return matches

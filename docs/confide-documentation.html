@@ -293,12 +293,16 @@
   <p>Twenty-eight separate detection rules across five categories:</p>
   <table>
     <tr><th style="width:24%">Category</th><th>Examples caught</th></tr>
-    <tr><td><strong>Phone numbers</strong></td><td>International (<code>+92 300 1234567</code>), national (<code>03001234567</code>), spaced digits, digits spelled out in words, numbers glued to text</td></tr>
+    <tr><td><strong>Phone numbers</strong></td><td>International (<code>+92 300 1234567</code>), national (<code>03001234567</code>), spaced digits, digits spelled out in words from seven upwards, and numbers glued to text (<code>call447304250183</code>)</td></tr>
     <tr><td><strong>Email addresses</strong></td><td>Standard, and disguised forms — <code>john [at] gmail [dot] com</code>, <code>john@gmail,com</code>, <code>j o h n @ …</code></td></tr>
     <tr><td><strong>Messaging links</strong></td><td>WhatsApp, Telegram, Signal, Instagram, Snapchat, Discord, Skype, LinkedIn, Facebook</td></tr>
     <tr><td><strong>Payment handles</strong></td><td>PayPal.me, Wise, Payoneer, IBAN bank details</td></tr>
     <tr><td><strong>Crypto wallets</strong></td><td>Bitcoin (both formats), Ethereum, Tron</td></tr>
   </table>
+
+  <p>A short run of digits is not a phone number: "one two three", "meet at 3pm"
+  and "v2.0.1" deliver untouched. Section 3b covers rooms that want even those
+  held.</p>
 
   <h3>Where the check happens</h3>
   <p>Screening runs on the server, before a message row exists. It is not a
@@ -349,7 +353,7 @@
   trick cannot work twice. Two thresholds are enforced automatically, and a change
   breaching either cannot be merged:</p>
   <div class="stats">
-    <div class="stat"><div class="n">271</div><div class="l">test cases in the corpus</div></div>
+    <div class="stat"><div class="n">279</div><div class="l">test cases in the corpus</div></div>
     <div class="stat"><div class="n">100%</div><div class="l">of contact info caught</div></div>
     <div class="stat"><div class="n">0%</div><div class="l">false alarms</div></div>
     <div class="stat"><div class="n">28</div><div class="l">detection rules</div></div>
@@ -865,7 +869,7 @@
   <div class="stats">
     <div class="stat"><div class="n">91</div><div class="l">unit tests</div></div>
     <div class="stat"><div class="n">43</div><div class="l">database rule tests</div></div>
-    <div class="stat"><div class="n">271</div><div class="l">screening test cases</div></div>
+    <div class="stat"><div class="n">279</div><div class="l">screening test cases</div></div>
     <div class="stat"><div class="n">3</div><div class="l">full journey tests</div></div>
   </div>
 
