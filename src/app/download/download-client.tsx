@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
+import QRCode from 'qrcode'
+
 import { DownloadIcon } from '@/lib/ui/icons'
 
 /**
@@ -47,12 +49,21 @@ export function DownloadClient() {
   const [platform, setPlatform] = useState<Platform>('other')
   const [installed, setInstalled] = useState(false)
   const [host, setHost] = useState('')
+  const [qr, setQr] = useState<string | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => {
       setPlatform(detectPlatform())
       setHost(window.location.host)
     })
+    // QR for the desktop view of the mobile card: scan → this page opens
+    // on the phone, where the real install button lives.
+    void QRCode.toDataURL(`${window.location.origin}/download`, {
+      width: 176,
+      margin: 1,
+    })
+      .then(setQr)
+      .catch(() => {})
     void fetch('/api/downloads')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setLinks(d as Links))
@@ -189,11 +200,26 @@ export function DownloadClient() {
               </li>
             </ol>
           ) : (
-            <p className="mt-4 text-sm text-muted">
-              Open{' '}
-              <span className="font-mono text-xs">{host}/download</span> on
-              your phone and the install button appears here.
-            </p>
+            <div className="mt-4 flex items-center gap-4">
+              {qr && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qr}
+                  alt="QR code — open this page on your phone"
+                  className="h-32 w-32 shrink-0 rounded-lg border border-border bg-white p-1.5"
+                />
+              )}
+              <div className="min-w-0 text-sm text-muted">
+                <p className="font-medium text-foreground">
+                  Scan with your phone&apos;s camera
+                </p>
+                <p className="mt-1">
+                  This page opens on the phone with an install button — one
+                  tap and Confide is on the home screen.
+                </p>
+                <p className="mt-2 font-mono text-xs">{host}/download</p>
+              </div>
+            </div>
           )}
         </section>
 
