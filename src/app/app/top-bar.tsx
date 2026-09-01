@@ -10,6 +10,7 @@ import {
   BellIcon,
   CheckIcon,
   ChevronDownIcon,
+  DownloadIcon,
   LogOutIcon,
   MenuIcon,
   SearchIcon,
@@ -251,6 +252,13 @@ export function TopBar(props: {
             }}
           />
           <NotifyMenuItem />
+          <Link
+            href="/download"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-hover"
+          >
+            <DownloadIcon />
+            Download apps
+          </Link>
           <button
             onClick={signOut}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-hover"

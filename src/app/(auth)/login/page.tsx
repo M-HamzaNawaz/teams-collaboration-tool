@@ -78,6 +78,8 @@ function LoginForm() {
         <a href="/reset" className="underline hover:text-foreground">Forgot password?</a>
         {' · '}
         <a href="/signup" className="underline hover:text-foreground">Create a workspace</a>
+        {' · '}
+        <a href="/download" className="underline hover:text-foreground">Get the apps</a>
       </p>
     </form>
   )
