@@ -35,6 +35,7 @@ export async function GET() {
       mac: find((n) => n.endsWith('.dmg')),
       linuxAppImage: find((n) => n.endsWith('.AppImage')),
       linuxDeb: find((n) => n.endsWith('.deb')),
+      android: find((n) => n.endsWith('.apk')),
     },
     { headers: { 'cache-control': 'public, max-age=600' } },
   )

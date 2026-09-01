@@ -20,6 +20,7 @@ type Links = {
   mac: string | null
   linuxAppImage: string | null
   linuxDeb: string | null
+  android: string | null
 }
 
 type Platform = 'windows' | 'mac' | 'linux' | 'android' | 'ios' | 'other'
@@ -175,15 +176,28 @@ export function DownloadClient() {
             </p>
           ) : platform === 'android' ? (
             <>
+              {links?.android && (
+                <a
+                  href={links.android}
+                  className="btn btn-primary mt-4 w-full py-3"
+                >
+                  <DownloadIcon /> Download Android app (.apk)
+                </a>
+              )}
+              <p className="mt-2 text-xs text-muted">
+                After downloading, open the file — Android asks once to allow
+                installs from your browser. Updates: install the new APK from
+                this page.
+              </p>
               <button
                 onClick={() => void installMobile()}
-                className="btn btn-primary mt-4 w-full py-3"
+                className="btn btn-secondary mt-3 w-full"
               >
-                <DownloadIcon /> Install on this phone
+                Or install the web version instead
               </button>
               <p className="mt-2 text-xs text-muted">
-                No prompt? Open your browser menu (⋮) → “Install app” or “Add
-                to Home screen”.
+                Web version gets notifications even when closed; the APK
+                notifies while the app is open.
               </p>
             </>
           ) : platform === 'ios' ? (
