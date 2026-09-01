@@ -35,7 +35,7 @@ export type DockItem = {
   href: string
   label: string
   Icon: () => React.ReactElement
-  group: 'WORK' | 'TRACK'
+  group: 'WORK' | 'TRACK' | 'APPS'
   /** Something is waiting here — shown as a quiet dot, never a number. */
   alert?: boolean
 }
@@ -176,7 +176,7 @@ export function Dock(props: {
     router.refresh()
   }
 
-  const groups: Array<DockItem['group']> = ['WORK', 'TRACK']
+  const groups: Array<DockItem['group']> = ['WORK', 'TRACK', 'APPS']
 
   return (
     // Outer shell reserves LAYOUT width (76px unless pinned) — the sidebar

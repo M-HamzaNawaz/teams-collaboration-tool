@@ -9,6 +9,7 @@ import { browserClient } from '@/lib/supabase/browser-client'
 import { localTheme, useApplyServerTheme } from '@/lib/theme/apply'
 import { isValidTheme } from '@/lib/theme/themes'
 import {
+  DownloadIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
   ScrollTextIcon,
@@ -144,6 +145,8 @@ export function AppShell(props: {
           },
         ]
       : []),
+    // Everyone — where teammates grab the desktop/mobile apps.
+    { href: '/download', label: 'Download', Icon: DownloadIcon, group: 'APPS' },
   ]
 
   return (
