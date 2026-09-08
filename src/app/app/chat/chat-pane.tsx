@@ -94,13 +94,18 @@ export function ChatPane(props: {
   /** Server-fetched first page — instant paint, no second skeleton. The
       subscribe-then-fetch cycle still runs and reconciles over this. */
   initialMessages?: RealtimeMessage[] | null
+  /** Server-projected masked names — bubbles show real names on first
+      paint instead of the 'Member' fallback flashing into place. */
+  initialNames?: Array<[string, string]> | null
   onBack: () => void
   onGroupChanged: () => void
 }) {
   const [messages, setMessages] = useState<ClientMessage[] | null>(
     props.initialMessages ?? null,
   )
-  const [names, setNames] = useState<Map<string, string>>(new Map())
+  const [names, setNames] = useState<Map<string, string>>(
+    () => new Map(props.initialNames ?? []),
+  )
   const [hasMore, setHasMore] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [sending, setSending] = useState(false)

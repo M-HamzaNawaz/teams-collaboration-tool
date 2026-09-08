@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { getSession } from '@/lib/auth/session'
 import { authorize } from '@/lib/authz/authorize'
+import { groupRosterIds } from '@/lib/masking/group-roster'
 import { projectProfile, type VisibilityRule } from '@/lib/masking/project'
 import { serviceClient } from '@/lib/supabase/service-client'
 import type { ProfileRow } from '@/lib/types'
@@ -43,13 +44,9 @@ export async function GET(
     return Response.json({ error: authz.reason }, { status: authz.status })
   }
 
-  const { data: members } = await service
-    .from('group_members')
-    .select('user_id')
-    .eq('group_id', groupId)
-    .is('removed_at', null)
-
-  const memberIds = (members ?? []).map((m) => m.user_id as string)
+  // Members PLUS workspace admins — admins post without membership rows,
+  // and a roster without them labeled their messages 'Member' forever.
+  const memberIds = await groupRosterIds(service, workspaceId, groupId)
   if (memberIds.length === 0) return Response.json({ profiles: [] })
 
   const [{ data: profiles }, { data: rules }] = await Promise.all([

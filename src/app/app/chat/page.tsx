@@ -1,6 +1,9 @@
 import { getSession } from '@/lib/auth/session'
+import { groupRosterIds } from '@/lib/masking/group-roster'
+import { projectProfile, type VisibilityRule } from '@/lib/masking/project'
+import { serviceClient } from '@/lib/supabase/service-client'
 import { userClient } from '@/lib/supabase/user-client'
-import type { GroupRow, WorkspaceRow } from '@/lib/types'
+import type { GroupRow, ProfileRow, WorkspaceRow } from '@/lib/types'
 
 import { ChatShell } from './chat-shell'
 
@@ -102,6 +105,42 @@ export default async function AppPage(props: {
     : { data: null }
   const initialMessages = initialRows ? [...initialRows].reverse() : null
 
+  // Masked member names for that same group — seeded HERE for the same
+  // reason as the messages: bubbles were painting the 'Member' fallback,
+  // then flipping to the real name once the client fetch landed. Same
+  // projection the profiles API applies, so a client still sees exactly
+  // what a client is allowed to see.
+  let initialNames: Array<[string, string]> | null = null
+  if (initialGroup) {
+    const service = serviceClient()
+    const memberIds = await groupRosterIds(
+      service,
+      session.profile.workspace_id,
+      initialGroup.id,
+    )
+    if (memberIds.length > 0) {
+      const [{ data: profileRows }, { data: rules }] = await Promise.all([
+        service
+          .from('profiles')
+          .select('*')
+          .eq('workspace_id', session.profile.workspace_id)
+          .in('user_id', memberIds),
+        service
+          .from('role_visibility_rules')
+          .select('viewer_role, target_role, visible_fields')
+          .eq('workspace_id', session.profile.workspace_id),
+      ])
+      initialNames = ((profileRows ?? []) as ProfileRow[]).map((profile) => {
+        const projected = projectProfile(
+          session.profile.member_role,
+          profile,
+          (rules ?? []) as VisibilityRule[],
+        )
+        return [projected.userId, projected.displayName ?? 'Member']
+      })
+    }
+  }
+
   return (
     <ChatShell
       // Keyed by the deep link: navigating /app/chat?g=x → ?g=y while
@@ -110,6 +149,7 @@ export default async function AppPage(props: {
       groups={groupRows}
       initialGroupId={requestedGroupId ?? null}
       initialMessages={initialMessages}
+      initialNames={initialNames}
       workspaceName={(workspace as WorkspaceRow | null)?.name ?? 'Workspace'}
       me={{
         userId: session.userId,

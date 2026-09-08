@@ -29,6 +29,7 @@ export function ChatShell(props: {
   /** Server-fetched first page for the group that opens first — the pane
       paints real messages immediately instead of a second skeleton. */
   initialMessages?: RealtimeMessage[] | null
+  initialNames?: Array<[string, string]> | null
   workspaceName: string
   me: Me
   unreadByGroup?: Record<string, number>
@@ -141,6 +142,13 @@ export function ChatShell(props: {
                 (props.groups.find((g) => g.id === props.initialGroupId) ??
                   props.groups[0])?.id
                   ? props.initialMessages
+                  : undefined
+              }
+              initialNames={
+                selected.id ===
+                (props.groups.find((g) => g.id === props.initialGroupId) ??
+                  props.groups[0])?.id
+                  ? props.initialNames
                   : undefined
               }
               onBack={closeGroup}
