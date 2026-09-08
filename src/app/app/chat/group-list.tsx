@@ -1,11 +1,8 @@
 'use client'
 
-import gsap from 'gsap'
-import { useEffect, useRef } from 'react'
 
 import type { GroupRow } from '@/lib/types'
 import { GroupMark } from '@/lib/ui/avatar'
-import { prefersReducedMotion } from '@/lib/ui/dismiss'
 
 import type { Me } from './chat-shell'
 
@@ -22,25 +19,8 @@ export function GroupList(props: {
   onSelect: (group: GroupRow) => void
   unreadByGroup: Record<string, number>
 }) {
-  const listRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (prefersReducedMotion()) return
-    const ctx = gsap.context(() => {
-      gsap.from('[data-anim="group-item"]', {
-        y: 12,
-        opacity: 0,
-        duration: 0.35,
-        stagger: 0.05,
-        ease: 'power2.out',
-        delay: 0.2,
-      })
-    }, listRef)
-    return () => ctx.revert()
-  }, [])
-
   return (
-    <div ref={listRef} className="flex h-full flex-col">
+    <div className="flex h-full flex-col">
       <header className="flex items-center gap-3 border-b border-border p-4">
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-semibold">Conversations</h1>
@@ -64,7 +44,7 @@ export function GroupList(props: {
           {props.groups.map((group) => {
             const active = group.id === props.selectedId
             return (
-              <li key={group.id} data-anim="group-item">
+              <li key={group.id}>
                 <button
                   onClick={() => props.onSelect(group)}
                   className={`group flex w-full items-center gap-3 rounded-[10px] px-2 py-2 text-left transition-colors ${
