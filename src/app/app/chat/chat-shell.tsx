@@ -1,11 +1,9 @@
 'use client'
 
-import gsap from 'gsap'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type { RealtimeMessage } from '@/lib/realtime/messages'
 import type { GroupRow } from '@/lib/types'
-import { prefersReducedMotion } from '@/lib/ui/dismiss'
 import { MessageSquareIcon } from '@/lib/ui/icons'
 
 import { ChatPane } from './chat-pane'
@@ -46,24 +44,6 @@ export function ChatShell(props: {
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(() =>
     props.initialGroupId ? 'chat' : 'list',
   )
-  const shellRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (prefersReducedMotion()) return
-    // Shell entrance: sidebar slides in, pane fades up — one timeline.
-    const ctx = gsap.context(() => {
-      gsap
-        .timeline({ defaults: { ease: 'power3.out' } })
-        .from('[data-anim="sidebar"]', { x: -24, opacity: 0, duration: 0.45 })
-        .from(
-          '[data-anim="pane"]',
-          { y: 16, opacity: 0, duration: 0.45 },
-          '-=0.25',
-        )
-    }, shellRef)
-    return () => ctx.revert()
-  }, [])
-
   /**
    * Mobile back, done as history rather than as a gesture handler.
    *
@@ -123,13 +103,12 @@ export function ChatShell(props: {
   }
 
   return (
-    <div ref={shellRef} className="h-full w-full overflow-hidden">
+    <div className="h-full w-full overflow-hidden">
       {/* Chat runs edge to edge — unlike the capped dashboard/audit pages,
           a conversation wants the whole width, not a centered column. */}
       <div className="flex h-full w-full gap-3 p-2 sm:p-3">
         {/* Sidebar card — hidden on mobile while a chat is open */}
         <aside
-          data-anim="sidebar"
           className={`${
             mobileView === 'chat' ? 'hidden' : 'flex'
           } w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-e1 md:flex md:w-72`}
@@ -146,7 +125,6 @@ export function ChatShell(props: {
 
         {/* Thread card — hidden on mobile while the list is open */}
         <main
-          data-anim="pane"
           className={`${
             mobileView === 'list' ? 'hidden' : 'flex'
           } min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-e1 md:flex`}
