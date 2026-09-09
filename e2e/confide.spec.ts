@@ -96,6 +96,8 @@ test('the full control loop: invite → consent → hold → approve → deliver
   await dismissThemePicker(invitee) // brand-new account = first login
   await invitee.goto('/app/chat')
   await expect(invitee.getByText(groupName).first()).toBeVisible()
+  // /app/chat opens the pick-a-conversation pane now — nothing auto-opens.
+  await invitee.getByRole('button', { name: new RegExp(groupName) }).click()
 
   // ── Recipient opens the group and stays on it.
   const recipient = await loggedInPage(browser, RECIPIENT)
