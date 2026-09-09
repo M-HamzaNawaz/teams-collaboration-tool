@@ -93,8 +93,9 @@ export default async function AppPage(props: {
   // route-level loading.tsx already covered this server time). The pane
   // still re-fetches after subscribing (M5-02's ordering rule), which
   // silently reconciles anything that landed in between.
-  const initialGroup =
-    groupRows.find((g) => g.id === requestedGroupId) ?? groupRows[0] ?? null
+  // Only a ?g= deep link opens a conversation now — without one, the page
+  // shows the picker, so there is nothing to preload.
+  const initialGroup = groupRows.find((g) => g.id === requestedGroupId) ?? null
   const { data: initialRows } = initialGroup
     ? await supabase
         .from('messages')

@@ -34,11 +34,11 @@ export function ChatShell(props: {
   me: Me
   unreadByGroup?: Record<string, number>
 }) {
+  // No conversation opens by itself: only a ?g= deep link preselects
+  // (WhatsApp-Web style). Plain /app/chat shows the pick-a-conversation
+  // pane, so the address always matches what's on screen.
   const [selected, setSelected] = useState<GroupRow | null>(
-    () =>
-      props.groups.find((g) => g.id === props.initialGroupId) ??
-      props.groups[0] ??
-      null,
+    () => props.groups.find((g) => g.id === props.initialGroupId) ?? null,
   )
   // Mobile: 'list' or 'chat'. Desktop shows both, this state is ignored.
   // A deep-linked group opens straight into the conversation.
@@ -72,13 +72,23 @@ export function ChatShell(props: {
     )
   }
 
+  /** Mirror the open conversation into the address bar (shallow — no
+      navigation, no remount) so refresh and share always land here. */
+  function reflectGroupInUrl(groupId: string | null) {
+    const url = groupId ? `/app/chat?g=${groupId}` : '/app/chat'
+    window.history.replaceState(window.history.state, '', url)
+  }
+
   function openGroup(group: GroupRow) {
     setSelected(group)
     // Only from the list, so the ⌘K switcher opening a group while already
-    // in a conversation does not stack a second entry.
+    // in a conversation does not stack a second entry. Push FIRST, then
+    // stamp ?g= on the new entry — the mobile back gesture then lands on
+    // the clean /app/chat entry, list view and address agreeing.
     if (mobileView === 'list' && isMobileViewport()) {
       window.history.pushState({ [MOBILE_ENTRY]: true }, '')
     }
+    reflectGroupInUrl(group.id)
     setMobileView('chat')
   }
 
@@ -138,21 +148,20 @@ export function ChatShell(props: {
               initialMessages={
                 // Only valid for the group the server fetched it for —
                 // switching groups falls back to the pane's own loader.
-                selected.id ===
-                (props.groups.find((g) => g.id === props.initialGroupId) ??
-                  props.groups[0])?.id
+                selected.id === props.initialGroupId
                   ? props.initialMessages
                   : undefined
               }
               initialNames={
-                selected.id ===
-                (props.groups.find((g) => g.id === props.initialGroupId) ??
-                  props.groups[0])?.id
+                selected.id === props.initialGroupId
                   ? props.initialNames
                   : undefined
               }
               onBack={closeGroup}
-              onGroupChanged={() => setSelected(null)}
+              onGroupChanged={() => {
+                setSelected(null)
+                reflectGroupInUrl(null)
+              }}
             />
           ) : (
             <div className="flex flex-1 items-center justify-center p-6 text-center">
@@ -160,10 +169,21 @@ export function ChatShell(props: {
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-surface-2 text-muted">
                   <MessageSquareIcon />
                 </div>
-                <p className="font-medium">No groups yet</p>
-                <p className="mt-1 text-sm text-muted">
-                  Your admin adds you to a group when a project starts.
-                </p>
+                {props.groups.length === 0 ? (
+                  <>
+                    <p className="font-medium">No groups yet</p>
+                    <p className="mt-1 text-sm text-muted">
+                      Your admin adds you to a group when a project starts.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-medium">Pick a conversation</p>
+                    <p className="mt-1 text-sm text-muted">
+                      Choose a group from the list to start reading.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}
