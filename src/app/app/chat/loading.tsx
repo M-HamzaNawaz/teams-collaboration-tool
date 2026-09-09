@@ -1,10 +1,20 @@
-/** Chat transition skeleton — mirrors the sidebar + thread card layout. */
+/**
+ * Chat transition skeleton — sidebar shape only.
+ *
+ * loading.tsx renders before the server decides anything, so it cannot
+ * know whether the URL carries a ?g= deep link. Since plain /app/chat now
+ * opens the pick-a-conversation pane (no auto-opened group), a skeleton
+ * sketching fake bubbles + composer would promise a thread that often
+ * never arrives. The right side stays a quiet empty card: truthful for
+ * the picker, and a deep-linked conversation paints straight over it
+ * (its messages are server-seeded, so there is no second wait).
+ */
 export default function ChatLoading() {
   return (
     <div className="h-full w-full overflow-hidden">
       <div className="flex h-full w-full gap-3 p-2 sm:p-3">
         {/* Sidebar card */}
-        <div className="hidden w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-surface md:flex">
+        <div className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-surface md:w-72">
           <div className="border-b border-border p-4">
             <div className="skeleton h-5 w-32" />
             <div className="skeleton mt-2 h-3 w-24" />
@@ -21,28 +31,9 @@ export default function ChatLoading() {
             ))}
           </div>
         </div>
-        {/* Thread card */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface">
-          <div className="flex items-center gap-3 border-b border-border p-3">
-            <div className="skeleton h-9 w-9 rounded-lg" />
-            <div className="min-w-0 flex-1">
-              <div className="skeleton h-4 w-48" />
-              <div className="skeleton mt-1.5 h-3 w-64" />
-            </div>
-          </div>
-          {/* Bubbles start at the TOP — exactly where the real message list
-              renders — so content lands without a vertical jump. */}
-          <div className="flex flex-1 flex-col gap-3 overflow-hidden bg-background p-4 pt-6">
-            <div className="skeleton h-12 w-2/5" />
-            <div className="skeleton ml-auto h-12 w-1/3" />
-            <div className="skeleton h-12 w-1/2" />
-            <div className="skeleton ml-auto h-12 w-2/5" />
-            <div className="skeleton h-12 w-1/3" />
-          </div>
-          <div className="border-t border-border p-3">
-            <div className="skeleton h-20 w-full rounded-[10px]" />
-          </div>
-        </div>
+        {/* Pane: a quiet surface — the picker or a seeded conversation
+            replaces it without ever contradicting it. */}
+        <div className="hidden min-w-0 flex-1 rounded-xl border border-border bg-surface md:block" />
       </div>
     </div>
   )
